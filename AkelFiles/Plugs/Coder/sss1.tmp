@@ -1,0 +1,128 @@
+Files:
+*.ss1
+
+
+Font:
+${HighLight_FontStyle} ${HighLight_FontSize} ${HighLight_FaceName}
+
+Colors:
+${HighLight_BasicTextColor} ${HighLight_BasicBkColor} ${HighLight_SelTextColor} ${HighLight_SelBkColor} ${HighLight_LineTextColor} ${HighLight_LineBkColor} ${HighLight_LineBorderColor} ${HighLight_AltTextColor} ${HighLight_AltBkColor} ${HighLight_AltBorderColor} ${HighLight_ColumnColor} ${HighLight_MarkerColor} ${HighLight_CaretColor} ${HighLight_UrlColor} ${HighLight_ActiveUrlColor} ${HighLight_VisitUrlColor}
+
+BkImage:
+${HighLight_BkImageFile}	${HighLight_BkImageAlpha}
+
+AutoMark:
+${HighLight_AutoMarkFlags} ${HighLight_AutoMarkFontStyle} ${HighLight_AutoMarkTextColor} ${HighLight_AutoMarkBkColor}
+
+FoldPanel:
+${CodeFold_PanelFirstBkColor} ${CodeFold_PanelSecondBkColor} ${CodeFold_PanelNormalFoldColor} ${CodeFold_PanelActiveFoldColor} ${CodeFold_PanelNormalNodeOpenBkColor} ${CodeFold_PanelNormalNodeCloseBkColor} ${CodeFold_PanelActiveNodeOpenBkColor} ${CodeFold_PanelActiveNodeCloseBkColor} ${CodeFold_PanelNormalNodeOpenSignColor} ${CodeFold_PanelNormalNodeCloseSignColor} ${CodeFold_PanelActiveNodeOpenSignColor} ${CodeFold_PanelActiveNodeCloseSignColor}
+
+FoldList:
+${CodeFold_ListTextColor} ${CodeFold_ListBkColor}
+
+TagMark:
+${CodeFold_TagMarkFlags} ${CodeFold_TagMarkFontStyle} ${CodeFold_TagMarkTextColor} ${CodeFold_TagMarkBkColor}
+
+Quotes:
+; Для HTML
+;388=4+128+256
+;0	0	${TAG}	0	"</"	">"	""	""	""	0	2
+;401=1+16+128+256
+;0	0	${TAG}	0	"<"	">"	""	""	""	0	3
+; Комментарии более чем тройными символами
+;1	2	#00ff00	0	"+++"	""	""	""	""
+;1	2	#ff0080	0	"---"	""	""	""	""
+;1	2	${COMM}	0	"-- "	""	":"	""	""
+;1	2	${COMM}	0	"//"	""	":"	""	""
+;1	2	${COMM}	0	"# "	""	":"	""	""
+
+QuotesRE:
+; для поиска
+1   `%#$&@`   "\0=(0,#FFFFFF,#FF0080)"
+2   `%#$&@`   "\0=(0,#FFFFFF,#8000ff)"
+; cmd path>
+1   "(^\w\:\\.+?\>)(.*?)$"   "\1=(0,#00FF00,#000000) \2=(0,#FFFF00,#000000)"
+; find_str.js AkelPad
+1   "^----------\s.+$"   "\0=(0,#ff0080,#000000)"
+1   "^\[\d+\]"   "\0=(0,${COMM},0)"
+1   `^\+\+\+.*?$`   "\0=(0,#00ff00,0)"
+1   `^\-\-\-.*?$`   "\0=(0,#ff0080,0)"
+; Для FindReplaceEx.js
+1   "^  \[\d+, \d+, \d+, \d+:\d+\]"   "\0=(0,${COMM},0)"
+1   "\A[A-Z]:\\.+?:"   "\0=(0,${DEL1},0)"
+1   "Всего вхождений: \d+\Z"   "\0=(0,${DEL2},0)"
+1   "Total found: \d+\Z"   "\0=(0,${DEL2},0)"
+; Для SearchReplace.js
+1   "\s*?\(\d+,\d+\)"   "\0=(0,${COMM},0)"
+1   "\A\d+:"   "\0=(0,${DEL1},0)"
+; QSearch
+1   "^Searching for .*?$"   "\0=(0,${DEL1},0)"
+1   "^\s*?\(\d*\s?\d+\:?\d+\)(?:\s*)?"   "\0=(0,${COMM},0)"
+1   "Total\s.*?$" "\0=(0,${TAG},0)"
+; findstr \O
+;1 "^(.*)+(\:\d+\:\d+)(\:)"   "\1=(0,#FFFF80,#000000) \2=(0,${COMM},#000000) \3=(0,#000000,#000000)"
+; findstr
+1 "^(.*)+(\:\d+)(\:)"   "\1=(0,#FFFF80,#000000) \2=(0,${COMM},#000000) \3=(0,#000000,#000000)"
+;1 "in file" "\0=(0,${DEL1},0)"
+; Для HTMLTidy
+; 1   "^line \d+ column \d+"   "\0=(0,#AFE7B3,0)"
+1   "^(line) (\d+) (column) (\d+) (\-)"   "\1=(0,${COMM},0)   \2=(0,${NUM},0)   \3=(0,${COMM},0)   \4=(0,#${COMM},0)   \5=(0,${COMM},0)"
+; 0   '[а-яё]'   "\0=(0,#BFCAA9,0)"
+; Для HTML
+1	' (\w+?)(=)("[^"<>]+")'	"\1=(0,${ATTR},0)	\2=(0,${DEL2},0)	\3=(0,${STR},0)"  3 0
+1	' (\w+?)(=)(\d+)'	"\1=(0,${ATTR},0)	\2=(0,${DEL2},0)	\3=(0,${NUM},0)"  3 0
+; Для путей
+;1	'\b[A-Z]:(?:\\[^\\/:\*\?"<>\|]+?)+'	"\0=(0,#FF0080,0)"
+; Для предупреждений
+; 1	'\b(?:error|warning)'	"\0=(0,${DEL2},0)"
+0	'\berror'	"\0=(0,#FF0031,0)"
+0	'\bwarning'	"\0=(0,${DEL2},0)"
+; 0	'[а-яё]'	"\0=(0,${COMM},0)"
+; Операторы
+;0   '[&+=*\(\)\{\}\]\[]'   "\0=(0,#004040,0)"
+; Латинский алфавит
+;0   '[a-zA-Z]'   "\0=(0,#AAA6DB,0)" ; может C0AD72
+;0   '[^a-zA-Z]'   "\0=(0,#C0C0C0,0)" ; может C0AD72
+;0   '[a-zA-Z]'   "\0=(0,${DEL2},0)"
+;0   '[^a-zA-Z]'   "\0=(0,${DEL2},0)"
+; Числа
+;0   "\d"   "\0=(0,#EBCB9C,0)"
+; Текст в кавычках
+;0	'".+?"'	"\0=(0,${STR},0)"
+;0	"'.+?'"	"\0=(0,${STR},0)"
+
+;----------------------------------------------;
+;                   CodeFold                   ;
+;----------------------------------------------;
+
+;Flags (sum of the members)
+;       1  case sensitive.
+;       2  force get fold name for function list from left at the fold start ("Folds:" section only).
+;       4  force get fold name for function list from right at the fold start, including fold start ("Folds:" section only).
+;       8  fold start ("Folds:" section) or skip start ("Skips:" section) located at line start.
+;      16  fold start ("Folds:" section) or skip start ("Skips:" section) located at line end.
+;      32  fold end ("Folds:" section) or skip end ("Skips:" section) located at line start.
+;      64  fold end ("Folds:" section) or skip end ("Skips:" section) located at line end.
+;     128  don't catch fold end ("Folds:" section) or skip end ("Skips:" section).
+;     256  additional to 128 flag - more priority is given to sibling level instead of parent level ("Folds:" section only).
+;     512  comment fold - fold ignore any other folds and skips inside ("Folds:" section only).
+;    1024  reserved.
+;    2048  deny fold - founded fold will be ignored ("Folds:" section only).
+;    4096  xml fold - "<tag" and "</tag>", "<single" and "/>", "<single" and ">" ("Folds:" section only).
+;    8192  don't check delimiters from left of fold start ("Folds:" section only).
+;   16384  don't check delimiters from right of fold start ("Folds:" section only).
+;   32768  don't check delimiters from left of fold end ("Folds:" section only).
+;   65536  don't check delimiters from right of fold end ("Folds:" section only).
+;  131072  deny delimiters ("Folds:" section only).
+;  262144  don't show fold in list ("Folds:" section only).
+; 1048576  regular expression in fold start ("Folds:" section) or skip start ("Skips:" section).
+; 2097152  regular expression in fold end ("Folds:" section) or skip end ("Skips:" section). Backreference \101 matches \1 in fold start, \102 matches \2 and so on.
+
+Folds:
+;1	0	0	0	"{"     "}"    ""       0	1
+;1	0	0	0	"["     "]"    ""       0	1
+;1	0	0	0	"("     ")"    ""       0	1
+3145865	0	0	0	"^----------"     "^(----------|Search.*?)"    ""       0	1
+3145865	0	0	0	"^Search"     "^(Search.*?|----------)"    ""       0	1
+
+; AkelPad

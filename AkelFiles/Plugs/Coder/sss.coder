@@ -1,0 +1,118 @@
+; *.coder для консоли, AZJIO, 06.2019
+
+
+Files:
+*.sss
+
+Font:
+${HighLight_FontStyle} ${HighLight_FontSize} ${HighLight_FaceName}
+
+Colors:
+${HighLight_BasicTextColor} ${HighLight_BasicBkColor} ${HighLight_SelTextColor} ${HighLight_SelBkColor} ${HighLight_LineTextColor} ${HighLight_LineBkColor} ${HighLight_LineBorderColor} ${HighLight_AltTextColor} ${HighLight_AltBkColor} ${HighLight_AltBorderColor} ${HighLight_ColumnColor} ${HighLight_MarkerColor} ${HighLight_CaretColor} ${HighLight_UrlColor} ${HighLight_ActiveUrlColor} ${HighLight_VisitUrlColor}
+
+BkImage:
+${HighLight_BkImageFile}	${HighLight_BkImageAlpha}
+
+AutoMark:
+${HighLight_AutoMarkFlags} ${HighLight_AutoMarkFontStyle} ${HighLight_AutoMarkTextColor} ${HighLight_AutoMarkBkColor}
+
+Quotes:
+; Для HTML
+;388=4+128+256
+;0	0	${TAG}	0	"</"	">"	""	""	""	0	2
+;401=1+16+128+256
+;0	0	${TAG}	0	"<"	">"	""	""	""	0	3
+; Комментарии более чем тройными символами
+; 1	2	${COMM}	0	"+++"	""	""	""	""
+; 1	2	${COMM}	0	"- - -"	""	""	""	""
+; 1	2	${COMM}	0	"***"	""	""	""	""
+; 1	2	${COMM}	0	"---"	""	""	""	""
+; 1	2	${COMM}	0	"==="	""	""	""	""
+; 1	2	${COMM}	0	"!!!"	""	""	""	""
+; 1	2	${COMM}	0	"###"	""	""	""	""
+; 1	2	${COMM}	0	"~~~"	""	""	""	""
+
+QuotesRE:
+; для поиска
+1   `%#$&@`   "\0=(0,#FFFFFF,#8000ff)"
+2   `%#$&@`   "\0=(0,#FFFFFF,#0000ff)"
+; cmd path>
+1   "(^\w\:\\.+?\>)(.*?)$"   "\1=(0,#00FF00,#000000) \2=(0,#FFFF00,#000000)"
+; findstr_1.js
+1 "^(.*)+(\:\d+\:\d+)(\:)"   "\1=(0,#ff0080,0) \2=(0,${COMM},0) \3=(0,${COMM},${COMM})"
+; find_str.js AkelPad
+1   "^----------\s.+?$"   "\0=(0,#ff0080,0)"
+1   "^\[\d+\]"   "\0=(0,${COMM},0)"
+1   `^\+\+\+.*?$`   "\0=(0,#00ff00,0)"
+1   `^\-\-\-.*?$`   "\0=(0,#ff0080,0)"
+; Для FindReplaceEx.js
+1   "^  \[\d+, \d+, \d+, \d+:\d+\]"   "\0=(0,${COMM},0)"
+1   "\A[A-Z]:\\.+?:"   "\0=(0,${DEL1},0)"
+1   "Всего вхождений: \d+\Z"   "\0=(0,${DEL2},0)"
+1   "Total found: \d+\Z"   "\0=(0,${DEL2},0)"
+; Для SearchReplace.js
+1   "\s*?\(\d+,\d+\)"   "\0=(0,${COMM},0)"
+1   "\A\d+:"   "\0=(0,${DEL1},0)"
+; QSearch
+1   "^Searching for .*?$"   "\0=(0,${DEL1},0)"
+1   "\s*?\(\d+\:\d+\)"   "\0=(0,${COMM},0)"
+;1 "in file" "\0=(0,${DEL1},0)"
+; Для HTMLTidy
+; 1   "^line \d+ column \d+"   "\0=(0,#AFE7B3,0)"
+1   "^(line) (\d+) (column) (\d+) (\-)"   "\1=(0,${COMM},0)   \2=(0,${NUM},0)   \3=(0,${COMM},0)   \4=(0,#${NUM},0) \5=(0,${COMM},0)"
+; 0   '[а-яё]'   "\0=(0,#BFCAA9,0)"
+; Для HTML
+;1	' (\w+?)(=)("[^"<>]+")'	"\1=(0,#DCA3A3,0)	\2=(0,#FF8080,0)	\3=(0,#C0AD72,0)"  3 0
+;1	' (\w+?)(=)(\d+)'	"\1=(0,#DCA3A3,0)	\2=(0,#FF8080,0)	\3=(0,#EBCB9C,0)"  3 0
+; Для путей
+;1	'\b[A-Z]:(?:\\[^\\/:\*\?"<>\|]+?)+'	"\0=(0,#FF0080,0)"
+; Для предупреждений
+; 1	'\b(?:error|warning)'	"\0=(0,${DEL2},0)"
+0	'\berror'	"\0=(0,${OP},0)"
+0	'\bwarning'	"\0=(0,${DEL2},0)"
+; 0	'[а-яё]'	"\0=(0,${COMM},0)"
+; Операторы
+;0   '[&+=*\(\)\{\}\]\[]'   "\0=(0,#004040,0)"
+; Латинский алфавит
+;0   '[a-zA-Z]'   "\0=(0,#AAA6DB,0)" ; может C0AD72
+;0   '[^a-zA-Z]'   "\0=(0,#C0C0C0,0)" ; может C0AD72
+;0   '[a-zA-Z]'   "\0=(0,${DEL2},0)"
+;0   '[^a-zA-Z]'   "\0=(0,${DEL2},0)"
+; Числа
+;0   "\d"   "\0=(0,#EBCB9C,0)"
+; Текст в кавычках
+;0	'".+?"'	"\0=(0,${STR},0)"
+;0	"'.+?'"	"\0=(0,${STR},0)"
+
+Delimiters:
+; Для HTML
+
+Words:
+;--Латинский алфавит--
+; 2	0	#BFCAA9	0	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+;--Русский алфавит--
+; 2 0 ${ATTR} 0 "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+
+FoldPanel:
+${CodeFold_PanelFirstBkColor} ${CodeFold_PanelSecondBkColor} ${CodeFold_PanelNormalFoldColor} ${CodeFold_PanelActiveFoldColor} ${CodeFold_PanelNormalNodeOpenBkColor} ${CodeFold_PanelNormalNodeCloseBkColor} ${CodeFold_PanelActiveNodeOpenBkColor} ${CodeFold_PanelActiveNodeCloseBkColor} ${CodeFold_PanelNormalNodeOpenSignColor} ${CodeFold_PanelNormalNodeCloseSignColor} ${CodeFold_PanelActiveNodeOpenSignColor} ${CodeFold_PanelActiveNodeCloseSignColor}
+
+FoldList:
+${CodeFold_ListTextColor} ${CodeFold_ListBkColor}
+
+TagMark:
+${CodeFold_TagMarkFlags} ${CodeFold_TagMarkFontStyle} ${CodeFold_TagMarkTextColor} ${CodeFold_TagMarkBkColor}
+
+Skips: 
+
+Folds: 
+;1052676=4+4096+1048576
+;1052676	0	0	0	"<[^<>]+?"                 ">" ""        0	0	"alias:.html"
+;1052676	0	0	0	"<[^<>]+>"                 "</[^<>]+>" ""        0	0	"alias:.html"
+;1	0	0	0	"{"     "}"    ""       0	1
+;1	0	0	0	"["     "]"    ""       0	1
+;1	0	0	0	"("     ")"    ""       0	1
+
+CompleteList:
+${AutoComplete_ListFontStyle} ${AutoComplete_ListFontSize} ${AutoComplete_ListFaceName} ${AutoComplete_ListLineGap} ${AutoComplete_ListBlockIcon} ${AutoComplete_ListBlockIconMargins} ${AutoComplete_ListHlBaseIcon} ${AutoComplete_ListHlBaseIconMargins} ${AutoComplete_ListDocWordIcon} ${AutoComplete_ListDocWordIconMargins} ${AutoComplete_ListBasicTextColor} ${AutoComplete_ListBasicBkColor} ${AutoComplete_ListSelTextColor} ${AutoComplete_ListSelBkColor}
+
+Blocks:
