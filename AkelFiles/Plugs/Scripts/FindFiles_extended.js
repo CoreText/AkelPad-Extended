@@ -1,4 +1,4 @@
-// FindFiles.js
+// FindFiles_extended.js
 // http://tc-image.3dn.ru/forum/9-779-4176-16-1353248260
 // Author: KDJ
 // ver. 2013-09-14
@@ -1922,7 +1922,7 @@ function OpenOrCloseFile(bSelect, bCloseOr)
         {
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
-            WScript.Sleep(666);
+            WScript.Sleep(666); // to avoid some crashes
             if (bSelect)
               if (searchSelect())
                 return true;
@@ -2433,6 +2433,7 @@ function searchSelect()
  2   regular expressions in "TEXT" parameter.
  4   whole word.
  *
+ * @param string sText
  * @param number nAction
  * @param number nFlags
  * @return bool if highlighted
