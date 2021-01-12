@@ -2952,7 +2952,7 @@ function qSearchLog(searchFlag)
     }
     catch (oError)
     {
-      AkelPad.MessageBox(0, 'qSearchLog() -> searching() Error: '+ oError.description, scriptName, 16 /*MB_ICONERROR*/);
+      AkelPad.MessageBox(0, 'qSearchLog() -> searching() Error: '+ oError.description, sScriptName, 16 /*MB_ICONERROR*/);
       return false;
     }
 
