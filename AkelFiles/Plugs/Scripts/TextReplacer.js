@@ -73,7 +73,9 @@
 
  * Ctrl+W           - replace backwards
  * Ctrl+E           - replace backwards
+ * Ctrl+D,
  * Ctrl+O           - find and show all occurs in the log (FIND)
+ * Ctrl+Shift+D,
  * Ctrl+Shift+O     - find and show all occurs in the log, keeping results (FIND)
  * Ctrl+Shift+A     - find in files and show all occurs in the log, in current dir (FINDSTR)
 
@@ -92,8 +94,8 @@
  */
 
 var oSys = AkelPad.SystemFunction();
-var scriptName = WScript.ScriptName;
-var sClass = "AkelPad::Scripts::" + scriptName + "::" + AkelPad.GetInstanceDll();
+var sScriptName = WScript.ScriptName;
+var sClass = "AkelPad::Scripts::" + sScriptName + "::" + AkelPad.GetInstanceDll();
 var hDlg;
 var dialogShown  = false;
 var hWndEdit = AkelPad.GetEditWnd();
@@ -316,7 +318,7 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
   }
   else if (uMsg === 5 /*WM_SIZE*/)
   {
-    if ((wParam == 0 /*SIZE_RESTORED*/) && (! bSizingEdit))
+    if ((wParam === 0 /*SIZE_RESTORED*/) && (! bSizingEdit))
     {
       nDlgW = LoWord(lParam);
       nDlgH = HiWord(lParam);
@@ -331,7 +333,6 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
   {
     nID = GetDlgCtrlID(oSys.Call("User32::GetFocus"));
 
-
     if ((wParam >= 0x31 /*1 key*/) && (wParam <= 0x36 /*6 key*/))
     {
       if (Ctrl() && (! Shift()) && (! Alt()))
@@ -343,43 +344,43 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
       {
         if (Ctrl() || Shift())
           AkelHelp(GetAkelHelpFile());
-        else if ((nID == IDWHATE) || (nID == IDWITHE))
+        else if ((nID === IDWHATE) || (nID === IDWITHE))
           MenuAE(oSys.Call("User32::GetFocus"), nID);
-        else if (nID == IDFINDB)
+        else if (nID === IDFINDB)
           MenuFind();
       }
     }
-    else if ((wParam == 0x72 /*VK_F3*/) || (wParam == 0x76 /*VK_F7*/))
+    else if ((wParam === 0x72 /*VK_F3*/) || (wParam === 0x76 /*VK_F7*/))
     {
       if (! Alt())
       {
         if (Ctrl())
         {
           if (Shift())
-            Find((wParam == 0x72 /*VK_F3*/) ? 4 : 14);
+            Find((wParam === 0x72 /*VK_F3*/) ? 4 : 14);
           else
-            Find((wParam == 0x72 /*VK_F3*/) ? 3 : 13);
+            Find((wParam === 0x72 /*VK_F3*/) ? 3 : 13);
         }
         else if (Shift())
-          Find((wParam == 0x72 /*VK_F3*/) ? 2 : 12);
+          Find((wParam === 0x72 /*VK_F3*/) ? 2 : 12);
         else
-          Find((wParam == 0x72 /*VK_F3*/) ? 1 : 11);
+          Find((wParam === 0x72 /*VK_F3*/) ? 1 : 11);
       }
     }
-    else if (((nID == IDWHATE) || (nID == IDWITHE)) && Ctrl() && (! Shift()) && (! Alt()))
+    else if (((nID === IDWHATE) || (nID === IDWITHE)) && Ctrl() && (! Shift()) && (! Alt()))
     {
-      if (wParam == 0x46 /*F key*/)
+      if (wParam === 0x46 /*F key*/)
       {
-        if (nID == IDWHATE)
+        if (nID === IDWHATE)
           bFont1 = ! bFont1;
         else
           bFont2 = ! bFont2;
 
         SetFontAE(nID);
       }
-      else if (wParam == 0x55 /*U key*/)
+      else if (wParam === 0x55 /*U key*/)
       {
-        if (nID == IDWHATE)
+        if (nID === IDWHATE)
           bWrap1 = ! bWrap1;
         else
           bWrap2 = ! bWrap2;
@@ -392,6 +393,18 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
     {
       if (Ctrl() && Shift())
         qSearchLog();
+    }
+    if (wParam === 0x44 /*D key VK_KEY_D*/)
+    {
+      if (Ctrl() && (! Shift()))
+        FindstrLog();
+      else if (Ctrl() && Shift())
+        FindstrLog(24);
+    }
+    if (wParam === 0x47 /*G key VK_KEY_G*/)
+    {
+      if (Ctrl() && Shift())
+        qSearchLog(3);
     }
     if (wParam === 0x51/*VK_KEY_Q*/)
     {
@@ -567,9 +580,6 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
       }
     }
   }
-//   else if (uMsg === 260 /*WM_SYSKEYDOWN*/)
-//   {
-//   }
   else if (uMsg === 123 /*WM_CONTEXTMENU*/)
   {
     nID = GetDlgCtrlID(wParam);
@@ -693,6 +703,20 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
     oSys.Call("User32::PostQuitMessage", 0);
     oSys.Call("User32::DestroyWindow", hDlg);
   }
+//   if (uMsg === 260 /*WM_SYSKEYDOWN*/)
+//   {
+//     if ((! Ctrl()) && (! Shift()))
+//     {
+//       if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
+//         {
+//           	AkelPad.Command(4317);
+//         }
+//       if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
+//         {
+//             AkelPad.Command(4316);
+//         }
+//     }
+//   }
 
   return 0;
 }
@@ -2966,7 +2990,7 @@ function ReadIni()
   }
   catch (oError)
   {
-    AkelPad.MessageBox(0, 'No configurations were found! '+ oError.description, scriptName, 0);
+    AkelPad.MessageBox(0, 'No configurations were found! '+ oError.description, sScriptName, 0);
   }
 
   if ((typeof nWhatH != "number") || (nWhatH < nEditMinH)) nWhatH = nEditMinH;
@@ -3233,13 +3257,13 @@ function GetLangStrings()
   }
   else
   {
-    sTxtDlgTitle      = 'Text Replace ('+ scriptName +')';
+    sTxtDlgTitle      = 'Text Replace ('+ sScriptName +')';
     sTxtWhat          = 'What&;';
     sTxtBatch         = 'Batch:';
     sTxtWith          = 'With&;';
     sTxtMatchCase     = 'Match &case';
     sTxtWholeWord     = '&Whole word';
-    sTxtRegExp        = 'Regular e&xpressions';
+    sTxtRegExp        = 'Regular expres&sions';
     sTxtDotMatchesNL  = '&. matches \\n';
     sTxtWithFunc      = 'Replace with f&unction';
     sTxtBatchRepl     = '&Batch replace';
@@ -3257,7 +3281,7 @@ function GetLangStrings()
     sTxtHistory       = '&History';
     sTxtTemplates     = '&Templates';
     sTxtFind          = '&Find';
-    sTxtClose         = 'Close';
+    sTxtClose         = 'Close [&X]';
     sTxtMenu          = '&Menu';
     sTxtOK            = 'OK';
     sTxtCancel        = 'Cancel';
@@ -3340,7 +3364,7 @@ function FindstrLog(pLogOutput)
   var sRETAGS    = "/FILE=\\1 /GOTOLINE=\\2:0";
   var sCOMMAND = "cmd.exe /K cd /d \"" + strDir + "\" & echo. & echo ---------- SEARCHED \""+ strContent +"\" IN DIRECTORY \""+ strDir +"\" "+ ((logOutput===16)?"":" & time /T & date /T ") +" & findstr /S /N "+ ((bRegExp)?"/R":"/L") + ((sBFile)?" /P ":"")+ ((! bMatch)?" /I ":"") +" /C:\""+ strContent +"\" \* & exit";
 
-  //AkelPad.MessageBox(0, sCOMMAND, scriptName, 0);
+  //AkelPad.MessageBox(0, sCOMMAND, sScriptName, 0);
   AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc, sREPATTERN, sRETAGS, -2, -2, logOutput);
   AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bRegExp)?"0":"1")) );
 
@@ -3407,7 +3431,7 @@ function qSearchLog(searchFlag)
 
   var flag = searchFlag || 1;
   var selText = "";
-  var scriptName = scriptName;
+  var sScriptName = sScriptName;
   var found = searching();
 
   function searching()
@@ -3424,7 +3448,7 @@ function qSearchLog(searchFlag)
     }
     catch (oError)
     {
-      AkelPad.MessageBox(0, 'qSearchLog() -> searching() Error: '+ oError.description, scriptName, 16 /*MB_ICONERROR*/);
+      AkelPad.MessageBox(0, 'qSearchLog() -> searching() Error: '+ oError.description, sScriptName, 16 /*MB_ICONERROR*/);
       return false;
     }
 
@@ -3433,12 +3457,12 @@ function qSearchLog(searchFlag)
 
     if (searchResult <= -100)
     {
-      AkelPad.MessageBox(0, 'Error in your expression "'+ strContent +'" \n ('+ searchResult +') is the offset.', scriptName, 0);
+      AkelPad.MessageBox(0, 'Error in your expression "'+ strContent +'" \n ('+ searchResult +') is the offset.', sScriptName, 0);
       return false;
     }
     else if (searchResult < 0)
     {
-      AkelPad.MessageBox(0, '"'+ strContent +'" was not found. ('+ searchResult +')', scriptName, 0);
+      AkelPad.MessageBox(0, '"'+ strContent +'" was not found. ('+ searchResult +')', sScriptName, 0);
       return false;
     }
   }
