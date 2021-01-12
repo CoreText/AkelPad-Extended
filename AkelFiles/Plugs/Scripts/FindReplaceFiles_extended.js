@@ -1,6 +1,8 @@
 // http://akelpad.sourceforge.net/forum/viewtopic.php?p=20235#20235
 // Version: 2018-11-06
-// Author: KDJ
+// Author: KDJ & texter
+//
+// Extended from original FindReplaceFiles.js
 //
 // *** search files by name/content and replace content. ***
 //
@@ -2584,7 +2586,7 @@ function OpenOrCloseFile(bSelect, bCloseOr)
 
         if (bSaved && AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
         {
-          WScript.Sleep(666);
+          WScript.Sleep(666); // to avoid some crashes
           if (bSelect)
             if (searchSelect())
               return true;
@@ -2829,7 +2831,15 @@ function Settings()
   else if (nCmd === 12)
   {
     if (bQSearchIsRunning)
+    {
+//       (new ActiveXObject("WScript.Shell").Popup(
+//        'The Double Click will show the results in the log.\nUse Ctrl+W to close file.',
+//        2, // Autoclose after 2 seconds
+//        sScriptName,
+//        64 /*MB_ICONINFORMATION*/
+//      ));
       bLogShow = ! bLogShow;
+    }
     else
       AkelPad.MessageBox(0, 'The QSearch plugin should be running!', sScriptName, 0);
   }
@@ -3127,6 +3137,7 @@ function searchSelect()
  2   regular expressions in "TEXT" parameter.
  4   whole word.
  *
+ * @param string sText
  * @param number nAction
  * @param number nFlags
  * @return bool if highlighted
