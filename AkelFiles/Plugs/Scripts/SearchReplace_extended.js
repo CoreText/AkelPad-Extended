@@ -12,7 +12,7 @@
 // -Template="Name"           -Template used on dialog open (default is "").
 //
 // Usage:
-// Call("Scripts::Main", 1, "SearchReplace.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
+// Call("Scripts::Main", 1, "SearchReplace_extended.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
 //
 // Example for "Replace with function" option:
 //   What: \d+
@@ -22,23 +22,23 @@
 //   With: var n = parseInt($0); return n >= 20 ? 20 : ++n;
 //
 //
-// Description(1049): Ïîèñê/çàìåíà ñ èñïîëüçîâàíèåì ðåãóëÿðíûõ âûðàæåíèé.
+// Description(1049): ÐŸÐ¾Ð¸ÑÐº/Ð·Ð°Ð¼ÐµÐ½Ð° Ñ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¸ÐµÐ¼ Ñ€ÐµÐ³ÑƒÐ»ÑÑ€Ð½Ñ‹Ñ… Ð²Ñ‹Ñ€Ð°Ð¶ÐµÐ½Ð¸Ð¹.
 //
-// Àðãóìåíòû:
-// -ShowCountOfChanges=false  -Âûäàâàòü êîëè÷åñòâî çàìåí (ïî óìîë÷àíèþ true).
-// -SearchStrings=10          -Ìàêñèìàëüíîå ÷èñëî ñòðîê ïîèñêà (ïî óìîë÷àíèþ 10).
-// -DefButtonID=1016          -Èäåíòèôèêàòîð êíîïêè ïî óìîë÷àíèþ. Ñì. îïèñàíèå IDC_* íèæå (ïî óìîë÷àíèþ 1016).
-// -Template="Èìÿ"            -Øàáëîí, èñïîëüçóþùèéñÿ ïðè îòêðûòèè äèàëîãà (ïî óìîë÷àíèþ "").
+// ÐÑ€Ð³ÑƒÐ¼ÐµÐ½Ñ‚Ñ‹:
+// -ShowCountOfChanges=false  -Ð’Ñ‹Ð´Ð°Ð²Ð°Ñ‚ÑŒ ÐºÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ Ð·Ð°Ð¼ÐµÐ½ (Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ true).
+// -SearchStrings=10          -ÐœÐ°ÐºÑÐ¸Ð¼Ð°Ð»ÑŒÐ½Ð¾Ðµ Ñ‡Ð¸ÑÐ»Ð¾ ÑÑ‚Ñ€Ð¾Ðº Ð¿Ð¾Ð¸ÑÐºÐ° (Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ 10).
+// -DefButtonID=1016          -Ð˜Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€ ÐºÐ½Ð¾Ð¿ÐºÐ¸ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ. Ð¡Ð¼. Ð¾Ð¿Ð¸ÑÐ°Ð½Ð¸Ðµ IDC_* Ð½Ð¸Ð¶Ðµ (Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ 1016).
+// -Template="Ð˜Ð¼Ñ"            -Ð¨Ð°Ð±Ð»Ð¾Ð½, Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÑŽÑ‰Ð¸Ð¹ÑÑ Ð¿Ñ€Ð¸ Ð¾Ñ‚ÐºÑ€Ñ‹Ñ‚Ð¸Ð¸ Ð´Ð¸Ð°Ð»Ð¾Ð³Ð° (Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ "").
 //
-// Ïðèìåíåíèå:
+// ÐŸÑ€Ð¸Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ:
 // Call("Scripts::Main", 1, "SearchReplace.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
 //
-// Ïðèìåð îïöèè "Çàìåíÿòü íà ôóíêöèþ":
-//   ×òî: \d+
-//   ×åì: parseInt($0) + 1;
-// èëè
-//   ×òî: \d+
-//   ×åì: var n = parseInt($0); return n >= 20 ? 20 : ++n;
+// ÐŸÑ€Ð¸Ð¼ÐµÑ€ Ð¾Ð¿Ñ†Ð¸Ð¸ "Ð—Ð°Ð¼ÐµÐ½ÑÑ‚ÑŒ Ð½Ð° Ñ„ÑƒÐ½ÐºÑ†Ð¸ÑŽ":
+//   Ð§Ñ‚Ð¾: \d+
+//   Ð§ÐµÐ¼: parseInt($0) + 1;
+// Ð¸Ð»Ð¸
+//   Ð§Ñ‚Ð¾: \d+
+//   Ð§ÐµÐ¼: var n = parseInt($0); return n >= 20 ? 20 : ++n;
 
 //Arguments
 var bShowCountOfChanges=AkelPad.GetArgValue("ShowCountOfChanges", true);
@@ -255,7 +255,7 @@ if (hWndEdit)
 
 function DialogCallback(hWnd, uMsg, wParam, lParam)
 {
-  if (uMsg == 0x110 /*WM_INITDIALOG*/)
+  if (uMsg === 0x110 /*WM_INITDIALOG*/)
   {
     hWndDialog=hWnd;
 
@@ -319,10 +319,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       for (i=0; i < nSearchStrings; ++i)
       {
         lpReplaceStrings[i]=oSet.Read("Replace" + i, 3 /*PO_STRING*/);
-        if (typeof lpReplaceStrings[i] == "undefined")
+        if (typeof lpReplaceStrings[i] === "undefined")
           break;
       }
-      if (typeof lpReplaceStrings[0] != "undefined")
+      if (typeof lpReplaceStrings[0] !== "undefined")
         pReplaceWith=lpReplaceStrings[0];
 
       //Templates
@@ -352,14 +352,14 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     }
 
     //Fill "What" combobox
-    for (i=0; i < nSearchStrings && typeof lpFindStrings[i] != "undefined"; ++i)
+    for (i=0; i < nSearchStrings && typeof lpFindStrings[i] !== "undefined"; ++i)
     {
       AkelPad.SendMessage(hWndWhat, 0x143 /*CB_ADDSTRING*/, 0, lpFindStrings[i]);
     }
     AkelPad.SendMessage(hWnd, AKDLG_PUTFIND, true, 0);
 
     //Fill "With" combobox
-    for (i=0; i < nSearchStrings && typeof lpReplaceStrings[i] != "undefined"; ++i)
+    for (i=0; i < nSearchStrings && typeof lpReplaceStrings[i] !== "undefined"; ++i)
     {
       AkelPad.SendMessage(hWndWith, 0x143 /*CB_ADDSTRING*/, 0, lpReplaceStrings[i]);
     }
@@ -392,21 +392,21 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     oSys.Call("user32::EnableWindow", hWndReplaceFunction, bRegExp);
     oSys.Call("user32::EnableWindow", hWndEscSequences, !bRegExp || !bReplaceFunction);
 
-    if (nDirection == DN_ALLFILES)
+    if (nDirection === DN_ALLFILES)
     {
       if (AkelPad.IsMDI())
         AkelPad.SendMessage(hWndAllFiles, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
       else
         nDirection=DN_DOWN;
     }
-    else if (nDirection == DN_BEGINNING)
+    else if (nDirection === DN_BEGINNING)
       AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
-    else if (nDirection == DN_SELECTION)
+    else if (nDirection === DN_SELECTION)
       AkelPad.SendMessage(hWndSelection, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
 
-    if (nDirection == DN_DOWN)
+    if (nDirection === DN_DOWN)
       AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
-    else if (nDirection == DN_UP)
+    else if (nDirection === DN_UP)
       AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
 
     //Min/max dialog sizes: left, top - minimum; right, bottom - maximum. Each member is valid if not equal to zero.
@@ -446,7 +446,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       for (i=0; i < lpTemplates.length; ++i)
       {
-        if (pTemplate == lpTemplates[i][0])
+        if (pTemplate === lpTemplates[i][0])
         {
           nSetTemplate=i + 1;
           AkelPad.SendMessage(hWndDialog, 273 /*WM_COMMAND*/, IDC_TEMPLATE, 0);
@@ -459,7 +459,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     //Update buttons
     AkelPad.SendMessage(hWnd, 273 /*WM_COMMAND*/, IDC_FIND, 0);
   }
-  else if (uMsg == AKDLG_PUTFIND)
+  else if (uMsg === AKDLG_PUTFIND)
   {
     var hWndEditCur=AkelPad.GetEditWnd();
     var selTxt=AkelPad.GetSelText();
@@ -487,16 +487,16 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       AkelPad.SendMessage(hWndWhat, 0x14E /*CB_SETCURSEL*/, 0, 0);
     return false;
   }
-  else if (uMsg == 6 /*WM_ACTIVATE*/)
+  else if (uMsg === 6 /*WM_ACTIVATE*/)
   {
-    if (LOWORD(wParam) != 0 /*WA_INACTIVE*/)
+    if (LOWORD(wParam) !== 0 /*WA_INACTIVE*/)
     {
       hWndFocus=oSys.Call("user32::GetFocus");
 
       //Remember plugin edit window
       if (!bMessageBox)
       {
-        if (AkelPad.IsAkelEdit(hWndFocus) == 2 /*ISAEW_PLUGIN*/)
+        if (AkelPad.IsAkelEdit(hWndFocus) === 2 /*ISAEW_PLUGIN*/)
           hWndPluginEdit=AkelPad.SetEditWnd(hWndFocus);
         else
           hWndPluginEdit=AkelPad.SetEditWnd(0);
@@ -505,9 +505,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("user32::SetFocus", hWndCancel);
     }
   }
-  else if (uMsg == 256 /*WM_KEYDOWN*/)
+  else if (uMsg === 256 /*WM_KEYDOWN*/)
   {
-    if (wParam == 114 /*VK_F3*/)
+    if (wParam === 114 /*VK_F3*/)
     {
       if (!hWndOutput)
       {
@@ -522,7 +522,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
     }
   }
-  else if (uMsg == 273 /*WM_COMMAND*/)
+  else if (uMsg === 273 /*WM_COMMAND*/)
   {
     wCommand=LOWORD(wParam);
 
@@ -569,9 +569,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
             GetWindowSize(hWndTemplate, 0, rcControl);
             for (i=0; i < lpTemplates.length; ++i)
             {
-              if (lpCurTemplate[1] == lpTemplates[i][1] &&
-                  lpCurTemplate[2] == lpTemplates[i][2] &&
-                  lpCurTemplate[3] == lpTemplates[i][3])
+              if (lpCurTemplate[1] === lpTemplates[i][1] &&
+                  lpCurTemplate[2] === lpTemplates[i][2] &&
+                  lpCurTemplate[3] === lpTemplates[i][3])
               {
                 nCurIndex=i;
               }
@@ -619,7 +619,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           {
             if (nCurIndex >= 0)
             {
-              if (nCmd == lpTemplates.length + 1)
+              if (nCmd === lpTemplates.length + 1)
               {
                 //Rename
                 if (pNewTemplateName=AkelPad.InputBox(hWndDialog, GetLangString(STRID_RENAME), GetLangString(STRID_NAME), lpTemplates[nCurIndex][0]))
@@ -627,7 +627,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
                   lpTemplates[nCurIndex][0]=pNewTemplateName;
                 }
               }
-              else if (nCmd == lpTemplates.length + 2)
+              else if (nCmd === lpTemplates.length + 2)
               {
                 //Delete
                 DeleteFromArray(lpTemplates, nCurIndex, 1);
@@ -654,9 +654,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         }
       }
     }
-    else if (wCommand == IDC_FIND)
+    else if (wCommand === IDC_FIND)
     {
-      if (HIWORD(wParam) == 1 /*CBN_SELCHANGE*/)
+      if (HIWORD(wParam) === 1 /*CBN_SELCHANGE*/)
       {
         i=AkelPad.SendMessage(hWndWhat, 0x147 /*CB_GETCURSEL*/, 0, 0);
         nFindItLength=AkelPad.SendMessage(hWndWhat, 0x149 /*CB_GETLBTEXTLEN*/, i, 0);
@@ -668,65 +668,65 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       oSys.Call("user32::EnableWindow", hWndReplaceAllButton, nFindItLength);
       oSys.Call("user32::EnableWindow", hWndFindAllButton, bLogPluginExists && nFindItLength);
     }
-    else if (wCommand == IDC_REGEXP ||
-             wCommand == IDC_MATCHCASE ||
-             wCommand == IDC_MULTILINE ||
-             wCommand == IDC_ESCAPESEQ ||
-             wCommand == IDC_FUNCTION)
+    else if (wCommand === IDC_REGEXP ||
+             wCommand === IDC_MATCHCASE ||
+             wCommand === IDC_MULTILINE ||
+             wCommand === IDC_ESCAPESEQ ||
+             wCommand === IDC_FUNCTION)
     {
-      if (wCommand == IDC_REGEXP)
+      if (wCommand === IDC_REGEXP)
         bRegExp=AkelPad.SendMessage(hWndRegExp, 240 /*BM_GETCHECK*/, 0, 0);
-      else if (wCommand == IDC_MATCHCASE)
+      else if (wCommand === IDC_MATCHCASE)
         bSensitive=AkelPad.SendMessage(hWndCase, 240 /*BM_GETCHECK*/, 0, 0);
-      else if (wCommand == IDC_MULTILINE)
+      else if (wCommand === IDC_MULTILINE)
         bMultiline=AkelPad.SendMessage(hWndMultiline, 240 /*BM_GETCHECK*/, 0, 0);
-      else if (wCommand == IDC_ESCAPESEQ)
+      else if (wCommand === IDC_ESCAPESEQ)
         bEscSequences=AkelPad.SendMessage(hWndEscSequences, 240 /*BM_GETCHECK*/, 0, 0);
-      else if (wCommand == IDC_FUNCTION)
+      else if (wCommand === IDC_FUNCTION)
         bReplaceFunction=AkelPad.SendMessage(hWndReplaceFunction, 240 /*BM_GETCHECK*/, 0, 0);
 
-      if (wCommand == IDC_REGEXP ||
-          wCommand == IDC_FUNCTION)
+      if (wCommand === IDC_REGEXP ||
+          wCommand === IDC_FUNCTION)
       {
         oSys.Call("user32::EnableWindow", hWndMultiline, bRegExp);
         oSys.Call("user32::EnableWindow", hWndReplaceFunction, bRegExp);
         oSys.Call("user32::EnableWindow", hWndEscSequences, !bRegExp || !bReplaceFunction);
       }
     }
-    else if (wCommand == IDC_FORWARD ||
-             wCommand == IDC_BACKWARD ||
-             wCommand == IDC_BEGINNING ||
-             wCommand == IDC_INSEL ||
-             wCommand == IDC_ALLFILES)
+    else if (wCommand === IDC_FORWARD ||
+             wCommand === IDC_BACKWARD ||
+             wCommand === IDC_BEGINNING ||
+             wCommand === IDC_INSEL ||
+             wCommand === IDC_ALLFILES)
     {
       if (nDirection & DN_ALLFILES)
         AkelPad.SendMessage(hWndAllFiles, 243 /*BM_SETSTATE*/, false, 0);
       else if (nDirection & DN_BEGINNING)
         AkelPad.SendMessage(hWndBeginning, 243 /*BM_SETSTATE*/, false, 0);
 
-      if (wCommand == IDC_FORWARD)
+      if (wCommand === IDC_FORWARD)
         nDirection=DN_DOWN;
-      else if (wCommand == IDC_BACKWARD)
+      else if (wCommand === IDC_BACKWARD)
         nDirection=DN_UP;
-      else if (wCommand == IDC_BEGINNING)
+      else if (wCommand === IDC_BEGINNING)
         nDirection=DN_BEGINNING;
-      else if (wCommand == IDC_INSEL)
+      else if (wCommand === IDC_INSEL)
         nDirection=DN_SELECTION;
-      else if (wCommand == IDC_ALLFILES)
+      else if (wCommand === IDC_ALLFILES)
         nDirection=DN_ALLFILES;
     }
-    else if (wCommand == IDC_FIND_BUTTON ||
-             wCommand == IDC_REPLACE_BUTTON ||
-             wCommand == IDC_REPLACEALL_BUTTON ||
-             wCommand == IDC_FINDALL_BUTTON)
+    else if (wCommand === IDC_FIND_BUTTON ||
+             wCommand === IDC_REPLACE_BUTTON ||
+             wCommand === IDC_REPLACEALL_BUTTON ||
+             wCommand === IDC_FINDALL_BUTTON)
     {
-      if (wCommand == IDC_FIND_BUTTON)
+      if (wCommand === IDC_FIND_BUTTON)
         nButton=BT_FIND;
-      else if (wCommand == IDC_REPLACE_BUTTON)
+      else if (wCommand === IDC_REPLACE_BUTTON)
         nButton=BT_REPLACE;
-      else if (wCommand == IDC_REPLACEALL_BUTTON)
+      else if (wCommand === IDC_REPLACEALL_BUTTON)
         nButton=BT_REPLACEALL;
-      else if (wCommand == IDC_FINDALL_BUTTON)
+      else if (wCommand === IDC_FINDALL_BUTTON)
         nButton=BT_FINDALL;
 
       //Find
@@ -739,7 +739,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         if (nSearchStrings)
         {
-          for (i=0; i < nSearchStrings && typeof lpFindStrings[i] != "undefined"; ++i)
+          for (i=0; i < nSearchStrings && typeof lpFindStrings[i] !== "undefined"; ++i)
           {
             if (lpFindStrings[i] == pFindIt)
             {
@@ -768,7 +768,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         if (nSearchStrings)
         {
-          for (i=0; i < nSearchStrings && typeof lpReplaceStrings[i] != "undefined"; ++i)
+          for (i=0; i < nSearchStrings && typeof lpReplaceStrings[i] !== "undefined"; ++i)
           {
             if (lpReplaceStrings[i] == pReplaceWith)
             {
@@ -793,15 +793,15 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         //Replace with function: Infocatcher's code.
         if (!/(^|[^\w.])return(\s+\S|\s*\()/.test(pReplaceWithEsc))
           pReplaceWithEsc="return " + pReplaceWithEsc;
-        pReplaceWithEsc='var args={}, l=arguments.length;'
-                      + 'for (var i=0; i < l; ++i)\n'
-                      + '  args["$" + i]=arguments[i];\n'
-                      + 'args.offset=arguments[l - 2];\n'
-                      + 'args.s=arguments[l - 1];\n'
-                      + 'with (args)\n'
-                      + '{\n'
-                      +    pReplaceWithEsc
-                      + '\n}';
+          pReplaceWithEsc='var args={}, l=arguments.length;'
+                        + 'for (var i=0; i < l; ++i)\n'
+                        + '  args["$" + i]=arguments[i];\n'
+                        + 'args.offset=arguments[l - 2];\n'
+                        + 'args.s=arguments[l - 1];\n'
+                        + 'with (args)\n'
+                        + '{\n'
+                        +    pReplaceWithEsc
+                        + '\n}';
         try
         {
           pReplaceWithEsc=new Function(pReplaceWithEsc);
@@ -835,16 +835,16 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
 
       hWndFocus=oSys.Call("user32::GetFocus");
-      if (nButton == BT_REPLACEALL)
+      if (nButton === BT_REPLACEALL)
         oSys.Call("user32::EnableWindow", hWndReplaceAllButton, false);
 
       nSearchResult=SearchReplace();
 
-      if (nButton == BT_REPLACEALL)
+      if (nButton === BT_REPLACEALL)
         oSys.Call("user32::EnableWindow", hWndReplaceAllButton, true);
       oSys.Call("user32::SetFocus", hWndFocus);
 
-      if (nSearchResult == -1)
+      if (nSearchResult === -1)
       {
         if (nDirection & DN_ALLFILES)
         {
@@ -859,12 +859,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
       else
       {
-        if (nDirection == DN_ALLFILES)
+        if (nDirection === DN_ALLFILES)
         {
           AkelPad.SendMessage(hWndAllFiles, 243 /*BM_SETSTATE*/, true, 0);
           nDirection|=DN_DOWN;
         }
-        else if (nDirection == DN_BEGINNING)
+        else if (nDirection === DN_BEGINNING)
         {
           AkelPad.SendMessage(hWndBeginning, 243 /*BM_SETSTATE*/, true, 0);
           nDirection|=DN_DOWN;
@@ -876,15 +876,15 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_CANCEL, 0);
       }
     }
-    else if (wCommand == IDC_CANCEL || wCommand == 2 /*IDCANCEL*/)
+    else if (wCommand === IDC_CANCEL || wCommand === 2 /*IDCANCEL*/)
     {
       oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 16 /*WM_CLOSE*/, 0, 0);
     }
   }
-  else if (uMsg == 16 /*WM_CLOSE*/)
+  else if (uMsg === 16 /*WM_CLOSE*/)
   {
     //Stop find all operation
-    if (nButton == BT_FINDALL)
+    if (nButton === BT_FINDALL)
     {
       if (hWndOutput)
       {
@@ -935,7 +935,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     //Destroy dialog
     oSys.Call("user32::DestroyWindow", hWnd);
   }
-  else if (uMsg == 2 /*WM_DESTROY*/)
+  else if (uMsg === 2 /*WM_DESTROY*/)
   {
     //Exit message loop
     oSys.Call("user32::PostQuitMessage", 0);
@@ -1020,7 +1020,7 @@ function SearchReplace()
 
   try
   {
-    oPattern=new RegExp((bRegExp?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton == BT_FINDALL || nButton == BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
+    oPattern=new RegExp((bRegExp?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton === BT_FINDALL || nButton === BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
   }
   catch (oError)
   {
@@ -1062,7 +1062,7 @@ function SearchReplace()
         {
           if (lpArray=pSelText.match(oPattern))
           {
-            if (lpArray.index == 0 && lpArray[0].length == (nInitialSelEnd - nInitialSelStart))
+            if (lpArray.index === 0 && lpArray[0].length === (nInitialSelEnd - nInitialSelStart))
             {
               pResult=pSelText.replace(oPattern, pReplaceWithEsc);
               AkelPad.ReplaceSel(pResult);
@@ -1079,7 +1079,7 @@ function SearchReplace()
     //Get ranges
     if (nDirection & DN_DOWN)
     {
-      if (nButton == BT_FIND)
+      if (nButton === BT_FIND)
       {
         nSelStart=nInitialSelEnd;
         nSelEnd=-1;
@@ -1092,7 +1092,7 @@ function SearchReplace()
     }
     else if (nDirection & DN_UP)
     {
-      if (nButton == BT_FIND)
+      if (nButton === BT_FIND)
       {
         nSelStart=0;
         nSelEnd=nInitialSelStart;
@@ -1124,7 +1124,7 @@ function SearchReplace()
     {
       pSelText=AkelPad.GetTextRange(nSelStart, nSelEnd, 2 /*\n*/);
 
-      if (nButton == BT_FIND)
+      if (nButton === BT_FIND)
       {
         if (lpArray=pSelText.match(oPattern))
         {
@@ -1157,7 +1157,7 @@ function SearchReplace()
             MessageBox(hWndDialog, GetLangString(STRID_FINISHED), pScriptName, 64 /*MB_ICONINFORMATION*/);
         }
       }
-      else if (nButton == BT_REPLACEALL)
+      else if (nButton === BT_REPLACEALL)
       {
         if (bShowCountOfChanges)
         {
@@ -1237,7 +1237,7 @@ function SearchReplace()
             MessageBox(hWndDialog, GetLangString(STRID_COUNTCHANGES) + nChanges, pScriptName, 64 /*MB_ICONINFORMATION*/);
         }
       }
-      else if (nButton == BT_FINDALL)
+      else if (nButton === BT_FINDALL)
       {
         var lpIndex=AkelPad.MemAlloc(_X64?24:12 /*sizeof(AECHARINDEX)*/);
         var lpMatches=[];
@@ -1278,7 +1278,7 @@ function SearchReplace()
             var nLineEnd;
 
             nLineStart=AkelPad.SendMessage(hWndEditCur, 1078 /*EM_EXLINEFROMCHAR*/, 0, nSelStart);
-            if (nSelEnd == -1)
+            if (nSelEnd === -1)
               nLineEnd=AkelPad.SendMessage(hWndEditCur, 0xBA /*EM_GETLINECOUNT*/, 0, 0) - 1;
             else
               nLineEnd=AkelPad.SendMessage(hWndEditCur, 1078 /*EM_EXLINEFROMCHAR*/, 0, nSelEnd);
@@ -1356,7 +1356,7 @@ function SearchReplace()
 
               for (i=0; i < lpMatches.length; ++i)
               {
-                if (i % 50 == 0)
+                if (i % 50 === 0)
                 {
                   if (hWndProgress)
                     AkelPad.SendMessage(hWndProgress, 1026 /*PBM_SETPOS*/, lpMatches.length + i, 0);
@@ -1453,7 +1453,7 @@ function InsertInArray(lpArray, lpItem, nPos)
 
   for (i=lpArray.length; i >= 0; --i)
   {
-    if (i == nPos)
+    if (i === nPos)
     {
       lpArray[i]=lpItem;
       break;
@@ -1724,134 +1724,134 @@ function GetLangString(nStringID)
 {
   var nLangID=AkelPad.GetLangId(1 /*LANGID_PRIMARY*/);
 
-  if (nLangID == 0x19) //LANG_RUSSIAN
+  if (nLangID === 0x19) //LANG_RUSSIAN
   {
-    if (nStringID == STRID_LOWJSCRIPT)
+    if (nStringID === STRID_LOWJSCRIPT)
       return "\u0412\u0435\u0440\u0441\u0438\u044F\u0020\u004A\u0053\u0063\u0072\u0069\u0070\u0074\u0020\u043D\u0438\u0436\u0435\u002C\u0020\u0447\u0435\u043C\u0020\u0035\u002E\u0035\u002E";
-    if (nStringID == STRID_WHAT)
+    if (nStringID === STRID_WHAT)
       return "\u0427\u0442\u043E\u003A";
-    if (nStringID == STRID_WITH)
+    if (nStringID === STRID_WITH)
       return "\u0427\u0435\u043C\u003A";
-    if (nStringID == STRID_ADD)
+    if (nStringID === STRID_ADD)
       return "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C...";
-    if (nStringID == STRID_RENAME)
+    if (nStringID === STRID_RENAME)
       return "\u041F\u0435\u0440\u0435\u0438\u043C\u0435\u043D\u043E\u0432\u0430\u0442\u044C...";
-    if (nStringID == STRID_DELETE)
+    if (nStringID === STRID_DELETE)
       return "\u0423\u0434\u0430\u043B\u0438\u0442\u044C";
-    if (nStringID == STRID_NAME)
+    if (nStringID === STRID_NAME)
       return "\u0418\u043C\u044F";
-    if (nStringID == STRID_REGEXP)
+    if (nStringID === STRID_REGEXP)
       return "\u0420\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u044B\u0435\u0020\u0432\u044B\u0440\u0430\u0436\u0435\u043D\u0438\u044F";
-    if (nStringID == STRID_MATCHCASE)
+    if (nStringID === STRID_MATCHCASE)
       return "\u0423\u0447\u0438\u0442\u044B\u0432\u0430\u0442\u044C\u0020\u0440\u0435\u0433\u0438\u0441\u0442\u0440";
-    if (nStringID == STRID_MULTILINE)
+    if (nStringID === STRID_MULTILINE)
       return "\u041C\u043D\u043E\u0433\u043E\u0441\u0442\u0440\u043E\u0447\u043D\u043E";
-    if (nStringID == STRID_ESCAPESEQ)
+    if (nStringID === STRID_ESCAPESEQ)
       return "\u0045\u0073\u0063\u002D\u043F\u043E\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u0441\u0442\u0438";
-    if (nStringID == STRID_FUNCTION)
+    if (nStringID === STRID_FUNCTION)
       return "\u0417\u0430\u043C\u0435\u043D\u044F\u0442\u044C\u0020\u043D\u0430\u0020\u0444\u0443\u043D\u043A\u0446\u0438\u044E";
-    if (nStringID == STRID_DIRECTION)
+    if (nStringID === STRID_DIRECTION)
       return "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435";
-    if (nStringID == STRID_FORWARD)
+    if (nStringID === STRID_FORWARD)
       return "\u0412\u043D\u0438\u0437";
-    if (nStringID == STRID_BACKWARD)
+    if (nStringID === STRID_BACKWARD)
       return "\u0412\u0432\u0435\u0440\u0445";
-    if (nStringID == STRID_BEGINNING)
+    if (nStringID === STRID_BEGINNING)
       return "\u0421\u0020\u043D\u0430\u0447\u0430\u043B\u0430";
-    if (nStringID == STRID_INSEL)
+    if (nStringID === STRID_INSEL)
       return "\u0412\u0020\u0432\u044B\u0434\u0435\u043B\u0435\u043D\u0438\u0438";
-    if (nStringID == STRID_ALLFILES)
+    if (nStringID === STRID_ALLFILES)
       return "\u0412\u0441\u0435\u0020\u0444\u0430\u0439\u043B\u044B";
-    if (nStringID == STRID_FINDNEXT)
+    if (nStringID === STRID_FINDNEXT)
       return "&\u041D\u0430\u0439\u0442\u0438\u0020\u0434\u0430\u043B\u0435\u0435";
-    if (nStringID == STRID_FINDALL)
+    if (nStringID === STRID_FINDALL)
       return "\u041D\u0430&\u0439\u0442\u0438 \u0432\u0441\u0435";
-    if (nStringID == STRID_REPLACE)
+    if (nStringID === STRID_REPLACE)
       return "&\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C";
-    if (nStringID == STRID_REPLACEALL)
+    if (nStringID === STRID_REPLACEALL)
       return "\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C &\u0432\u0441\u0435";
-    if (nStringID == STRID_CANCEL)
+    if (nStringID === STRID_CANCEL)
       return "\u041E\u0442\u043C\u0435\u043D\u0430";
-    if (nStringID == STRID_STOP)
+    if (nStringID === STRID_STOP)
       return "\u041E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C";
-    if (nStringID == STRID_SYNTAXERROR)
+    if (nStringID === STRID_SYNTAXERROR)
       return "\u0421\u0438\u043D\u0442\u0430\u043A\u0441\u0438\u0447\u0435\u0441\u043A\u0430\u044F\u0020\u043E\u0448\u0438\u0431\u043A\u0430\u003A\n \\\\ - \u043E\u0431\u0440\u0430\u0442\u043D\u044B\u0439\u0020\u0441\u043B\u044D\u0448\n \\r - \u043A\u043E\u043D\u0435\u0446\u0020\u0441\u0442\u0440\u043E\u043A\u0438\n \\t - \u0437\u043D\u0430\u043A\u0020\u0442\u0430\u0431\u0443\u043B\u044F\u0446\u0438\u0438";
-    if (nStringID == STRID_FINISHED)
+    if (nStringID === STRID_FINISHED)
       return "\u041F\u043E\u0438\u0441\u043A\u0020\u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u002E";
-    if (nStringID == STRID_COUNTFILES)
+    if (nStringID === STRID_COUNTFILES)
       return "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u043D\u044B\u0445\u0020\u0444\u0430\u0439\u043B\u043E\u0432\u003A\u0020";
-    if (nStringID == STRID_COUNTCHANGES)
+    if (nStringID === STRID_COUNTCHANGES)
       return "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E\u0020\u0437\u0430\u043C\u0435\u043D\u003A\u0020";
-    if (nStringID == STRID_TEMPLATE1)
+    if (nStringID === STRID_TEMPLATE1)
       return "\u0423\u0434\u0430\u043B\u0438\u0442\u044C\u0020\u043F\u0443\u0441\u0442\u044B\u0435\u0020\u0441\u0442\u0440\u043E\u043A\u0438";
-    if (nStringID == STRID_TEMPLATE2)
+    if (nStringID === STRID_TEMPLATE2)
       return "\u0423\u0434\u0430\u043B\u0438\u0442\u044C\u0020\u043F\u0440\u043E\u0431\u0435\u043B\u044B\u0020\u0432\u0020\u043D\u0430\u0447\u0430\u043B\u0435\u0020\u0438\u0020\u0432\u0020\u043A\u043E\u043D\u0446\u0435\u0020\u0441\u0442\u0440\u043E\u043A";
-    if (nStringID == STRID_TEMPLATE3)
+    if (nStringID === STRID_TEMPLATE3)
       return "\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C\u0020\u0441\u0438\u043C\u0432\u043E\u043B\u044B\u0020\u043F\u0440\u043E\u0431\u0435\u043B\u0430\u043C\u0438";
   }
   else
   {
-    if (nStringID == STRID_LOWJSCRIPT)
+    if (nStringID === STRID_LOWJSCRIPT)
       return "JScript version is less than 5.5.";
-    if (nStringID == STRID_WHAT)
+    if (nStringID === STRID_WHAT)
       return "What&;";
-    if (nStringID == STRID_WITH)
+    if (nStringID === STRID_WITH)
       return "With&;";
-    if (nStringID == STRID_ADD)
+    if (nStringID === STRID_ADD)
       return "Add..&.";
-    if (nStringID == STRID_RENAME)
+    if (nStringID === STRID_RENAME)
       return "Rename..&.";
-    if (nStringID == STRID_DELETE)
+    if (nStringID === STRID_DELETE)
       return "Delete";
-    if (nStringID == STRID_NAME)
+    if (nStringID === STRID_NAME)
       return "Name";
-    if (nStringID == STRID_REGEXP)
+    if (nStringID === STRID_REGEXP)
       return "Regular expres&sions";
-    if (nStringID == STRID_MATCHCASE)
+    if (nStringID === STRID_MATCHCASE)
       return "&Case sensitive";
-    if (nStringID == STRID_MULTILINE)
+    if (nStringID === STRID_MULTILINE)
       return "&Multiline";
-    if (nStringID == STRID_ESCAPESEQ)
+    if (nStringID === STRID_ESCAPESEQ)
       return "&Esc-sequences";
-    if (nStringID == STRID_FUNCTION)
+    if (nStringID === STRID_FUNCTION)
       return "Replace &with function";
-    if (nStringID == STRID_DIRECTION)
+    if (nStringID === STRID_DIRECTION)
       return "Direction";
-    if (nStringID == STRID_FORWARD)
+    if (nStringID === STRID_FORWARD)
       return "&Down";
-    if (nStringID == STRID_BACKWARD)
+    if (nStringID === STRID_BACKWARD)
       return "&Up";
-    if (nStringID == STRID_BEGINNING)
+    if (nStringID === STRID_BEGINNING)
       return "&Beginning";
-    if (nStringID == STRID_INSEL)
-      return "&In selection"; 
-    if (nStringID == STRID_ALLFILES)
+    if (nStringID === STRID_INSEL)
+      return "&In selection";
+    if (nStringID === STRID_ALLFILES)
       return "All files &'";
-    if (nStringID == STRID_FINDNEXT)
+    if (nStringID === STRID_FINDNEXT)
       return "&Find next";
-    if (nStringID == STRID_FINDALL)
+    if (nStringID === STRID_FINDALL)
       return "Find a&ll";
-    if (nStringID == STRID_REPLACE)
+    if (nStringID === STRID_REPLACE)
       return "&Replace";
-    if (nStringID == STRID_REPLACEALL)
+    if (nStringID === STRID_REPLACEALL)
       return "Replace &all";
-    if (nStringID == STRID_CANCEL)
+    if (nStringID === STRID_CANCEL)
       return "Cancel [&X]";
-    if (nStringID == STRID_STOP)
+    if (nStringID === STRID_STOP)
       return "Sto&p";
-    if (nStringID == STRID_SYNTAXERROR)
+    if (nStringID === STRID_SYNTAXERROR)
       return "Syntax error:\n \\\\ - backslash\n \\r - line feed\n \\t - tabulation";
-    if (nStringID == STRID_FINISHED)
+    if (nStringID === STRID_FINISHED)
       return "Search finished.";
-    if (nStringID == STRID_COUNTFILES)
+    if (nStringID === STRID_COUNTFILES)
       return "Changed files: ";
-    if (nStringID == STRID_COUNTCHANGES)
+    if (nStringID === STRID_COUNTCHANGES)
       return "Count of changes: ";
-    if (nStringID == STRID_TEMPLATE1)
+    if (nStringID === STRID_TEMPLATE1)
       return "Delete empty lines";
-    if (nStringID == STRID_TEMPLATE2)
+    if (nStringID === STRID_TEMPLATE2)
       return "Delete leading and trailing spaces";
-    if (nStringID == STRID_TEMPLATE3)
+    if (nStringID === STRID_TEMPLATE3)
       return "Zap symbols with spaces";
   }
   return "";
