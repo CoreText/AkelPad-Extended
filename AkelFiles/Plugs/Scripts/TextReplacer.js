@@ -97,7 +97,6 @@ var oSys = AkelPad.SystemFunction();
 var sScriptName = WScript.ScriptName;
 var sClass = "AkelPad::Scripts::" + sScriptName + "::" + AkelPad.GetInstanceDll();
 var hDlg;
-var dialogShown  = false;
 var hWndEdit = AkelPad.GetEditWnd();
 var fileFullPath = AkelPad.GetEditFile(0);
 
@@ -272,39 +271,41 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
     SetHotKeys(LoWord(wParam));
     SetTransparency(LoWord(wParam) || (lParam != hMainWnd));
 
+    var dialogShown = false;
     if ((! bRegExp) && (! bBatch))
     {
-    	nID = GetDlgCtrlID(oSys.Call("User32::GetFocus"));
-    	selTextTemp = AkelPad.GetSelText();
+      nID = GetDlgCtrlID(oSys.Call("User32::GetFocus"));
+      selTextTemp = AkelPad.GetSelText();
+      //AkelPad.MessageBox(0, selTextTemp, WScript.ScriptName, 0);
 
-    	if (selTextTemp !== '' && nRange === 2)
-    	{
-    	  ReplaceTextAE(IDWHATE, selTextTemp);
+      if (selTextTemp !== '' && nRange === 2)
+      {
+        ReplaceTextAE(IDWHATE, selTextTemp);
 
-    	  if ((! bFunc) && nRange === 2)
-    	  {
-    	    ReplaceTextAE(IDWITHE, selTextTemp);
-    	  }
+        if ((! bFunc) && nRange === 2)
+        {
+          ReplaceTextAE(IDWITHE, selTextTemp);
+        }
 
-    	  if (bCoderHighLightIsRunning)
-    	  {
-    	    AkelPad.Call("Coder::HighLight", 3, 69);
-    	    AkelPad.Call("Coder::HighLight", 3, 96);
-    	  }
+        if (bCoderHighLightIsRunning)
+        {
+          AkelPad.Call("Coder::HighLight", 3, 69);
+          AkelPad.Call("Coder::HighLight", 3, 96);
+        }
 
-    	  if (nID !== IDWITHE)
-    	  {
-    	    oSys.Call("user32::SetFocus", GetDlgItem(hDlg, IDWITHE));
-    	    SendDlgItemMessage(hWnd, IDWITHE, 3044 /*AEM_KEYDOWN*/, 0x23 /*VK_END*/);
-    	    dialogShown = true;
-    	  }
-    	}
-    	else if (!dialogShown && nID !== IDWHATE)
-    	{
-    	  oSys.Call("user32::SetFocus", GetDlgItem(hDlg, IDWHATE));
-    	  SendDlgItemMessage(hWnd, IDWHATE, 3044 /*AEM_KEYDOWN*/, 0x23 /*VK_END*/);
-    	  dialogShown = true;
-    	}
+        if (nID !== IDWITHE)
+        {
+          oSys.Call("user32::SetFocus", GetDlgItem(hDlg, IDWITHE));
+          SendDlgItemMessage(hWnd, IDWITHE, 3044 /*AEM_KEYDOWN*/, 0x23 /*VK_END*/);
+          dialogShown = true;
+        }
+      }
+      else if ((! dialogShown) && nID !== IDWHATE)
+      {
+        oSys.Call("user32::SetFocus", GetDlgItem(hDlg, IDWHATE));
+        SendDlgItemMessage(hWnd, IDWHATE, 3044 /*AEM_KEYDOWN*/, 0x23 /*VK_END*/);
+        dialogShown = true;
+      }
     }
   }
   else if (uMsg === 786 /*WM_HOTKEY*/)
@@ -338,7 +339,7 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
       if (Ctrl() && (! Shift()) && (! Alt()))
         CountInRange(wParam - 0x30);
     }
-    else if (wParam == 0x70 /*VK_F1*/)
+    else if (wParam === 0x70 /*VK_F1*/)
     {
       if (! Alt())
       {
@@ -518,18 +519,18 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
         }
         if (wParam === 0x52/*VK_KEY_R*/)
         {
-      	  if (nID !== IDWITHE)
-      	    oSys.Call("user32::SetFocus", GetDlgItem(hDlg, IDWITHE));
+          if (nID !== IDWITHE)
+            oSys.Call("user32::SetFocus", GetDlgItem(hDlg, IDWITHE));
 
-      	  AkelPad.TextReplace(0, sWhat, sWith, 0x200001 /*FRF_DOWN|FRF_BEGINNING*/, 0x1);
-      	  //AkelPad.TextReplace(0, "FindIt2", "ReplaceWith2", 0x280001 /*FRF_DOWN|FRF_BEGINNING|FRF_REGEXP*/, 0x1);
-      	  //AkelPad.TextReplace(0, "FindIt1", "ReplaceWith1", 0x280001 /*FRF_DOWN|FRF_BEGINNING|FRF_REGEXP*/, true);
+          AkelPad.TextReplace(0, sWhat, sWith, 0x200001 /*FRF_DOWN|FRF_BEGINNING*/, 0x1);
+          //AkelPad.TextReplace(0, "FindIt2", "ReplaceWith2", 0x280001 /*FRF_DOWN|FRF_BEGINNING|FRF_REGEXP*/, 0x1);
+          //AkelPad.TextReplace(0, "FindIt1", "ReplaceWith1", 0x280001 /*FRF_DOWN|FRF_BEGINNING|FRF_REGEXP*/, true);
 
-      	  if (bCoderHighLightIsRunning && sWith)
-      	    AkelPad.Call("Coder::HighLight", 2, "#FFFFFF", "#FF0080", 1, 0, 96, sWith);
+          if (bCoderHighLightIsRunning && sWith)
+            AkelPad.Call("Coder::HighLight", 2, "#FFFFFF", "#FF0080", 1, 0, 96, sWith);
 
-      	  Find(1);
-      	  AkelPad.SetSel(AkelPad.GetSelStart(), AkelPad.GetSelStart());
+          Find(1);
+          AkelPad.SetSel(AkelPad.GetSelStart(), AkelPad.GetSelStart());
 
           if (AkelPad.GetSelText() === '')
           {
@@ -538,7 +539,7 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
           }
 
           AkelPad.Command(4333);
-      	}
+        }
         if (wParam === 0x55/*VK_KEY_U*/)
         {
           nIDTemp = nID;
@@ -709,7 +710,7 @@ function CallbackDlg(hWnd, uMsg, wParam, lParam)
 //     {
 //       if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
 //         {
-//           	AkelPad.Command(4317);
+//            AkelPad.Command(4317);
 //         }
 //       if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
 //         {
@@ -793,12 +794,12 @@ function CallbackAE(hWnd, uMsg, wParam, lParam)
   var nNY1, nNY2;
   var bSizingWhat;
 
-  if (uMsg == 36 /*WM_GETMINMAXINFO*/)
+  if (uMsg === 36 /*WM_GETMINMAXINFO*/)
   {
     AkelPad.MemCopy(_PtrAdd(lParam, 24), nEditMinW, 3 /*DT_DWORD*/); //ptMinTrackSize_x
     AkelPad.MemCopy(_PtrAdd(lParam, 28), nEditMinH, 3 /*DT_DWORD*/); //ptMinTrackSize_y
   }
-  else if (uMsg == 532 /*WM_SIZING*/)
+  else if (uMsg === 532 /*WM_SIZING*/)
   {
     lpRECT = AkelPad.MemAlloc(16);
     oSys.Call("User32::GetWindowRect", hWnd, lpRECT);
@@ -809,7 +810,7 @@ function CallbackAE(hWnd, uMsg, wParam, lParam)
     nNY1 = AkelPad.MemRead(_PtrAdd(lParam,  4), 3 /*DT_DWORD*/);
     nNY2 = AkelPad.MemRead(_PtrAdd(lParam, 12), 3 /*DT_DWORD*/);
 
-    if ((wParam == 6 /*WMSZ_BOTTOM*/) && (nNY2 != nY2))
+    if ((wParam === 6 /*WMSZ_BOTTOM*/) && (nNY2 != nY2))
     {
       bSizingEdit = true;
       if (bSizingWhat = (GetDlgCtrlID(hWnd) == IDWHATE))
@@ -834,7 +835,7 @@ function CallbackAE(hWnd, uMsg, wParam, lParam)
 
     AkelPad.MemFree(lpRECT);
   }
-  else if (uMsg == 562 /*WM_EXITSIZEMOVE*/)
+  else if (uMsg === 562 /*WM_EXITSIZEMOVE*/)
     //bug in WinXP - set z-order
     oSys.Call("User32::SetWindowPos", hWnd, GetDlgItem(hDlg, GetDlgCtrlID(hWnd) - 1), 0, 0, 0, 0, 0x13 /*SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOSIZE*/);
 
@@ -915,7 +916,7 @@ function SetTextAE(nID, sText)
 
 function ReplaceTextAE(nID, sText)
 {
-  if (bBatch && (nID == IDWHATE))
+  if (bBatch && (nID === IDWHATE))
     SendDlgItemMessage(hDlg, nID, 3228 /*AEM_SETOPTIONS*/, 4 /*AECOOP_XOR*/, 1 /*AECO_READONLY*/);
 
   SendDlgItemMessage(hDlg, nID, 177 /*EM_SETSEL*/, 0, -1);
@@ -924,13 +925,13 @@ function ReplaceTextAE(nID, sText)
   AkelPad.SetEditWnd(0);
   SendDlgItemMessage(hDlg, nID, 177 /*EM_SETSEL*/, 0, 0);
 
-  if (bBatch && (nID == IDWHATE))
+  if (bBatch && (nID === IDWHATE))
     SendDlgItemMessage(hDlg, nID, 3228 /*AEM_SETOPTIONS*/, 2 /*AECOOP_OR*/, 1 /*AECO_READONLY*/);
 }
 
 function SetFontAE(nID)
 {
-  var bFont = (nID == IDWHATE) ? bFont1 : bFont2;
+  var bFont = (nID === IDWHATE) ? bFont1 : bFont2;
   var hFont = bFont ? SendMessage(hMainWnd, 1233 /*AKD_GETFONTW*/, 0, 0) : hGuiFont;
   SendDlgItemMessage(hDlg, nID, 48 /*WM_SETFONT*/, hFont, 0);
   oSys.Call("User32::InvalidateRect", GetDlgItem(hDlg, nID), 0, 1);
@@ -938,7 +939,7 @@ function SetFontAE(nID)
 
 function SetWrapAE(nID)
 {
-  var bWrap = (nID == IDWHATE) ? bWrap1 : bWrap2;
+  var bWrap = (nID === IDWHATE) ? bWrap1 : bWrap2;
   SendDlgItemMessage(hDlg, nID, 3242 /*AEM_SETWORDWRAP*/, bWrap ? 2 /*AEWW_SYMBOL*/ : 0 /*AEWW_NONE*/, 0);
 }
 
@@ -981,7 +982,7 @@ function EnableButtonsDlg()
 {
   var hEditWnd = AkelPad.GetEditWnd();
 
-  if ((! IsLineBoard()) && (nRange == 3))
+  if ((! IsLineBoard()) && (nRange === 3))
   {
     nRange = 4;
     oSys.Call("User32::CheckRadioButton", hDlg, IDFBTC, IDALLDOC, IDFBTC + nRange);
@@ -1044,7 +1045,7 @@ function SetTransparency(bDlgActive)
     if (nAlphaCur >= 0)
       nAlphaNew = 255;
   }
-  else if ((nAlphaCur < 0) && (nOpacity < 255) || (nAlphaCur >= 0) && (nAlphaCur != nOpacity))
+  else if ((nAlphaCur < 0) && (nOpacity < 255) || (nAlphaCur >= 0) && (nAlphaCur !== nOpacity))
     nAlphaNew = nOpacity;
 
   if (nAlphaNew >= 0)
@@ -1126,7 +1127,7 @@ function ResizeDlg(bSizingWhat, nW, nH)
     0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
   for (i = IDMATCH; i <= IDLOCKUNDO; ++i)
     oSys.Call("User32::SetWindowPos", GetDlgItem(hDlg, i), 0,
-      ScaleX(((i == IDDOTNL) || (i == IDLOCKUNDO)) ? 27 : 10),
+      ScaleX(((i === IDDOTNL) || (i === IDLOCKUNDO)) ? 27 : 10),
       nWhatH + nWithH + ScaleY(25) + ScaleY((i - IDMATCH) * 20),
       0,
       0,
@@ -1233,22 +1234,22 @@ function Replace(nID)
           return;
         }
       }
-      while ((nRange == 5) && ((lpFrameCurr = SendMessage(hMainWnd, 1290 /*AKD_FRAMEFINDW*/, 2 /*FWF_NEXT*/, lpFrameCurr)) != lpFrameStart));
+      while ((nRange === 5) && ((lpFrameCurr = SendMessage(hMainWnd, 1290 /*AKD_FRAMEFINDW*/, 2 /*FWF_NEXT*/, lpFrameCurr)) !== lpFrameStart));
     }
   }
   else
   {
     sFlags = "";
-    if (! bMatch)        sFlags += "i";
-    if (bWord)           sFlags += "w";
-    if (bRegExp)         sFlags += "r";
-    if (! bDotNL)        sFlags += "n";
-    if (bFunc)           sFlags += "f";
-    if (nID == IDREPL2B) sFlags += "g";
+    if (! bMatch)         sFlags += "i";
+    if (bWord)            sFlags += "w";
+    if (bRegExp)          sFlags += "r";
+    if (! bDotNL)         sFlags += "n";
+    if (bFunc)            sFlags += "f";
+    if (nID === IDREPL2B) sFlags += "g";
   }
 
-  if ((nRange == 5) && (SendMessage(hMainWnd, 1291 /*AKD_FRAMESTATS*/, 0 /*FWS_COUNTALL*/, 0) > 1) &&
-      (AkelPad.MessageBox(hDlg, sTxtAreYouSure, sTxtDlgTitle, 0x21 /*MB_OKCANCEL|MB_ICONQUESTION*/) != 1 /*IDOK*/))
+  if ((nRange === 5) && (SendMessage(hMainWnd, 1291 /*AKD_FRAMESTATS*/, 0 /*FWS_COUNTALL*/, 0) > 1) &&
+      (AkelPad.MessageBox(hDlg, sTxtAreYouSure, sTxtDlgTitle, 0x21 /*MB_OKCANCEL|MB_ICONQUESTION*/) !== 1 /*IDOK*/))
     return;
 
   hFocus       = oSys.Call("User32::GetFocus");
@@ -1262,7 +1263,7 @@ function Replace(nID)
   if (nRange < 4)
     nRange1 = -(nRange + 1);
 
-  if (nID == IDREPL2B)
+  if (nID === IDREPL2B)
   {
     for (i = IDWHATS; i <= IDCLOSEB; ++i)
       oSys.Call("User32::EnableWindow", GetDlgItem(hDlg, i), 0);
@@ -1305,14 +1306,14 @@ function Replace(nID)
       {
         if (aBatch[i][0])
         {
-          if (nRange == 0)
+          if (nRange === 0)
           {
             nCaretPos -= nTextLen - (nTextLen = SendMessage(hEditWnd, 3138 /*AEM_GETRICHOFFSET*/, 2 /*AEGI_LASTCHAR*/, 0));
             AkelPad.SetSel(nCaretPos, nCaretPos);
           }
-          else if (nRange == 1)
+          else if (nRange === 1)
             AkelPad.SetSel(nCaretPos, nCaretPos);
-          else if (nRange == 2)
+          else if (nRange === 2)
           {
             nSelEnd -= nTextLen - (nTextLen = SendMessage(hEditWnd, 3138 /*AEM_GETRICHOFFSET*/, 2 /*AEGI_LASTCHAR*/, 0));
             AkelPad.SetSel(nSelStart, nSelEnd);
@@ -1393,13 +1394,13 @@ function Replace(nID)
           if (! bBatch)
             hFocus = GetDlgItem(hDlg, IDWITHE);
         }
-        else if (nCount == -13)
+        else if (nCount === -13)
         {
           sMsg += sTxtNoFuncErr;
           if (! bBatch)
             hFocus = GetDlgItem(hDlg, IDWITHE);
         }
-        else if (nCount == -14)
+        else if (nCount === -14)
         {
           sMsg += sTxtNoTextErr;
           if (! bBatch)
@@ -1426,7 +1427,7 @@ function Replace(nID)
       aDoc.push([lpFrameCurr, lpCaret, lpSelect, lpPoint64]);
     }
   }
-  while ((nRange == 5) && ((lpFrameCurr = SendMessage(hMainWnd, 1285 /*AKD_FRAMEACTIVATE*/, 0x10 /*FWA_NEXT*/, lpFrameCurr)) != lpFrameStart));
+  while ((nRange === 5) && ((lpFrameCurr = SendMessage(hMainWnd, 1285 /*AKD_FRAMEACTIVATE*/, 0x10 /*FWA_NEXT*/, lpFrameCurr)) != lpFrameStart));
 
   if (nID == IDREPL2B)
   {
@@ -1439,14 +1440,14 @@ function Replace(nID)
 
   oSys.Call("User32::SetFocus", hFocus);
 
-  if ((typeof nCount == "number") && (nCount >= 0))
+  if ((typeof nCount === "number") && (nCount >= 0))
   {
     SendMessage(hMainWnd, 1285 /*AKD_FRAMEACTIVATE*/, 0, lpFrameEnd);
     nMsgType = 0x40 /*MB_ICONINFORMATION*/;
 
-    if ((nRange == 5) && (nCountAll > 0))
+    if ((nRange === 5) && (nCountAll > 0))
       sMsg += sTxtChangedDocs + aDoc.length + "\n";
-    if ((nID == IDREPL1B) && (nCountAll == 0) || (nID == IDREPL2B))
+    if ((nID === IDREPL1B) && (nCountAll === 0) || (nID === IDREPL2B))
       sMsg += sTxtCountChanges + nCountAll;
 
     //add to history
@@ -1456,7 +1457,7 @@ function Replace(nID)
       {
         for (i = 0; i < aHist.length; ++i)
         {
-          if ((aHist[i][0].toLowerCase() == sBFile.toLowerCase()) && (aHist[i][2] == "b"))
+          if ((aHist[i][0].toLowerCase() === sBFile.toLowerCase()) && (aHist[i][2] === "b"))
           {
             aHist.splice(i, 1);
             break;
@@ -1471,7 +1472,7 @@ function Replace(nID)
 
         for (i = 0; i < aHist.length; ++i)
         {
-          if ((aHist[i][0] == sWhat) && (aHist[i][1] == sWith) && (aHist[i][2] == sFlags))
+          if ((aHist[i][0] === sWhat) && (aHist[i][1] === sWith) && (aHist[i][2] === sFlags))
           {
             aHist.splice(i, 1);
             break;
@@ -1670,49 +1671,49 @@ function HistAndTempl(bHist)
   {
     var nID, nCode;
 
-    if (uMsg == 272 /*WM_INITDIALOG*/)
+    if (uMsg === 272 /*WM_INITDIALOG*/)
     {
       hWndHT = hWnd;
       InitHT();
     }
-    else if (uMsg == 6 /*WM_ACTIVATE*/)
+    else if (uMsg === 6 /*WM_ACTIVATE*/)
       SetHotKeysHT(LoWord(wParam));
-    else if (uMsg == 786 /*WM_HOTKEY*/)
+    else if (uMsg === 786 /*WM_HOTKEY*/)
     {
       if (oSys.Call("User32::GetFocus") == GetDlgItem(hWndHT, IDLIST))
         aHotKeyHT[wParam][2]();
     }
-    else if (uMsg == 123 /*WM_CONTEXTMENU*/)
+    else if (uMsg === 123 /*WM_CONTEXTMENU*/)
     {
       if (wParam == GetDlgItem(hWndHT, IDLIST))
         MenuHT(LoWord(lParam), HiWord(lParam));
       else if (wParam == GetDlgItem(hWndHT, IDMENUB))
         MenuHT();
     }
-    else if (uMsg == 273 /*WM_COMMAND*/)
+    else if (uMsg === 273 /*WM_COMMAND*/)
     {
       nID   = LoWord(wParam);
       nCode = HiWord(wParam);
 
-      if (nID == IDLIST)
+      if (nID === IDLIST)
       {
-        if (nCode == 1 /*LBN_SELCHANGE*/)
+        if (nCode === 1 /*LBN_SELCHANGE*/)
           SetHTToDlg();
-        else if (nCode == 2 /*LBN_DBLCLK*/)
+        else if (nCode === 2 /*LBN_DBLCLK*/)
           PostMessage(hWndHT, 16 /*WM_CLOSE*/, 0, 0);
       }
-      else if (nID == IDMENUB)
+      else if (nID === IDMENUB)
         MenuHT();
-      else if (nID == IDOKB)
+      else if (nID === IDOKB)
         PostMessage(hWndHT, 16 /*WM_CLOSE*/, 0, 0);
-      else if ((nID == IDCANCEL) || (nID == IDCANCELB))
+      else if ((nID === IDCANCEL) || (nID === IDCANCELB))
       {
         SendDlgItemMessage(hWndHT, IDLIST, 390 /*LB_SETCURSEL*/, 0, 0);
         SetHTToDlg();
         PostMessage(hWndHT, 16 /*WM_CLOSE*/, 0, 0);
       }
     }
-    else if (uMsg == 16 /*WM_CLOSE*/)
+    else if (uMsg === 16 /*WM_CLOSE*/)
     {
       if (bBatch)
       {
@@ -1752,7 +1753,7 @@ function HistAndTempl(bHist)
       {
         aTempl[i] = aTempl[i].split("\t", 4);
 
-        if ((aTempl[i].length == 4) && aTempl[i][0].length && aTempl[i][3].replace(/ +$/, "").length)
+        if ((aTempl[i].length === 4) && aTempl[i][0].length && aTempl[i][3].replace(/ +$/, "").length)
           SendDlgItemMessage(hWndHT, IDLIST, 385 /*LB_INSERTSTRING*/, 0, aTempl[i][3]);
         else
         {
@@ -1775,10 +1776,10 @@ function HistAndTempl(bHist)
 
     if (bHist)
     {
-      bMatch  = (aHist[nPos][2].indexOf("i") == -1);
+      bMatch  = (aHist[nPos][2].indexOf("i") === -1);
       bWord   = (aHist[nPos][2].indexOf("w") > -1);
       bRegExp = (aHist[nPos][2].indexOf("r") > -1);
-      bDotNL  = (aHist[nPos][2].indexOf("n") == -1);
+      bDotNL  = (aHist[nPos][2].indexOf("n") === -1);
       bFunc   = (aHist[nPos][2].indexOf("f") > -1);
       bBatch  = (aHist[nPos][2].indexOf("b") > -1);
 
@@ -1788,10 +1789,10 @@ function HistAndTempl(bHist)
     }
     else
     {
-      bMatch  = (aTempl[nPos][2].indexOf("i") == -1);
+      bMatch  = (aTempl[nPos][2].indexOf("i") === -1);
       bWord   = (aTempl[nPos][2].indexOf("w") > -1);
       bRegExp = (aTempl[nPos][2].indexOf("r") > -1);
-      bDotNL  = (aTempl[nPos][2].indexOf("n") == -1);
+      bDotNL  = (aTempl[nPos][2].indexOf("n") === -1);
       bFunc   = (aTempl[nPos][2].indexOf("f") > -1);
       bBatch  = (aTempl[nPos][2].indexOf("b") > -1);
 
@@ -1808,7 +1809,7 @@ function HistAndTempl(bHist)
     SendDlgItemMessage(hDlg, IDBATCH,  241 /*BM_SETCHECK*/, bBatch,  0);
     EnableButtonsDlg();
 
-    if (nPos == 0)
+    if (nPos === 0)
     {
       for (i = 0; i < 2; ++i)
       {
@@ -1852,7 +1853,7 @@ function HistAndTempl(bHist)
       {
         SendDlgItemMessage(hWndHT, IDLIST, 386 /*LB_DELETESTRING*/, nPos, 0);
 
-        if (nPos == aHist.length)
+        if (nPos === aHist.length)
           --nPos;
         else
         {
@@ -1891,7 +1892,7 @@ function HistAndTempl(bHist)
         {
           aHist.length = nHistLen + 1;
 
-          if (aHist.length == 1)
+          if (aHist.length === 1)
             PostMessage(hWndHT, 273 /*WM_COMMAND*/, IDCANCELB, 0);
           else
           {
@@ -1938,7 +1939,7 @@ function HistAndTempl(bHist)
 
     for (i = 1; i < aTempl.length; ++i)
     {
-      if ((aTempl[i][0] == aTempl[0][0]) && (aTempl[i][1] == aTempl[0][1]) && (aTempl[i][2] == aTempl[0][2]))
+      if ((aTempl[i][0] === aTempl[0][0]) && (aTempl[i][1] === aTempl[0][1]) && (aTempl[i][2] === aTempl[0][2]))
       {
         SendDlgItemMessage(hWndHT, IDLIST, 390 /*LB_SETCURSEL*/, i, 0);
         SetHTToDlg();
@@ -1981,7 +1982,7 @@ function HistAndTempl(bHist)
     {
       for (i = 1; i < aTempl.length; ++i)
       {
-        if ((aTempl[i][3] == sName) && ((nPos == 0) || (nPos != i)))
+        if ((aTempl[i][3] === sName) && ((nPos === 0) || (nPos !== i)))
         {
           SendDlgItemMessage(hWndHT, IDLIST, 390 /*LB_SETCURSEL*/, i, 0);
           SetHTToDlg();
@@ -2056,7 +2057,7 @@ function HistAndTempl(bHist)
       bSaveTempl = true;
       aTempl.splice(nPos, 1);
       SendDlgItemMessage(hWndHT, IDLIST, 386 /*LB_DELETESTRING*/, nPos, 0);
-      SendDlgItemMessage(hWndHT, IDLIST, 390 /*LB_SETCURSEL*/, nPos - ((nPos == aTempl.length) ? 1 : 0), 0);
+      SendDlgItemMessage(hWndHT, IDLIST, 390 /*LB_SETCURSEL*/, nPos - ((nPos === aTempl.length) ? 1 : 0), 0);
       SetHTToDlg();
     }
   }
@@ -2081,7 +2082,7 @@ function HistAndTempl(bHist)
     {
       SendDlgItemMessage(hWndHT, IDLIST, 384 /*LB_ADDSTRING*/, 0, aTempl[i][3]);
 
-      if (aTempl[i][3] == sName)
+      if (aTempl[i][3] === sName)
         nPos = i;
     }
 
@@ -2105,7 +2106,7 @@ function HistAndTempl(bHist)
     SendDlgItemMessage(hWndHT, IDOKB,   244 /*BM_SETSTYLE*/, 1 /*BS_DEFPUSHBUTTON*/, 1);
 
     //menu from keyboard or "Menu" button
-    if ((typeof nX != "number") || (nX == 0xFFFF))
+    if ((typeof nX !== "number") || (nX === 0xFFFF))
     {
       lpRECT = AkelPad.MemAlloc(16);
       SendDlgItemMessage(hWndHT, IDLIST, 408 /*LB_GETITEMRECT*/, nPos, lpRECT);
@@ -2125,7 +2126,7 @@ function HistAndTempl(bHist)
     }
     else
     {
-      oSys.Call("User32::AppendMenuW", hMenu, (aTempl[0][0].length && (aTempl[0][2].indexOf("b") == -1)) ? MF_STRING : MF_GRAYED, 11, sTxtAdd + "\tInsert");
+      oSys.Call("User32::AppendMenuW", hMenu, (aTempl[0][0].length && (aTempl[0][2].indexOf("b") === -1)) ? MF_STRING : MF_GRAYED, 11, sTxtAdd + "\tInsert");
       oSys.Call("User32::AppendMenuW", hMenu, (nPos > 0) ? MF_STRING : MF_GRAYED, 12, sTxtRename + "\tF2");
       oSys.Call("User32::AppendMenuW", hMenu, (nPos > 1) ? MF_STRING : MF_GRAYED, 13, sTxtMoveUp + "\tAlt+Up");
       oSys.Call("User32::AppendMenuW", hMenu, ((nPos > 0) && (nPos < aTempl.length - 1)) ? MF_STRING : MF_GRAYED, 14, sTxtMoveDown + "\tAlt+Down");
@@ -2140,21 +2141,21 @@ function HistAndTempl(bHist)
 
     if (nCmd == 1)
       RemoveHist();
-    else if (nCmd == 2)
+    else if (nCmd === 2)
       ClearHist();
-    else if (nCmd == 3)
+    else if (nCmd === 3)
       SetHistLen();
-    else if (nCmd == 11)
+    else if (nCmd === 11)
       AddTempl();
-    else if (nCmd == 12)
+    else if (nCmd === 12)
       RenameTempl();
-    else if (nCmd == 13)
+    else if (nCmd === 13)
       UpTempl();
-    else if (nCmd == 14)
+    else if (nCmd === 14)
       DownTempl();
-    else if (nCmd == 15)
+    else if (nCmd === 15)
       RemoveTempl();
-    else if (nCmd == 16)
+    else if (nCmd === 16)
       SortTempl();
   }
 }
@@ -2203,12 +2204,12 @@ function Find(nCmd)
 
   if (nCmd < 11)
   {
-    if (nCmd == 1)
+    if (nCmd === 1)
       nFRF |= 0x00000001 /*FRF_DOWN*/;
-    else if ((nCmd == 2) || (nCmd == 3))
+    else if ((nCmd === 2) || (nCmd === 3))
     {
       nFRF |= 0x00100000 /*FRF_UP*/;
-      if (nCmd == 3)
+      if (nCmd === 3)
         AkelPad.SetSel(-1, -1);
     }
     else
@@ -2224,11 +2225,11 @@ function Find(nCmd)
     {
       nPos = -1;
 
-      if ((nCmd == 11) || (nCmd == 14))
+      if ((nCmd === 11) || (nCmd === 14))
       {
         nFRF |= 0x00000001 /*FRF_DOWN*/;
 
-        if (nCmd == 11)
+        if (nCmd === 11)
         {
           nSel    = AkelPad.GetSelEnd();
           nBRange = GetCurrBRange(aBRange, nSel);
@@ -2243,9 +2244,9 @@ function Find(nCmd)
           }
         }
 
-        if (nPos == -1)
+        if (nPos === -1)
         {
-          if (nCmd == 11)
+          if (nCmd === 11)
             nBRange = GetNextBRange(aBRange, nBRange, true);
           else
             nBRange = 0;
@@ -2284,9 +2285,9 @@ function Find(nCmd)
           }
         }
 
-        if (nPos == -1)
+        if (nPos === -1)
         {
-          if (nCmd == 12)
+          if (nCmd === 12)
             nBRange = GetNextBRange(aBRange, nBRange, false);
           else
             nBRange = aBRange.length - 1;
@@ -2337,11 +2338,11 @@ function Find(nCmd)
 
   if (nPos < 0)
   {
-    if ((nCmd % 10) == 1)
+    if ((nCmd % 10) === 1)
       sTitle = sTxtNext;
-    else if ((nCmd % 10) == 2)
+    else if ((nCmd % 10) === 2)
       sTitle = sTxtPrev;
-    else if ((nCmd % 10) == 3)
+    else if ((nCmd % 10) === 3)
       sTitle = sTxtLast;
     else
       sTitle = sTxtFirst;
@@ -2559,7 +2560,7 @@ function CountInRange(nCmd)
   var sText;
   var i, n;
 
-  if ((! hEditWnd) || (! sWhat) || bBatch || ((nCmd == 24) && (! IsLineBoard())))
+  if ((! hEditWnd) || (! sWhat) || bBatch || ((nCmd === 24) && (! IsLineBoard())))
     return;
 
   nFRF = 0x80000001 /*FRF_TEST|FRF_DOWN*/;
@@ -2700,7 +2701,7 @@ function MenuAE(hWnd, nID, nX, nY)
   }
 
   //menu from keyboard
-  if ((typeof nX != "number") || (nX == 0xFFFF))
+  if ((typeof nX !== "number") || (nX === 0xFFFF))
   {
     lpPOINT = AkelPad.MemAlloc(8);
     oSys.Call("User32::GetCaretPos", lpPOINT);
@@ -2864,7 +2865,7 @@ function GetAkelHelpFile()
   var sDir  = AkelPad.GetAkelDir(2 /*ADTYPE_DOCS*/) + "\\";
   var sFile = "";
 
-  if (AkelPad.GetLangId() == 1049 /*Russian*/)
+  if (AkelPad.GetLangId() === 1049 /*Russian*/)
   {
     if (oFSO.FileExists(sDir + "AkelHelp-Rus.htm"))
       sFile = "AkelHelp-Rus.htm";
@@ -2962,15 +2963,15 @@ function MenuFind()
   {
     if (nCmd < 15)
       Find(nCmd);
-    else if (nCmd == 15)
+    else if (nCmd === 15)
       BookmarkLines(true);
-    else if (nCmd == 16)
+    else if (nCmd === 16)
       BookmarkLines(false);
-    else if (nCmd == 666)
+    else if (nCmd === 666)
       FindstrLog();
-    else if (nCmd == 777)
+    else if (nCmd === 777)
       FindToLog();
-    else if (nCmd == 888)
+    else if (nCmd === 888)
       qSearchLog();
     else if (nCmd < 29)
       CountInRange(nCmd - 20);
@@ -2993,31 +2994,31 @@ function ReadIni()
     AkelPad.MessageBox(0, 'No configurations were found! '+ oError.description, sScriptName, 0);
   }
 
-  if ((typeof nWhatH != "number") || (nWhatH < nEditMinH)) nWhatH = nEditMinH;
+  if ((typeof nWhatH !== "number") || (nWhatH < nEditMinH)) nWhatH = nEditMinH;
   nDlgMinH += nWhatH - nEditMinH;
-  if (typeof nDlgX != "number") nDlgX = 200;
-  if (typeof nDlgY != "number") nDlgY = 200;
-  if ((typeof nDlgW != "number") || (nDlgW < nDlgMinW)) nDlgW = nDlgMinW;
-  if ((typeof nDlgH != "number") || (nDlgH < nDlgMinH)) nDlgH = nDlgMinH;
-  if (typeof bTranspNA != "boolean") bTranspNA = false;
-  if ((typeof nOpacity != "number") || (nOpacity < 15) || (nOpacity > 255)) nOpacity = 255;
-  if (typeof bMatch != "boolean") bMatch = false;
-  if (typeof bWord != "boolean") bWord = false;
-  if (typeof bRegExp != "boolean") bRegExp = false;
-  if (typeof bDotNL != "boolean") bDotNL = true;
-  if (typeof bFunc != "boolean") bFunc = false;
-  if (typeof bBatch != "boolean") bBatch = false;
-  if (typeof bLockUndo != "boolean") bLockUndo = false;
-  if ((typeof nRange != "number") || (nRange < 0) || (nRange > 5)) nRange = 3;
-  if (typeof bFont1 != "boolean") bFont1 = false;
-  if (typeof bFont2 != "boolean") bFont2 = false;
-  if (typeof bWrap1 != "boolean") bWrap1 = false;
-  if (typeof bWrap2 != "boolean") bWrap2 = false;
-  if (typeof sWhat != "string") sWhat = "";
-  if (typeof sWith != "string") sWith = "";
-  if ((typeof sBFile != "string") || (! oFSO.FileExists(AkelPad.GetAkelDir(5 /*ADTYPE_SCRIPTS*/) + "\\" + sBFile))) sBFile = "";
-  if ((typeof nFindDef != "number") || (nFindDef < 1) || (nFindDef > 4)) nFindDef = 0;
-  if (typeof nHistLen != "number") nHistLen = 10;
+  if (typeof nDlgX !== "number") nDlgX = 200;
+  if (typeof nDlgY !== "number") nDlgY = 200;
+  if ((typeof nDlgW !== "number") || (nDlgW < nDlgMinW)) nDlgW = nDlgMinW;
+  if ((typeof nDlgH !== "number") || (nDlgH < nDlgMinH)) nDlgH = nDlgMinH;
+  if (typeof bTranspNA !== "boolean") bTranspNA = false;
+  if ((typeof nOpacity !== "number") || (nOpacity < 15) || (nOpacity > 255)) nOpacity = 255;
+  if (typeof bMatch !== "boolean") bMatch = false;
+  if (typeof bWord !== "boolean") bWord = false;
+  if (typeof bRegExp !== "boolean") bRegExp = false;
+  if (typeof bDotNL !== "boolean") bDotNL = true;
+  if (typeof bFunc !== "boolean") bFunc = false;
+  if (typeof bBatch !== "boolean") bBatch = false;
+  if (typeof bLockUndo !== "boolean") bLockUndo = false;
+  if ((typeof nRange !== "number") || (nRange < 0) || (nRange > 5)) nRange = 3;
+  if (typeof bFont1 !== "boolean") bFont1 = false;
+  if (typeof bFont2 !== "boolean") bFont2 = false;
+  if (typeof bWrap1 !== "boolean") bWrap1 = false;
+  if (typeof bWrap2 !== "boolean") bWrap2 = false;
+  if (typeof sWhat !== "string") sWhat = "";
+  if (typeof sWith !== "string") sWith = "";
+  if ((typeof sBFile !== "string") || (! oFSO.FileExists(AkelPad.GetAkelDir(5 /*ADTYPE_SCRIPTS*/) + "\\" + sBFile))) sBFile = "";
+  if ((typeof nFindDef !== "number") || (nFindDef < 1) || (nFindDef > 4)) nFindDef = 0;
+  if (typeof nHistLen !== "number") nHistLen = 10;
   if (nHistLen < 0)
     nHistLen = 0;
   else if (nHistLen > 99)
@@ -3176,7 +3177,7 @@ function GetLangStrings()
     sTxtNameExists    = 'Nazwa już istnieje!';
     sTxtTemplExists   = 'Szablon już istnieje!';
   }
-  else if (AkelPad.GetLangId(0 /*LANGID_FULL*/) == 1049) //Russian
+  else if (AkelPad.GetLangId(0 /*LANGID_FULL*/) === 1049) //Russian
   {
     //translated by YuS
     sTxtDlgTitle      = 'Замена текста';
@@ -3393,8 +3394,8 @@ function FindToLog(pLogOutput)
   var sCOMMAND = "cmd.exe /K cd /d \""+ strDir +"\" & find /N "+ ((bMatch)?"":"/I") +" \""+ strContent +"\" "+ fileFullPath +" & exit";
 
   AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc,
-  	"^(---------- (.+)$)?(\\[(\\d+)\\])?",
-  	"/FILE=\\2 /GOTOLINE=\\4:0" , -2, -2, logOutput
+    "^(---------- (.+)$)?(\\[(\\d+)\\])?",
+    "/FILE=\\2 /GOTOLINE=\\4:0" , -2, -2, logOutput
   );
 
   AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bRegExp)?"0":"1") ));
@@ -3444,7 +3445,7 @@ function qSearchLog(searchFlag)
 
     try
     {
-    	searchResult = TextSearchOptions(sTextSearchOptionsParams);
+      searchResult = TextSearchOptions(sTextSearchOptionsParams);
     }
     catch (oError)
     {
@@ -3469,9 +3470,9 @@ function qSearchLog(searchFlag)
 
   if (found && qSearching(AkelPad.GetSelText(), flag))
   {
-  	AkelPad.Command(4199); // caret in editor history back
-  	oSys.Call("User32::SetFocus", GetDlgItem(hDlg, IDWHATE));
-  	return found;
+    AkelPad.Command(4199); // caret in editor history back
+    oSys.Call("User32::SetFocus", GetDlgItem(hDlg, IDWHATE));
+    return found;
   }
 
   oSys.Call("User32::SetFocus", GetDlgItem(hDlg, IDWHATE));
