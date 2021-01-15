@@ -1,6 +1,6 @@
 // FindFiles_extended.js
 // http://tc-image.3dn.ru/forum/9-779-4176-16-1353248260
-// Author: KDJ
+// Author: KDJ & texter
 // ver. 2013-09-14
 // Поиск файлов по названию и содержанию.
 // Extended from FindFiles.js - ver. 2013-09-14 (x86/x64)
@@ -98,8 +98,8 @@ var hInstanceDLL = AkelPad.GetInstanceDll();
 var sScriptName  = WScript.ScriptName;
 var sClassName   = "AkelPad::Scripts::" + sScriptName + "::" + hInstanceDLL;
 var hWndDlg;
-var bCoderHighLightIsRunning = AkelPad.IsPluginRunning("Coder::HighLight");
-var bQSearchIsRunning = AkelPad.IsPluginRunning("QSearch::QSearch");
+// var bCoderHighLightIsRunning = AkelPad.IsPluginRunning("Coder::HighLight");
+// var bQSearchIsRunning = AkelPad.IsPluginRunning("QSearch::QSearch");
 
 if (hWndDlg = oSys.Call("User32::FindWindowExW", 0, 0, sClassName, 0))
 {
@@ -1922,7 +1922,7 @@ function OpenOrCloseFile(bSelect, bCloseOr)
         {
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
-            WScript.Sleep(666); // to avoid some crashes
+            //WScript.Sleep(666); // to avoid some crashes
             if (bSelect)
               if (searchSelect())
                 return true;
@@ -1965,7 +1965,7 @@ function OpenFileAndFindBeginOrFindNext(bPrev)
         {
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
-            WScript.Sleep(666);
+            //WScript.Sleep(666);
             return true;
           }
 
@@ -2132,10 +2132,7 @@ function Settings()
     FindToLog();
   else if (nCmd === 11)
   {
-    if (bQSearchIsRunning)
-      bLogShow = ! bLogShow;
-    else
-      AkelPad.MessageBox(0, 'The QSearch plugin should be running!', sScriptName, 0);
+    bLogShow = ! bLogShow;
   }
 }
 
