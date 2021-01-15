@@ -109,7 +109,7 @@ var sScriptName = WScript.ScriptName;
 var sClass   = "AkelPad::Scripts::" + sScriptName + "::" + hInstDLL;
 var hDlg;
 // var bCoderHighLightIsRunning = AkelPad.IsPluginRunning("Coder::HighLight");
-var bQSearchIsRunning = AkelPad.IsPluginRunning("QSearch::QSearch");
+// var bQSearchIsRunning = AkelPad.IsPluginRunning("QSearch::QSearch");
 
 if (hDlg = oSys.Call("User32::FindWindowExW", 0, 0, sClass, 0))
 {
@@ -758,10 +758,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         // TextSearchOptions('word up');
         // AkelPad.Command(4333);
-        if (bQSearchIsRunning)
-          bLogShow = ! bLogShow;
-        else
-          AkelPad.MessageBox(0, 'The QSearch plugin should be running!', sScriptName, 0);
+        bLogShow = ! bLogShow;
       }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         TextSearchOptions('word up');
@@ -2586,7 +2583,7 @@ function OpenOrCloseFile(bSelect, bCloseOr)
 
         if (bSaved && AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
         {
-          WScript.Sleep(666); // to avoid some crashes
+          //WScript.Sleep(666); // to avoid some crashes
           if (bSelect)
             if (searchSelect())
               return true;
@@ -2628,7 +2625,7 @@ function OpenFileAndFindBeginOrFindNext(bPrev)
         {
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
-            WScript.Sleep(666);
+            //WScript.Sleep(666);
             return true;
           }
 
@@ -2830,18 +2827,13 @@ function Settings()
     FindToLog();
   else if (nCmd === 12)
   {
-    if (bQSearchIsRunning)
-    {
 //       (new ActiveXObject("WScript.Shell").Popup(
 //        'The Double Click will show the results in the log.\nUse Ctrl+W to close file.',
 //        2, // Autoclose after 2 seconds
 //        sScriptName,
 //        64 /*MB_ICONINFORMATION*/
 //      ));
-      bLogShow = ! bLogShow;
-    }
-    else
-      AkelPad.MessageBox(0, 'The QSearch plugin should be running!', sScriptName, 0);
+    bLogShow = ! bLogShow;
   }
 }
 
