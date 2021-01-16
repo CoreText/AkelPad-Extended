@@ -34,12 +34,17 @@
 // Shift+Alt+P      - Show results in the new document
 // Shift+Enter      - Open focused file for editing and select the found text (or close file if is currently edited)
 
-// Ctrl+Enter       - Go to next occur
-// Ctrl+Shift+Enter - Go to previous occur
+// Ctrl+Enter       - Go to next occurrence
+// Ctrl+Shift+Enter - Go to previous occurrence
 // Alt+Enter        - Go to next occur Match Word
 // Shift+Alt+Enter  - Go to previous occurrence Match Word
 // Alt+G            - Go to next occur Match Word, in opened documents
 // Sfhit+Alt+G      - Go to previous occur Match Word, in opened documents
+
+// Alt+B            - Bookmark the results
+// Shift+Alt+B      - Unmark the results
+// Ctrl+B           - Go to next bookmark
+// Ctrl+Shift+B     - Go to previous bookmark
 
 // Ctrl+W           - Close current document
 // Ctrl+Shift+W     - Close tabs by extension
@@ -471,7 +476,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
     }
   }
-
   else if (uMsg === 0x0134) //WM_CTLCOLORLISTBOX
   {
     if (lParam === hWndContentList)
@@ -579,6 +583,19 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       if (Ctrl() && Shift())
         qSearchLog();
+    }
+    else if (wParam === 0x42 /*B key VK_KEY_B*/)
+    {
+      if (Ctrl() && (! Shift()))
+      {
+        if (IsLineBoard())
+          AkelPad.Call("LineBoard::Main::NextBookmark");
+      }
+      else if (Ctrl() && Shift())
+      {
+        if (IsLineBoard())
+          AkelPad.Call("LineBoard::Main::PrevBookmark");
+      }
     }
     else if (wParam === 0x45 /*E key VK_KEY_E*/)
     {
@@ -1912,9 +1929,15 @@ function OpenOrCloseFile(bSelect, bCloseOr)
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
             WScript.Sleep(111); // to avoid some crashes
+
             if (bSelect)
-              if (searchSelect())
-                return true;
+              searchSelect();
+
+            if (bBookmarkResults)
+              BookmarkLines('', true);
+
+            if (bMarkResults)
+              highlight();
 
             return true;
           }
