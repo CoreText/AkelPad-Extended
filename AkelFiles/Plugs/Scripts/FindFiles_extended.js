@@ -415,12 +415,14 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 			SetWindowText(aWnd[IDCONTENTCB][HWND], (sWhat || sLastContent));
 		}
 
+		/*
 		bMatchWord = AkelPad.GetArgValue("bWord" , 0);
 		bMatchCase = AkelPad.GetArgValue("bCase" , 0);
 		bContentRE = AkelPad.GetArgValue("bRegEx", 0);
 
 		if (bContentRE)
 			bMultiline = AkelPad.GetArgValue("bRegExMulti", bMultiline);
+		*/
 	}
 
 	else if (uMsg === 0x8001 /*WM_APP+1*/)
