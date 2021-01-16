@@ -1523,7 +1523,8 @@ function CurrentDir()
 
 function BrowseDirs()
 {
-  var sSelDir = BrowseForFolder(hWndDlg, sTxtChooseDir, GetWindowText(aWnd[IDDIRCB][HWND]).replace(/(^ +)|( +$)/g, ""));
+  var sCurrentDir = GetWindowText(aWnd[IDDIRCB][HWND]).replace(/(^ +)|( +$)/g, "");
+  var sSelDir = BrowseForFolder(hWndDlg, sTxtChooseDir + sCurrentDir, sCurrentDir);
 
   if (sSelDir)
   {
@@ -2682,13 +2683,13 @@ function ReadIni()
     sTxtSkipBinary  = "S&kip binary files";
     sTxtSkipLarger  = "Don't search\nin larger than [&B]:";
     sTxtFiles       = "Files";
-    sTxtSearch      = "&Search";
+    sTxtSearch      = "&SEARCH";
     sTxtEdit        = "&Edit";
     sTxtCopyList    = "Cop&y list";
     sTxtClearList   = "Clear list [&Q]";
     sTxtSettings    = "SETTINGS [&;]";
     sTxtClose       = "Close [&X]";
-    sTxtChooseDir   = "Choose &directory:";
+    sTxtChooseDir   = "Current path is:\n";
     sTxtNoFiles     = "<no files>";
     sTxtSeparateWnd = "Run in separate window";
     sTxtKeepFiles   = "Keep files list";
