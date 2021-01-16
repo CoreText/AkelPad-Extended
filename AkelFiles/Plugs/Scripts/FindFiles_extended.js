@@ -120,7 +120,8 @@ else
 	var DT_WORD    = 4;
 	var hMainWnd   = AkelPad.GetMainWnd();
 	var nBkColorT  = 0xFFFFFF;
-	var nBkColorRE = 0x586bad /* 0xA0FFFF */;
+	var nBkColorTU = 0xC8C8C8;
+	var nBkColorRE = 0xA7E2B7;
 	var hBrush     = oSys.Call("Gdi32::CreateSolidBrush", nBkColorRE);
 	var nBufSize   = 2048 /* 1024 */;
 	var lpBuffer   = AkelPad.MemAlloc(nBufSize);
@@ -456,36 +457,35 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
   ////////////////////////////////////////////////////////////////////////// inputs status highlight
   else if (uMsg === 0x0133) //WM_CTLCOLOREDIT
   {
-    if ((lParam === hWndNameEdit) || (lParam === hWndContentEdit))
+    if (lParam === hWndContentEdit)
     {
-      if (((lParam === hWndNameEdit) && (bNameRE)) || ((lParam === hWndContentEdit) && (bContentRE)))
+      if (bContentRE)
       {
         oSys.Call("Gdi32::SetBkColor", wParam, nBkColorRE);
         return hBrush;
       }
-      // else
-      // {
-      //   oSys.Call("Gdi32::SetBkColor", wParam, nBkColorT);
-      //   oSys.Call("Gdi32::SetFgColor", wParam, nBkColorT);
-      //   return oSys.Call("User32::GetSysColorBrush", 5 /*COLOR_WINDOW*/);
-      // }
+      else
+      {
+        oSys.Call("Gdi32::SetBkColor", wParam, nBkColorT);
+        return nBkColorT;
+      }
     }
   }
 
   else if (uMsg === 0x0134) //WM_CTLCOLORLISTBOX
   {
-    if ((lParam === hWndNameList) || (lParam === hWndContentList))
+    if (lParam === hWndContentList)
     {
-      if (((lParam === hWndNameList) && (bNameRE)) || ((lParam === hWndContentList) && (bContentRE)))
+      if (bContentRE)
       {
         oSys.Call("Gdi32::SetBkColor", wParam, nBkColorRE);
         return hBrush;
       }
-      // else
-      // {
-      //   oSys.Call("Gdi32::SetBkColor", wParam, oSys.Call("User32::GetSysColor", 5 /*COLOR_WINDOW*/));
-      //   return oSys.Call("User32::GetSysColorBrush", 5 /*COLOR_WINDOW*/);
-      // }
+      else
+      {
+        oSys.Call("Gdi32::SetBkColor", wParam, nBkColorT);
+        return nBkColorT;
+      }
     }
   }
   ////////////////////////////////////////////////////////////////////////// end inputs status highlight
