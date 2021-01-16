@@ -1,4 +1,3 @@
-// FindFiles_extended.js
 // http://tc-image.3dn.ru/forum/9-779-4176-16-1353248260
 // Author: KDJ & texter
 // ver. 2013-09-14
@@ -162,6 +161,7 @@ else
   var bKeepFiles      = 1;
   var bPathShow       = 1;
   var bLogShow        = 0;
+  var bMarkResults    = 0;
   var nPathLen        = 0;
   var bSortDesc       = 0;
   var nDirLevel       = -1;
@@ -823,19 +823,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (AkelPad.MemRead(lParam + (_X64 ? 24 : 12) /*NMITEMACTIVATE.iItem*/, DT_DWORD) === -1)
         SetSelLV(GetCurFocLV());
       else
-        if (OpenFileAndFindBeginOrFindNext())
-        {
-          searchSelect();
-        }
+        OpenFileAndFindBeginOrFindNext();
     }
     else if (inputCode === -5 /*NM_RCLICK*/) {
       if (AkelPad.MemRead(lParam + (_X64 ? 24 : 12) /*NMITEMACTIVATE.iItem*/, DT_DWORD) === -1)
         SetSelLV(GetCurFocLV());
       else
-        if (OpenFileAndFindBeginOrFindNext(true))
-        {
-          searchSelect();
-        }
+        OpenFileAndFindBeginOrFindNext(true);
     }
   }
 
@@ -1922,7 +1916,7 @@ function OpenOrCloseFile(bSelect, bCloseOr)
         {
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
-            //WScript.Sleep(666); // to avoid some crashes
+            WScript.Sleep(111); // to avoid some crashes
             if (bSelect)
               if (searchSelect())
                 return true;
@@ -1954,7 +1948,7 @@ function OpenFileAndFindBeginOrFindNext(bPrev)
     var nItem = GetCurFocLV();
     if (nItem >= 0)
     {
-      if (aFiles[nItem].toUpperCase() == AkelPad.GetEditFile(0).toUpperCase())
+      if (aFiles[nItem].toUpperCase() === AkelPad.GetEditFile(0).toUpperCase())
       {
         TextSearchOptions(sTextSearchOptionsParams);
         return false;
@@ -1965,7 +1959,12 @@ function OpenFileAndFindBeginOrFindNext(bPrev)
         {
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
-            //WScript.Sleep(666);
+            WScript.Sleep(111);
+            searchSelect();
+
+            if (bMarkResults)
+              return highlight();
+
             return true;
           }
 
@@ -2091,6 +2090,7 @@ function Settings()
   oSys.Call("User32::AppendMenuW", hMenu, (bKeepFiles   ? MF_CHECKED : MF_STRING), 2, sTxtKeepFiles);
   oSys.Call("User32::AppendMenuW", hMenu, MF_SEPARATOR);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShow     ? MF_CHECKED : MF_STRING), 11, sTxtLogShow);
+  oSys.Call("User32::AppendMenuW", hMenu, (bMarkResults ? MF_CHECKED : MF_STRING), 12, sTxtMarkResults);
   oSys.Call("User32::AppendMenuW", hMenu, MF_SEPARATOR);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShowNewT ? MF_CHECKED : MF_STRING), 4, sTxtLogResultsN);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShowKeep ? MF_CHECKED : MF_STRING), 5, sTxtLogResultsK);
@@ -2131,8 +2131,14 @@ function Settings()
   else if (nCmd === 10)
     FindToLog();
   else if (nCmd === 11)
-  {
     bLogShow = ! bLogShow;
+  else if (nCmd === 12)
+  {
+    bMarkResults = ! bMarkResults;
+    if (bMarkResults)
+      highlight(sContent);
+    else
+      highlight(sContent, 3);
   }
 }
 
@@ -2425,6 +2431,10 @@ function searchSelect()
 /**
  * HighLight text from the What input.
  *
+ * nAction
+ * 2 - highlight
+ * 3 - unhighlight
+ *
  * nFlags
  1   case sensitive (default).
  2   regular expressions in "TEXT" parameter.
@@ -2452,10 +2462,12 @@ function highlight(sText, nAction, nFlags)
   else if (bMatchWord)
     args += 4;
 
+  AkelPad.Call("Coder::HighLight", 3, -666999, "#FF8080", '#400080');
+
   if (action === 2)
-    AkelPad.Call("Coder::HighLight", action, "#FF8080", '#400080', args, 0, -666, strWhat);
+    AkelPad.Call("Coder::HighLight", action, "#FF8080", '#400080', args, 0, -666999, strWhat);
   else if (action === 3)
-    AkelPad.Call("Coder::HighLight", action, -666, "#FF8080", '#400080');
+    AkelPad.Call("Coder::HighLight", action, -666999, "#FF8080", '#400080');
 
   return true;
 }
@@ -2515,14 +2527,15 @@ function ReadIni()
     sTxtSeparateWnd = "Run in separate window";
     sTxtKeepFiles   = "Keep files list";
     sTxtPathShow    = "Show full path on files list";
-    sTxtLogResLog   = "Show results of current document (&FIND) in the log output\t\tCtrl+S";
+    sTxtLogResLog   = "Show results of current document (&FIND) in the log output\tCtrl+S";
     sTxtLogResLogP  = "Show results of current document (FIND), &Preserving the log output\tCtrl+Shift+S";
     sTxtLogResLogQS = "Show results of current document (&qSearch), preserving the log output\tCtrl+Shift+A";
     sTxtLogResLogQSA= "Results from opened documents in log (qSearch), preserving the log output\tShift+Alt+&A";
-    sTxtLogResults  = "Show results in the &Log (FINDSTR)\t\t\tCtrl+L";
+    sTxtLogResults  = "Show results in the &Log (FINDSTR)\tCtrl+L";
     sTxtLogResultsK = "Show results in the log, but &Keep the previous results (FINDSTR)\tCtrl+Shift+L";
-    sTxtLogResultsN = "Show results in the &New tab (FINDSTR)\t\tCtrl+N";
+    sTxtLogResultsN = "Show results in the &New tab (FINDSTR)\tCtrl+N";
     sTxtLogShow     = "Double click to &Close instead showing results in the Log";
+    sTxtMarkResults = "&Highlight | Mark the results\tCtrl+Q/Ctrl+Shift+Q";
     sTxtDirNoExist  = "Directory does not exists.";
     sTxtFileNoExist = "File(s) does not exists.";
     sTxtErrorRE     = "Error in regular expression.";
@@ -2615,6 +2628,7 @@ function WriteIni()
              'bKeepFiles='      + bKeepFiles + ';\r\n' +
              'bPathShow='       + bPathShow + ';\r\n' +
              'bLogShow='        + bLogShow + ';\r\n' +
+             'bMarkResults='    + bMarkResults + ';\r\n' +
              'nPathLen='        + nPathLen + ';\r\n' +
              'bSortDesc='       + bSortDesc + ';\r\n' +
              'nDirLevel='       + nDirLevel + ';\r\n' +
