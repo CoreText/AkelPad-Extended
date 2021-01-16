@@ -86,7 +86,7 @@ Quotes:
 ;5=1+4
 5	3	${STR}	0	"'"	"'"	"\"	""	""	0	0
 ;5=1+4
-5	3	${STR}	0	"`"	"`"	"\"	""	""	0	0
+5	3	${HighLight_BasicTextColor}	0	"`"	"`"	"\"	""	""	0	0
 ;1=1
 1	3	${COMM}	0	"--"	""	""	""	""	0	0
 ;1=1
@@ -1073,6 +1073,8 @@ Words:
 0	0	${OP}	0	syn
 0	0	${OP}	0	keyword
 ;--sqlStatement--
+0	2	${DEL1}	0	commit
+0	2	${DEL1}	0	start
 0	2	${OP}	0	allocate
 0	2	${OP}	0	alter
 0	2	${OP}	0	backup
@@ -1080,7 +1082,6 @@ Words:
 0	2	${OP}	0	checkpoint
 0	2	${OP}	0	clear
 0	2	${OP}	0	close
-0	2	${OP}	0	commit
 0	2	${OP}	0	configure
 0	2	${OP}	0	connect
 0	2	${OP}	0	create
@@ -1130,11 +1131,9 @@ Words:
 0	2	${OP}	0	rollback
 0	2	${OP}	0	savepoint
 0	2	${OP}	0	select
-0	2	${OP}	0	set
 0	2	${OP}	0	setuser
 0	2	${OP}	0	signal
 0	2	${OP}	0	show
-0	2	${OP}	0	start
 0	2	${OP}	0	stop
 0	2	${OP}	0	synchronize
 0	2	${OP}	0	system
@@ -1147,6 +1146,7 @@ Words:
 0	2	${OP}	0	whenever
 0	2	${OP}	0	where
 0	2	${OP}	0	writetext
+0	2	${VAR}	0	set
 ;--sqlOperator--
 0	0	${OP}	0	all
 0	0	${OP}	0	and
@@ -1331,8 +1331,12 @@ Words:
 0	0	${ATTR}	0	Verify_threshold
 0	0	${ATTR}	0	Wait_for_commit
 ;--sqlType--
+0	0	${DEL2}	0	UNSIGNED
+0	0	${DEL2}	0	unsigned
 0	0	${OP}	0	CHARSET
 0	0	${OP}	0	charset
+0	0	${OP}	0	COLLATE
+0	0	${OP}	0	collate
 0	0	${TYPE}	0	BIGINT
 0	0	${TYPE}	0	bigint
 0	0	${TYPE}	0	BINARY
@@ -1387,8 +1391,6 @@ Words:
 0	0	${TYPE}	0	tinytext
 0	0	${TYPE}	0	UNIQUEIDENTIFIER
 0	0	${TYPE}	0	uniqueidentifier
-0	0	${TYPE}	0	unsigned
-0	0	${TYPE}	0	UNSIGNED
 0	0	${TYPE}	0	VARBINARY
 0	0	${TYPE}	0	varbinary
 0	0	${TYPE}	0	VARCHAR
@@ -1461,47 +1463,48 @@ Words:
 0	2	${ATTR}	0	utf8                ; UTF-8 Unicode
 0	2	${ATTR}	0	utf8mb4             ; UTF-8 Unicode
 ;--Collations--
-0	2	${STR}	0	armscii8_general_ci ; ARMSCII-8 Armenian
-0	2	${STR}	0	ascii_general_ci    ; US ASCII
-0	2	${STR}	0	big5_chinese_ci     ; Big5 Traditional Chinese
-0	2	${STR}	0	binary              ; Binary pseudo charset
-0	2	${STR}	0	cp1250_general_ci   ; Windows Central European
-0	2	${STR}	0	cp1251_general_ci   ; Windows Cyrillic
-0	2	${STR}	0	cp1256_general_ci   ; Windows Arabic
-0	2	${STR}	0	cp1257_general_ci   ; Windows Baltic
-0	2	${STR}	0	cp850_general_ci    ; DOS West European
-0	2	${STR}	0	cp852_general_ci    ; DOS Central European
-0	2	${STR}	0	cp866_general_ci    ; DOS Russian
-0	2	${STR}	0	cp932_japanese_ci   ; SJIS for Windows Japanese
-0	2	${STR}	0	dec8_swedish_ci     ; DEC West European
-0	2	${STR}	0	eucjpms_japanese_ci ; UJIS for Windows Japanese
-0	2	${STR}	0	euckr_korean_ci     ; EUC-KR Korean
-0	2	${STR}	0	gb18030_chinese_ci  ; China National Standard GB18030
-0	2	${STR}	0	gb2312_chinese_ci   ; GB2312 Simplified Chinese
-0	2	${STR}	0	gbk_chinese_ci      ; GBK Simplified Chinese
-0	2	${STR}	0	geostd8_general_ci  ; GEOSTD8 Georgian
-0	2	${STR}	0	greek_general_ci    ; ISO 8859-7 Greek
-0	2	${STR}	0	hebrew_general_ci   ; ISO 8859-8 Hebrew
-0	2	${STR}	0	hp8_english_ci      ; HP West European
-0	2	${STR}	0	keybcs2_general_ci  ; DOS Kamenicky Czech-Slovak
-0	2	${STR}	0	koi8r_general_ci    ; KOI8-R Relcom Russian
-0	2	${STR}	0	koi8u_general_ci    ; KOI8-U Ukrainian
-0	2	${STR}	0	latin1_swedish_ci   ; cp1252 West European
-0	2	${STR}	0	latin2_general_ci   ; ISO 8859-2 Central European
-0	2	${STR}	0	latin5_turkish_ci   ; ISO 8859-9 Turkish
-0	2	${STR}	0	latin7_general_ci   ; ISO 8859-13 Baltic
-0	2	${STR}	0	macce_general_ci    ; Mac Central European
-0	2	${STR}	0	macroman_general_ci ; Mac West European
-0	2	${STR}	0	sjis_japanese_ci    ; Shift-JIS Japanese
-0	2	${STR}	0	swe7_swedish_ci     ; 7bit Swedish
-0	2	${STR}	0	tis620_thai_ci      ; TIS620 Thai
-0	2	${STR}	0	ucs2_general_ci     ; UCS-2 Unicode
-0	2	${STR}	0	ujis_japanese_ci    ; EUC-JP Japanese
-0	2	${STR}	0	utf16_general_ci    ; UTF-16 Unicode
-0	2	${STR}	0	utf16le_general_ci  ; UTF-16LE Unicode
-0	2	${STR}	0	utf32_general_ci    ; UTF-32 Unicode
-0	2	${STR}	0	utf8_general_ci     ; UTF-8 Unicode
-0	2	${STR}	0	utf8mb4_0900_ai_ci  ; UTF-8 Unicode
+0	2	${ATTR}	0	armscii8_general_ci ; ARMSCII-8 Armenian
+0	2	${ATTR}	0	ascii_general_ci    ; US ASCII
+0	2	${ATTR}	0	big5_chinese_ci     ; Big5 Traditional Chinese
+0	2	${ATTR}	0	binary              ; Binary pseudo charset
+0	2	${ATTR}	0	cp1250_general_ci   ; Windows Central European
+0	2	${ATTR}	0	cp1251_general_ci   ; Windows Cyrillic
+0	2	${ATTR}	0	cp1256_general_ci   ; Windows Arabic
+0	2	${ATTR}	0	cp1257_general_ci   ; Windows Baltic
+0	2	${ATTR}	0	cp850_general_ci    ; DOS West European
+0	2	${ATTR}	0	cp852_general_ci    ; DOS Central European
+0	2	${ATTR}	0	cp866_general_ci    ; DOS Russian
+0	2	${ATTR}	0	cp932_japanese_ci   ; SJIS for Windows Japanese
+0	2	${ATTR}	0	dec8_swedish_ci     ; DEC West European
+0	2	${ATTR}	0	eucjpms_japanese_ci ; UJIS for Windows Japanese
+0	2	${ATTR}	0	euckr_korean_ci     ; EUC-KR Korean
+0	2	${ATTR}	0	gb18030_chinese_ci  ; China National Standard GB18030
+0	2	${ATTR}	0	gb2312_chinese_ci   ; GB2312 Simplified Chinese
+0	2	${ATTR}	0	gbk_chinese_ci      ; GBK Simplified Chinese
+0	2	${ATTR}	0	geostd8_general_ci  ; GEOSTD8 Georgian
+0	2	${ATTR}	0	greek_general_ci    ; ISO 8859-7 Greek
+0	2	${ATTR}	0	hebrew_general_ci   ; ISO 8859-8 Hebrew
+0	2	${ATTR}	0	hp8_english_ci      ; HP West European
+0	2	${ATTR}	0	keybcs2_general_ci  ; DOS Kamenicky Czech-Slovak
+0	2	${ATTR}	0	koi8r_general_ci    ; KOI8-R Relcom Russian
+0	2	${ATTR}	0	koi8u_general_ci    ; KOI8-U Ukrainian
+0	2	${ATTR}	0	latin1_swedish_ci   ; cp1252 West European
+0	2	${ATTR}	0	latin2_general_ci   ; ISO 8859-2 Central European
+0	2	${ATTR}	0	latin5_turkish_ci   ; ISO 8859-9 Turkish
+0	2	${ATTR}	0	latin7_general_ci   ; ISO 8859-13 Baltic
+0	2	${ATTR}	0	macce_general_ci    ; Mac Central European
+0	2	${ATTR}	0	macroman_general_ci ; Mac West European
+0	2	${ATTR}	0	sjis_japanese_ci    ; Shift-JIS Japanese
+0	2	${ATTR}	0	swe7_swedish_ci     ; 7bit Swedish
+0	2	${ATTR}	0	tis620_thai_ci      ; TIS620 Thai
+0	2	${ATTR}	0	ucs2_general_ci     ; UCS-2 Unicode
+0	2	${ATTR}	0	ujis_japanese_ci    ; EUC-JP Japanese
+0	2	${ATTR}	0	utf16_general_ci    ; UTF-16 Unicode
+0	2	${ATTR}	0	utf16le_general_ci  ; UTF-16LE Unicode
+0	2	${ATTR}	0	utf32_general_ci    ; UTF-32 Unicode
+0	2	${ATTR}	0	utf8_general_ci     ; UTF-8 Unicode
+0	2	${ATTR}	0	utf8mb4_0900_ai_ci  ; UTF-8 Unicode
+0	2	${ATTR}	0	utf8mb4_unicode_ci  ; UTF-8 Unicode
 
 ;----------------------------------------------;
 ;                   CodeFold                   ;
