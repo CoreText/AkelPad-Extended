@@ -572,7 +572,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (Ctrl() && Shift())
         AkelPad.Command(4200);
     }
-    else if (wParam == 0x53 /*S key VK_KEY_S*/)
+    else if (wParam === 0x53 /*S key VK_KEY_S*/)
     {
       if (Ctrl() && (! Shift()))
         FindToLog();
@@ -867,7 +867,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (nHiwParam === 1 /*CBN_SELCHANGE*/)
       {
         nDirLevel = AkelPad.SendMessage(aWnd[IDLEVELCB][HWND], 0x0147 /*CB_GETCURSEL*/, 0, 0);
-        if (nDirLevel == (AkelPad.SendMessage(aWnd[IDLEVELCB][HWND], 0x0146 /*CB_GETCOUNT*/, 0, 0) - 1))
+        if (nDirLevel === (AkelPad.SendMessage(aWnd[IDLEVELCB][HWND], 0x0146 /*CB_GETCOUNT*/, 0, 0) - 1))
           nDirLevel = -1;
       }
       else if (nHiwParam === 8 /*CBN_CLOSEUP*/)
@@ -2854,7 +2854,7 @@ function WriteIni()
 
 function IsFileExist(pFile)
 {
-  if (oSys.Call("kernel32::GetFileAttributes" + _TCHAR, pFile) == -1)
+  if (oSys.Call("kernel32::GetFileAttributes" + _TCHAR, pFile) === -1)
     return false;
   return true;
 }
