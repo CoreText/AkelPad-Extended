@@ -171,6 +171,7 @@ var oWndPos  = {"X": 240, "Y": 140, "W": nWndMinW, "H": nWndMinH, "Max": 0};
 var bPathShow       = 1;
 var bSeparateWnd    = 0;
 var bLogShow        = 0;
+var bMarkResults    = 0;
 var bKeepHist       = 1;
 var bKeepFiles      = 1;
 var nPathLen        = 0;
@@ -845,19 +846,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (AkelPad.MemRead(lParam + (_X64 ? 24 : 12) /*NMITEMACTIVATE.iItem*/, DT_DWORD) === -1)
         SetSelLV(GetCurFocLV());
       else
-        if (OpenFileAndFindBeginOrFindNext())
-        {
-          searchSelect();
-        }
+        OpenFileAndFindBeginOrFindNext();
     }
     else if (inputCode === -5 /*NM_RCLICK*/) {
       if (AkelPad.MemRead(lParam + (_X64 ? 24 : 12) /*NMITEMACTIVATE.iItem*/, DT_DWORD) === -1)
         SetSelLV(GetCurFocLV());
       else
-        if (OpenFileAndFindBeginOrFindNext(true))
-        {
-          searchSelect();
-        }
+        OpenFileAndFindBeginOrFindNext(true);
     }
   }
 
@@ -2583,7 +2578,7 @@ function OpenOrCloseFile(bSelect, bCloseOr)
 
         if (bSaved && AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
         {
-          //WScript.Sleep(666); // to avoid some crashes
+          WScript.Sleep(111); // to avoid some crashes
           if (bSelect)
             if (searchSelect())
               return true;
@@ -2625,7 +2620,12 @@ function OpenFileAndFindBeginOrFindNext(bPrev)
         {
           if (AkelPad.OpenFile(aFiles[nItem]) === 0 /*EOD_SUCCESS*/)
           {
-            //WScript.Sleep(666);
+            WScript.Sleep(111); // to avoid some crashes
+            searchSelect();
+
+            if (bMarkResults)
+              return highlight();
+
             return true;
           }
 
@@ -2780,6 +2780,7 @@ function Settings()
   oSys.Call("User32::AppendMenuW", hMenu, (bKeepFiles   ? MF_CHECKED : MF_STRING), 4, sTxtKeepFiles);
   oSys.Call("User32::AppendMenuW", hMenu, MF_SEPARATOR);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShow     ? MF_CHECKED : MF_STRING), 12, sTxtLogShow);
+  oSys.Call("User32::AppendMenuW", hMenu, (bMarkResults ? MF_CHECKED : MF_STRING), 13, sTxtMarkResults);
   oSys.Call("User32::AppendMenuW", hMenu, MF_SEPARATOR);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShowNewT ? MF_CHECKED : MF_STRING), 5, sTxtLogResultsN);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShowKeep ? MF_CHECKED : MF_STRING), 6, sTxtLogResultsK);
@@ -2834,6 +2835,14 @@ function Settings()
 //        64 /*MB_ICONINFORMATION*/
 //      ));
     bLogShow = ! bLogShow;
+  }
+  else if (nCmd === 13)
+  {
+    bMarkResults = ! bMarkResults;
+    if (bMarkResults)
+      highlight(sContent);
+    else
+      highlight(sContent, 3);
   }
 }
 
@@ -3124,6 +3133,10 @@ function searchSelect()
 /**
  * HighLight text from the What input.
  *
+ * nAction
+ * 2 - highlight
+ * 3 - unhighlight
+ *
  * nFlags
  1   case sensitive (default).
  2   regular expressions in "TEXT" parameter.
@@ -3151,10 +3164,12 @@ function highlight(sText, nAction, nFlags)
   else if (bMatchWord)
     args += 4;
 
+  AkelPad.Call("Coder::HighLight", 3, -666999, "#FF8080", '#400080');
+
   if (action === 2)
-    AkelPad.Call("Coder::HighLight", action, "#FF8080", '#400080', args, 0, -666, strWhat);
+    AkelPad.Call("Coder::HighLight", action, "#FF8080", '#400080', args, 0, -666999, strWhat);
   else if (action === 3)
-    AkelPad.Call("Coder::HighLight", action, -666, "#FF8080", '#400080');
+    AkelPad.Call("Coder::HighLight", action, -666999, "#FF8080", '#400080');
 
   return true;
 }
@@ -3244,6 +3259,7 @@ function WriteIni()
   sIniTxt +=
     'bPathShow='       + bPathShow + ';\r\n' +
     'bLogShow='        + bLogShow + ';\r\n' +
+    'bMarkResults='    + bMarkResults + ';\r\n' +
     'bSeparateWnd='    + bSeparateWnd + ';\r\n' +
     'bKeepHist='       + bKeepHist + ';\r\n' +
     'bKeepFiles='      + bKeepFiles + ';\r\n' +
@@ -3361,14 +3377,15 @@ function GetLangStrings()
   sTxtWait        = "Wait...";
   sTxtChooseDir   = "Choose directory:";
   sTxtPathShow    = "Show full path in file list";
-  sTxtLogResLog   = "Show results of current document (&FIND) in the log output\t\tCtrl+S";
+  sTxtLogResLog   = "Show results of current document (&FIND) in the log output\tCtrl+S";
   sTxtLogResLogP  = "Show results of current document (FIND), &Preserving the log output\tCtrl+Shift+S";
   sTxtLogResLogQS = "Show results of current document (&qSearch), preserving the log output\tCtrl+Shift+A";
   sTxtLogResLogQSA= "Results from opened documents in log (qSearch), preserving the log output\tShift+Alt+&A";
-  sTxtLogResults  = "Show results in the &Log (FINDSTR)\t\t\tCtrl+L";
+  sTxtLogResults  = "Show results in the &Log (FINDSTR)\tCtrl+L";
   sTxtLogResultsK = "Show results in the log, but &Keep the previous results (FINDSTR)\tCtrl+Shift+L";
-  sTxtLogResultsN = "Show results in the &New tab (FINDSTR)\t\tCtrl+N";
+  sTxtLogResultsN = "Show results in the &New tab (FINDSTR)\tCtrl+N";
   sTxtLogShow     = "Double click to &Close instead showing results in the Log";
+  sTxtMarkResults = "&Highlight | Mark the results\tCtrl+Q/Ctrl+Shift+Q";
   sTxtSeparateWnd = "Run in separate window";
   sTxtKeepHist    = "Keep history on exit";
   sTxtKeepFiles   = "Keep file list";
