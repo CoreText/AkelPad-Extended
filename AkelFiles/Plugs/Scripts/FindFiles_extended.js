@@ -119,7 +119,8 @@ else
 	var DT_DWORD   = 3;
 	var DT_WORD    = 4;
 	var hMainWnd   = AkelPad.GetMainWnd();
-	var nBkColorRE = 0xA0FFFF;
+	var nBkColorT  = 0xFFFFFF;
+	var nBkColorRE = 0x586bad /* 0xA0FFFF */;
 	var hBrush     = oSys.Call("Gdi32::CreateSolidBrush", nBkColorRE);
 	var nBufSize   = 2048 /* 1024 */;
 	var lpBuffer   = AkelPad.MemAlloc(nBufSize);
@@ -452,39 +453,42 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 		ResizeWindow(hWnd);
 	}
 
-//   else if (uMsg == 0x0133) //WM_CTLCOLOREDIT
-//   {
-//     if ((lParam == hWndNameEdit) || (lParam == hWndContentEdit))
-//     {
-//       if (((lParam == hWndNameEdit) && (bNameRE)) || ((lParam == hWndContentEdit) && (bContentRE)))
-//       {
-//         oSys.Call("Gdi32::SetBkColor", wParam, nBkColorRE);
-//         return hBrush;
-//       }
-//       else
-//       {
-//         oSys.Call("Gdi32::SetBkColor", wParam, oSys.Call("User32::GetSysColor", 5 /*COLOR_WINDOW*/));
-//         return oSys.Call("User32::GetSysColorBrush", 5 /*COLOR_WINDOW*/);
-//       }
-//     }
-//   }
-//
-//   else if (uMsg == 0x0134) //WM_CTLCOLORLISTBOX
-//   {
-//     if ((lParam == hWndNameList) || (lParam == hWndContentList))
-//     {
-//       if (((lParam == hWndNameList) && (bNameRE)) || ((lParam == hWndContentList) && (bContentRE)))
-//       {
-//         oSys.Call("Gdi32::SetBkColor", wParam, nBkColorRE);
-//         return hBrush;
-//       }
-//       else
-//       {
-//         oSys.Call("Gdi32::SetBkColor", wParam, oSys.Call("User32::GetSysColor", 5 /*COLOR_WINDOW*/));
-//         return oSys.Call("User32::GetSysColorBrush", 5 /*COLOR_WINDOW*/);
-//       }
-//     }
-//   }
+  ////////////////////////////////////////////////////////////////////////// inputs status highlight
+  else if (uMsg === 0x0133) //WM_CTLCOLOREDIT
+  {
+    if ((lParam === hWndNameEdit) || (lParam === hWndContentEdit))
+    {
+      if (((lParam === hWndNameEdit) && (bNameRE)) || ((lParam === hWndContentEdit) && (bContentRE)))
+      {
+        oSys.Call("Gdi32::SetBkColor", wParam, nBkColorRE);
+        return hBrush;
+      }
+      // else
+      // {
+      //   oSys.Call("Gdi32::SetBkColor", wParam, nBkColorT);
+      //   oSys.Call("Gdi32::SetFgColor", wParam, nBkColorT);
+      //   return oSys.Call("User32::GetSysColorBrush", 5 /*COLOR_WINDOW*/);
+      // }
+    }
+  }
+
+  else if (uMsg === 0x0134) //WM_CTLCOLORLISTBOX
+  {
+    if ((lParam === hWndNameList) || (lParam === hWndContentList))
+    {
+      if (((lParam === hWndNameList) && (bNameRE)) || ((lParam === hWndContentList) && (bContentRE)))
+      {
+        oSys.Call("Gdi32::SetBkColor", wParam, nBkColorRE);
+        return hBrush;
+      }
+      // else
+      // {
+      //   oSys.Call("Gdi32::SetBkColor", wParam, oSys.Call("User32::GetSysColor", 5 /*COLOR_WINDOW*/));
+      //   return oSys.Call("User32::GetSysColorBrush", 5 /*COLOR_WINDOW*/);
+      // }
+    }
+  }
+  ////////////////////////////////////////////////////////////////////////// end inputs status highlight
 
 	else if (uMsg === 256) //WM_KEYDOWN
 	{
@@ -1874,6 +1878,11 @@ function OpenFiles()
 	}
 }
 
+/**
+ * Open the file, or close the file if it's already opened.
+ *
+ * @return bool - false if already opened
+ */
 function OpenOrCloseFile(bSelect, bCloseOr)
 {
 	var bClose = bCloseOr || true;
@@ -1921,6 +1930,11 @@ function OpenOrCloseFile(bSelect, bCloseOr)
 	}
 }
 
+/**
+ * Open the file and find results from begin, or find next occurrence.
+ *
+ * @return bool - false if already opened
+ */
 function OpenFileAndFindBeginOrFindNext(bPrev)
 {
 	var sTextSearchOptionsParams = "";
@@ -2140,7 +2154,7 @@ function Settings()
 }
 
 /**
- * Find in files using FINDSTR search util and show search results in log
+ * Find in files using FINDSTR search util and show search results in log.
  * @TODO: Match exact word
  *
  * @param int pLogOutput - flags for Log::Output, default no scroll (16)
@@ -2288,7 +2302,7 @@ function qSearchLog(searchFlag)
 }
 
 /**
- * qSearch FindAll
+ * qSearch Find All.
  *
  * @param string selText    - text to search
  * @param number flag       - search flag
@@ -2468,6 +2482,7 @@ function highlight(sText, nAction, nFlags)
 }
 
 /**
+ * Bookmark Lines.
  *
  * @return bool when executed
  */
@@ -2685,7 +2700,7 @@ function ReadIni()
 		sTxtLogResults  = "Show results in the &Log (FINDSTR)\tCtrl+L";
 		sTxtLogResultsK = "Show results in the log, but &Keep the previous results (FINDSTR)\tCtrl+Shift+L";
 		sTxtLogResultsN = "Show results in the &New tab (FINDSTR)\tCtrl+N";
-		sTxtLogShow     = "Double click to show results in the &Log instead closing the file";
+		sTxtLogShow     = "&Double click to show results in the Log instead closing the file";
 		sTxtMarkResults = "&Highlight | Mark the results\tCtrl+Q/Ctrl+Shift+Q";
 		sTxtBookmarkResults = "&Bookmark the results\tAlt+B/Shift+Alt+B";
 		sTxtDirNoExist  = "Directory does not exists.";
