@@ -18,6 +18,14 @@
 // Ctrl+Down         - Focus the Files list
 // Ctrl+Up           - Focus the Search input
 
+// Alt+O             - Focus the file name input
+// Alt+D             - Focus the search path
+// Alt+T,
+// Ctrl+F            - Focus the search input
+
+// Alt+Up            - Opened file navigation scroll up
+// Alt+Down          - Opened file navigation scroll down
+
 // Left Mouse Click  - Open the selected file for editing and select the found text and finds next result
 // Right Mouse Click - Open the selected file for editing and select the found text and finds previous result
 // Double Click      - Close the selected file, or shows the results in the log depending on the settings of the dialog
@@ -750,6 +758,16 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         AkelPad.Command(4199);
       else if (wParam === 0x0D /*VK_RETURN*/)
         TextSearchOptions('word');
+      else if (wParam === 0x26 /*UP ARROW key VK_UP*/)
+      {
+        oSys.Call("User32::SetFocus", aWnd[IDFILELV][HWND]);
+        AkelPad.Call("Scroll::Settings", 4, -20);
+      }
+      else if (wParam === 0x28 /*DOWN ARROW key VK_DOWN*/)
+      {
+        oSys.Call("User32::SetFocus", aWnd[IDFILELV][HWND]);
+        AkelPad.Call("Scroll::Settings", 4, 20);
+      }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         AkelPad.Command(4317);
       else if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
