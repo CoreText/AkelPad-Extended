@@ -1905,17 +1905,6 @@ function SearchFiles(bReplace)
   sContent = GetWindowText(aDlg[IDCONTENTCB].HWND);
   sReplace = GetWindowText(aDlg[IDREPLACECB].HWND);
 
-  if (sContent === sReplace)
-  {
-    (new ActiveXObject("WScript.Shell").Popup(
-    'THE TEXT IS THE SAME!',
-    1.2, // Autoclose after 2 seconds
-    'NO REPLACE!',
-    64 /*MB_ICONINFORMATION*/
-    ));
-    return;
-  }
-
   if (sContent)
   {
     if (bContentRE)
@@ -1938,6 +1927,17 @@ function SearchFiles(bReplace)
 
   if (bReplace)
   {
+    if (sContent === sReplace)
+    {
+      (new ActiveXObject("WScript.Shell").Popup(
+        'THE TEXT IS THE SAME!',
+        1.2, // Autoclose after 2 seconds
+        'NO REPLACE!',
+        64 /*MB_ICONINFORMATION*/
+      ));
+      return;
+    }
+
     if (MessageBox(sTxtWantReplace, true))
     {
       if (bContentRE)
