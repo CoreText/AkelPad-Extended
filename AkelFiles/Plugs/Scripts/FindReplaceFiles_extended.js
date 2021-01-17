@@ -1908,9 +1908,9 @@ function SearchFiles(bReplace)
   if (sContent === sReplace)
   {
     (new ActiveXObject("WScript.Shell").Popup(
-    'The text is the same!',
-    2, // Autoclose after 2 seconds
-    'NO REPLACE ('+ sScriptName +')',
+    'THE TEXT IS THE SAME!',
+    1.2, // Autoclose after 2 seconds
+    'NO REPLACE!',
     64 /*MB_ICONINFORMATION*/
     ));
     return;
