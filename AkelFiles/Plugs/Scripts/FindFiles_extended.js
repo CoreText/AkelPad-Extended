@@ -1560,8 +1560,10 @@ function CurrentDir()
 
 function BrowseDirs()
 {
+  var oRect = {};
   var sCurrentDir = GetWindowText(aWnd[IDDIRCB][HWND]).replace(/(^ +)|( +$)/g, "");
-  var sSelDir = BrowseForFolder(hWndDlg, sTxtChooseDir + sCurrentDir, sCurrentDir);
+  GetWindowPos(aWnd[IDBROWSEB][HWND], oRect);
+  var sSelDir = BrowseForFolder(hWndDlg, sTxtChooseDir + sCurrentDir, sCurrentDir, 0, 0, oRect.X, oRect.Y + oRect.H);
 
   if (sSelDir)
   {
@@ -2732,7 +2734,7 @@ function ReadIni()
     sTxtClearList   = "Clear list [&Q]";
     sTxtSettings    = "SETTINGS [&;]";
     sTxtClose       = "Close [&X]";
-    sTxtChooseDir   = "Current path is:\n";
+    sTxtChooseDir   = "The current path is:\n";
     sTxtNoFiles     = "<no files>";
     sTxtSeparateWnd = "Run in separate window";
     sTxtKeepFiles   = "Keep files list";
