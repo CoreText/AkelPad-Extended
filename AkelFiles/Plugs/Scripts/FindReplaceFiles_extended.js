@@ -1907,7 +1907,6 @@ function SearchFiles(bReplace)
 
   if (sContent === sReplace)
   {
-    //AkelPad.MessageBox(0, 'The text is the same!', 'NO REPLACE', 0);
     (new ActiveXObject("WScript.Shell").Popup(
     'The text is the same!',
     2, // Autoclose after 2 seconds
