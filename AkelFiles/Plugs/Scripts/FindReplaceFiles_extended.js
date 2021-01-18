@@ -19,6 +19,14 @@
 // Ctrl+Down         - Focus the Files list
 // Ctrl+Up           - Focus the Search input
 
+// Alt+O             - Focus the file name input
+// Alt+D             - Focus the search path
+// Alt+T,
+// Ctrl+F            - Focus the search input
+
+// Alt+Up            - Opened file navigation scroll up
+// Alt+Down          - Opened file navigation scroll down
+
 // Left Mouse Click  - Open the selected file for editing and select the found text and finds next result
 // Right Mouse Click - Open the selected file for editing and select the found text and finds previous result
 // Double Click      - Close the selected file, or shows the results in the log depending on the settings of the dialog
@@ -195,6 +203,7 @@ var bInStreams      = 0;
 var bSkipReadOnly   = 0;
 var bSkipHidden     = 0;
 var bSkipSystem     = 0;
+var bSkipVCSignore  = 0;
 var bInResults      = 0;
 var bContentRE      = 0;
 var bMatchCase      = 0;
@@ -263,17 +272,18 @@ var IDSKIPG      = 2026;
 var IDREADONLY   = 2027;
 var IDHIDDEN     = 2028;
 var IDSYSTEM     = 2029;
-var IDINRESULTS  = 2030;
-var IDSEARCHB    = 2031;
-var IDREPLACEB   = 2032;
-var IDHISTORYB   = 2033;
-var IDEDITB      = 2034;
-var IDCOPYB      = 2035;
-var IDCLEARB     = 2036;
-var IDSETTINGSB  = 2037;
-var IDCLOSEB     = 2038;
-var IDFILELV     = 2039;
-var IDSTATUS     = 2040;
+var IDVCSIGNORE  = 2030;
+var IDINRESULTS  = 2031;
+var IDSEARCHB    = 2032;
+var IDREPLACEB   = 2033;
+var IDHISTORYB   = 2034;
+var IDEDITB      = 2035;
+var IDCOPYB      = 2036;
+var IDCLEARB     = 2037;
+var IDSETTINGSB  = 2038;
+var IDCLOSEB     = 2039;
+var IDFILELV     = 2040;
+var IDSTATUS     = 2041;
 
 //0x50000000=WS_VISIBLE|WS_CHILD
 //0x50000002=WS_VISIBLE|WS_CHILD|SS_RIGHT
@@ -315,6 +325,7 @@ aDlg[IDSKIPG     ]={S:0x50000007, C:"BUTTON", T:sTxtSkipFiles};
 aDlg[IDREADONLY  ]={S:0x50010003, C:"BUTTON", T:sTxtReadOnly};
 aDlg[IDHIDDEN    ]={S:0x50010003, C:"BUTTON", T:sTxtHidden};
 aDlg[IDSYSTEM    ]={S:0x50010003, C:"BUTTON", T:sTxtSystem};
+aDlg[IDVCSIGNORE ]={S:0x50010003, C:"BUTTON", T:sTxtVCSigore};
 aDlg[IDINRESULTS ]={S:0x50010003, C:"BUTTON", T:sTxtInResults};
 aDlg[IDSEARCHB   ]={S:0x50010000, C:"BUTTON", T:sTxtSearch};
 aDlg[IDREPLACEB  ]={S:0x50010000, C:"BUTTON", T:sTxtReplace};
@@ -799,6 +810,16 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         AkelPad.Command(4199);
       // else if (wParam == 0x0D /*VK_RETURN*/)
         // TextSearchOptions('word');
+      else if (wParam === 0x26 /*UP ARROW key VK_UP*/)
+      {
+        oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
+        AkelPad.Call("Scroll::Settings", 4, -20);
+      }
+      else if (wParam === 0x28 /*DOWN ARROW key VK_DOWN*/)
+      {
+        oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
+        AkelPad.Call("Scroll::Settings", 4, 20);
+      }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         AkelPad.Command(4317);
       else if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
@@ -1009,6 +1030,8 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       bSkipHidden = ! bSkipHidden;
     else if (nID === IDSYSTEM)
       bSkipSystem = ! bSkipSystem;
+    else if (nID === IDVCSIGNORE)
+      bSkipVCSignore = ! bSkipVCSignore;
     else if (nID === IDINRESULTS)
     {
       bInResults = ! bInResults;
@@ -1286,14 +1309,28 @@ function ResizeDlg(nW, nH)
     nW90,
     Scale.Y(80),
     nFlags);
-  for (i = IDREADONLY; i <= IDSYSTEM; ++i)
+//   for (i = IDREADONLY; i <= IDVCSIGNORE /* IDSYSTEM */; ++i)
+//     oSys.Call("User32::SetWindowPos",
+//       aDlg[i].HWND, 0,
+//       nW - nW90,
+//       Scale.Y(25 + (i - IDREADONLY) * 20),
+//       nW75,
+//       nH16,
+//       nFlags);
+
+  for (var i = 0, nScaleY, aFields = [IDREADONLY, IDHIDDEN, IDSYSTEM, IDVCSIGNORE], nLen = aFields.length; i < nLen; i++)
+  {
+    nScaleY = 20 + (aFields[i] - IDREADONLY) * 16;
+
     oSys.Call("User32::SetWindowPos",
-      aDlg[i].HWND, 0,
+      aDlg[aFields[i]].HWND, 0,
       nW - nW90,
-      Scale.Y(25 + (i - IDREADONLY) * 20),
+      Scale.Y(nScaleY),
       nW75,
       nH16,
       nFlags);
+  }
+
   oSys.Call("User32::SetWindowPos",
     aDlg[IDINRESULTS].HWND, 0,
     nW - nW90 - nW5,
@@ -1337,6 +1374,7 @@ function SetCheckButtons()
   SendMessage(aDlg[IDREADONLY  ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipReadOnly, 0);
   SendMessage(aDlg[IDHIDDEN    ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipHidden, 0);
   SendMessage(aDlg[IDSYSTEM    ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipSystem, 0);
+  SendMessage(aDlg[IDVCSIGNORE ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipVCSignore, 0);
   SendMessage(aDlg[IDINRESULTS ].HWND, 0x00F1 /*BM_SETCHECK*/, bInResults, 0);
 }
 
@@ -1360,6 +1398,7 @@ function EnableButtons()
   oSys.Call("User32::EnableWindow", aDlg[IDREADONLY  ].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDHIDDEN    ].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDSYSTEM    ].HWND, bNotInRes);
+  oSys.Call("User32::EnableWindow", aDlg[IDVCSIGNORE ].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDHELP2B    ].HWND, bContentRE);
   oSys.Call("User32::EnableWindow", aDlg[IDMULTILINE ].HWND, bContentRE);
   oSys.Call("User32::EnableWindow", aDlg[IDNOTCONTAIN].HWND, bContent);
@@ -1683,10 +1722,8 @@ function BrowseDirs()
   var oRect = {};
   var sSelDir;
   var sCurrentDir = GetWindowText(aDlg[IDDIRCB].HWND).replace(/(^ +)|( +$)/g, "");
-
   GetWindowPos(aDlg[IDBROWSEB].HWND, oRect);
-
-  sSelDir = BrowseForFolder(hDlg, sTxtChooseDir + sCurrentDir, sCurrentDir, 0, 0 , oRect.X, oRect.Y + oRect.H);
+  sSelDir = BrowseForFolder(hDlg, sTxtChooseDir + sCurrentDir, sCurrentDir, 0, 0, oRect.X, oRect.Y + oRect.H);
 
   if (sSelDir)
   {
@@ -1838,6 +1875,9 @@ function SearchFiles(bReplace)
   var bNTFS;
   var aStreams;
   var i, n;
+  var aDirsToSkip;
+  var nCurrentLevel;
+  var sCurrentRelativeDir;
 
   if (! (bInResults && aFiles.length))
   {
@@ -1905,6 +1945,11 @@ function SearchFiles(bReplace)
   sContent = GetWindowText(aDlg[IDCONTENTCB].HWND);
   sReplace = GetWindowText(aDlg[IDREPLACECB].HWND);
 
+  if (bSkipVCSignore)
+  {
+    aDirsToSkip = GetVCSIgnoreFileToSkip();
+  }
+
   if (sContent)
   {
     if (bContentRE)
@@ -1931,7 +1976,7 @@ function SearchFiles(bReplace)
     {
       (new ActiveXObject("WScript.Shell").Popup(
         'THE TEXT IS THE SAME!',
-        1.2, // Autoclose after 2 seconds
+        1.2, // Autoclose after ~2 seconds
         'NO REPLACE!',
         64 /*MB_ICONINFORMATION*/
       ));
@@ -2019,7 +2064,7 @@ function SearchFiles(bReplace)
   else
   {
     aFiles    = [];
-    aPath     = [sDir + ((sDir.slice(-1) != "\\") ? "\\" : "")];
+    aPath     = [sDir + ((sDir.slice(-1) !== "\\") ? "\\" : "")];
     nPathLen  = aPath[0].length;
     bNTFS     = IsSupportStreams(/^[a-z]:/i.test(sDir) ? sDir.substr(0, 2) : "");
     nMaxLevel = (nDirLevel < 0) ? Infinity : nDirLevel;
@@ -2031,7 +2076,12 @@ function SearchFiles(bReplace)
 
       if (hFindFile !== -1) //INVALID_HANDLE_VALUE
       {
-        bLevelOK = ((aPath[i].match(/\\/g).length - aPath[0].match(/\\/g).length) < nMaxLevel);
+        nCurrentLevel = (aPath[i].match(/\\/g).length - aPath[0].match(/\\/g).length);
+        bLevelOK = (nCurrentLevel < nMaxLevel);
+        sCurrentRelativeDir = aPath[i].replace(aPath[0], "").slice(0, -1);
+
+        if (bSkipVCSignore && (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1))
+          continue;
 
         do
         {
@@ -2162,6 +2212,15 @@ function SearchFiles(bReplace)
 
 function GetNameRegExp(sName)
 {
+  if (! sName)
+    sName += "*";
+  else if (! ~sName.indexOf("*"))
+  {
+    // TODO: sort results by extensions
+    var sNameExt = AkelPad.GetFilePath(AkelPad.GetEditFile(0), 4);
+    sName += "*"+ sNameExt +";"+ sName +".*;"+ sName +"*";
+  }
+
   var sPattern = sName
         .replace(/"([^"]*)"/g, function() {return arguments[1].replace(/;/g, "\0");})
         .replace(/[\\\/.^$+|()\[\]{}]/g, "\\$&")
@@ -2171,6 +2230,7 @@ function GetNameRegExp(sName)
         .replace(/(^;)|(;$)/g, "")
         .replace(/;/g, "|")
         .replace(/\0/g, ";");
+
   return new RegExp("^(" + sPattern + ")$", "i");
 }
 
@@ -2214,16 +2274,17 @@ function SortFiles()
   var nSort = bSortDesc ? -1 : 1;
   var nCompare;
 
-  aFiles.sort(
-    function(sName1, sName2)
-    {
-      nCompare = nSort * oSys.Call("Kernel32::lstrcmpiW", sName1.substr(0, sName1.lastIndexOf("\\")), sName2.substr(0, sName2.lastIndexOf("\\")));
+  function sorting(sName1, sName2)
+  {
+    nCompare = nSort * oSys.Call("Kernel32::lstrcmpiW", sName1.substr(0, sName1.lastIndexOf("\\")), sName2.substr(0, sName2.lastIndexOf("\\")));
 
-      if (nCompare === 0)
-        return nSort * oSys.Call("Kernel32::lstrcmpiW", sName1, sName2);
-      else
-        return nCompare;
-    });
+    if (nCompare === 0)
+      return nSort * oSys.Call("Kernel32::lstrcmpiW", sName1, sName2);
+    else
+      return nCompare;
+  }
+
+  aFiles.sort(sorting);
 }
 
 function AddToHistory()
@@ -2270,6 +2331,7 @@ function AddToHistory()
         (aHist[n].bSkipReadOnly === bSkipReadOnly) &&
         (aHist[n].bSkipHidden === bSkipHidden) &&
         (aHist[n].bSkipSystem === bSkipSystem) &&
+        (aHist[n].bSkipVCSignore === bSkipVCSignore) &&
         (aHist[n].bInResults === bInResults) &&
         (aHist[n].bMatchCase === bMatchCase) &&
         (aHist[n].bContentRE === bContentRE) &&
@@ -2300,6 +2362,7 @@ function AddToHistory()
     bSkipReadOnly: bSkipReadOnly,
     bSkipHidden: bSkipHidden,
     bSkipSystem: bSkipSystem,
+    bSkipVCSignore: bSkipVCSignore,
     bInResults: bInResults,
     bMatchCase: bMatchCase,
     bContentRE: bContentRE,
@@ -2348,6 +2411,7 @@ function History()
     bSkipReadOnly: bSkipReadOnly,
     bSkipHidden: bSkipHidden,
     bSkipSystem: bSkipSystem,
+    bSkipVCSignore: bSkipVCSignore,
     bInResults: bInResults,
     bMatchCase: bMatchCase,
     bContentRE: bContentRE,
@@ -2467,6 +2531,7 @@ function History()
           bSkipReadOnly = aHist[i].bSkipReadOnly;
           bSkipHidden = aHist[i].bSkipHidden;
           bSkipSystem = aHist[i].bSkipSystem;
+          bSkipVCSignore = aHist[i].bSkipVCSignore;
           bInResults = aHist[i].bInResults;
           bMatchCase = aHist[i].bMatchCase;
           bContentRE = aHist[i].bContentRE;
@@ -3427,6 +3492,57 @@ function MessageBox(sText, bQuestion)
   return (AkelPad.MessageBox(hDlg, sText, sTxtDlgTitle, nType) === 1 /*IDOK*/);
 }
 
+/**
+ * Read VCS File to exclude directories from the search result.
+ *
+ * @return array of directories that should be ignored
+ */
+function GetVCSIgnoreFileToSkip()
+{
+  var strDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1);
+  var sVCSFile = strDir + "\\.gitignore";
+  var oError = {},
+      sFileContent = "";
+      aExcludedDirs = aExcludedDirsRaw = ['.git', '.vscode', '.idea', '.history'];
+
+  if (IsFileExists(sVCSFile))
+  {
+    try
+    {
+      sFileContent = AkelPad.ReadFile(sVCSFile);
+    }
+    catch (oError)
+    {
+      AkelPad.MessageBox(0, 'Error: ' + oError.description, sScriptName, 0);
+    }
+  }
+
+  sVCSFile = strDir + "\\.svnignore";
+
+  if (IsFileExists(sVCSFile))
+  {
+    try
+    {
+      sFileContent += "\n"+ AkelPad.ReadFile(sVCSFile);
+    }
+    catch (oError)
+    {
+      AkelPad.MessageBox(0, 'Error: '+ oError.description, sScriptName, 0);
+    }
+  }
+
+  aExcludedDirsRaw = sFileContent.split("\n");
+
+  for (var i = 0, nLen = aExcludedDirsRaw.length; i < nLen; i++)
+  {
+    var sExcDir = aExcludedDirsRaw[i];
+    if (sExcDir.substr(0, 1) === "/")
+      aExcludedDirs.push(sExcDir.slice(1).replace(/\//g, "\\"));
+  }
+
+  return aExcludedDirs;
+}
+
 function ReadIni()
 {
   var sLngFile = WScript.ScriptFullName.replace(/\.js$/i, "_" + AkelPad.GetLangId(0 /*LANGID_FULL*/).toString() + ".lng");
@@ -3517,6 +3633,7 @@ function WriteIni()
     'bSkipReadOnly='   + bSkipReadOnly + ';\r\n' +
     'bSkipHidden='     + bSkipHidden + ';\r\n' +
     'bSkipSystem='     + bSkipSystem + ';\r\n' +
+    'bSkipVCSignore='  + bSkipVCSignore + ';\r\n' +
     'bInResults='      + bInResults + ';\r\n' +
     'bMatchCase='      + bMatchCase + ';\r\n' +
     'bMatchWord='      + bMatchWord + ';\r\n' +
@@ -3558,6 +3675,7 @@ function WriteIni()
       'bSkipReadOnly:' + aHist[i].bSkipReadOnly + ',' +
       'bSkipHidden:'   + aHist[i].bSkipHidden + ',' +
       'bSkipSystem:'   + aHist[i].bSkipSystem + ',' +
+      'bSkipVCSignore:'+ aHist[i].bSkipVCSignore + ',' +
       'bInResults:'    + aHist[i].bInResults + ',' +
       'bMatchCase:'    + aHist[i].bMatchCase + ',' +
       'bContentRE:'    + aHist[i].bContentRE + ',' +
@@ -3607,6 +3725,7 @@ function GetLangStrings()
   sTxtReadOnly    = "Read-only";
   sTxtHidden      = "Hidden";
   sTxtSystem      = "System";
+  sTxtVCSigore    = "VCS dirs";
   sTxtInResults   = "&In results";
   sTxtSearch      = "&SEARCH";
   sTxtReplace     = "&Replace";
