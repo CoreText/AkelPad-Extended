@@ -2216,7 +2216,7 @@ function GetNameRegExp(sName)
     sName += "*";
   else if (! ~sName.indexOf("*"))
   {
-    // TODO: sort results by extensions
+    // TODO: sort results by the extensions list order
     var sNameExt = AkelPad.GetFilePath(AkelPad.GetEditFile(0), 4);
     sName += "*"+ sNameExt +";"+ sName +".*;"+ sName +"*";
   }
@@ -2269,6 +2269,9 @@ function ReplaceFunc(s0, s1, s2)
   return s1.substr(0, s1.length / 2) + s2;
 }
 
+/**
+ * @return sorted array of files
+ */
 function SortFiles()
 {
   var nSort = bSortDesc ? -1 : 1;
@@ -2277,14 +2280,13 @@ function SortFiles()
   function sorting(sName1, sName2)
   {
     nCompare = nSort * oSys.Call("Kernel32::lstrcmpiW", sName1.substr(0, sName1.lastIndexOf("\\")), sName2.substr(0, sName2.lastIndexOf("\\")));
-
     if (nCompare === 0)
       return nSort * oSys.Call("Kernel32::lstrcmpiW", sName1, sName2);
     else
       return nCompare;
   }
 
-  aFiles.sort(sorting);
+  return aFiles.sort(sorting);
 }
 
 function AddToHistory()
@@ -3502,8 +3504,9 @@ function GetVCSIgnoreFileToSkip()
   var strDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1);
   var sVCSFile = strDir + "\\.gitignore";
   var oError = {},
-      sFileContent = "";
-      aExcludedDirs = aExcludedDirsRaw = ['.git', '.vscode', '.idea', '.history'];
+      sFileContent = "",
+      aExcludedDirs = ['.git', '.vscode', '.idea', '.history', 'node_modules', 'vendor'],
+      aExcludedDirsRaw = [];
 
   if (IsFileExists(sVCSFile))
   {
