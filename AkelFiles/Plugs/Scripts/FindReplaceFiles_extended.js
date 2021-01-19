@@ -242,6 +242,7 @@ var aHist           = [];
 var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#A6D8B3";
 var aVCSIgnoreFileConfs = [".gitignore", ".svnignore"];
 var aVCSExcludedDirs = [".git", ".vscode", ".idea", ".history", "node_modules", "vendor"];
+var aExcludedDirsCollection = [];
 
 ReadIni();
 
@@ -2115,25 +2116,20 @@ function SearchFiles(bReplace)
 
     for (i = nDelta = 0; i < aPath.length; ++i)
     {
-      hFindFile = oSys.Call("Kernel32::FindFirstFileW", aPath[i] + "*.*", lpBuffer);
+      nCurrentLevel = (aPath[i].match(/\\/g).length - aPath[0].match(/\\/g).length);
+      bLevelOK = (nCurrentLevel < nMaxLevel);
+      sCurrentRelativeDir = aPath[i].replace(aPath[0], "").slice(0, -1);
 
+      if (bSkipVCSignore)
+      {
+        aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
+        if (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1)
+          continue;
+      }
+
+      hFindFile = oSys.Call("Kernel32::FindFirstFileW", aPath[i] + "*.*", lpBuffer);
       if (hFindFile !== -1) //INVALID_HANDLE_VALUE
       {
-        nCurrentLevel = (aPath[i].match(/\\/g).length - aPath[0].match(/\\/g).length);
-        bLevelOK = (nCurrentLevel < nMaxLevel);
-        sCurrentRelativeDir = aPath[i].replace(aPath[0], "").slice(0, -1);
-
-        if (bSkipVCSignore)
-        {
-          if (nDelta < nCurrentLevel) // skip very first level
-          {
-            ++nDelta;
-            //aDirsToSkip = (GetVCSIgnoreFileToSkip(sCurrentRelativeDir));
-            //AkelPad.MessageBox(0, sCurrentRelativeDir + "\n\n" + nCurrentLevel + ' = ' + nDelta + "\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
-          }
-          if (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1)
-            continue;
-        }
 
         do
         {
@@ -3547,14 +3543,12 @@ function GetVCSIgnoreFileToSkip(sCurrentDir)
       aIgnoreFileConfs = aVCSIgnoreFileConfs.slice(0) || [],
       aExcludedDirs = aVCSExcludedDirs.slice(0) || [],
       aExcludedDirsRaw = [],
-      aExcludedDirsCollection = [],
-      sFileContent = "";
+      sFileContent = ""
+  ;
 
   for (var i = 0; i < aIgnoreFileConfs.length; i++)
-  {
   	if (aIgnoreFileConfs[i])
     	sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + aIgnoreFileConfs[i]);
-  }
 
   aExcludedDirsRaw = sFileContent.split("\n");
 
@@ -3562,7 +3556,12 @@ function GetVCSIgnoreFileToSkip(sCurrentDir)
   {
     var sExcDir = aExcludedDirsRaw[i];
     if (sExcDir.substr(0, 1) === "/")
-      aExcludedDirsCollection.push(sExcDir.slice(1).replace(/\//g, "\\"));
+      aExcludedDirsCollection
+        .push(
+          sCurrentDirLevel
+            .concat(sExcDir.slice(1))
+            .replace(/^\s+|\s+$/g, '')
+        );
   }
 
   return ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs));
@@ -3798,7 +3797,7 @@ function GetLangStrings()
   sTxtReadOnly    = "Read-only";
   sTxtHidden      = "Hidden";
   sTxtSystem      = "System";
-  sTxtVCSigore    = "&VCS dirs";
+  sTxtVCSigore    = "&VCS paths";
   sTxtInResults   = "&In results";
   sTxtSearch      = "&SEARCH";
   sTxtReplace     = "&Replace";
