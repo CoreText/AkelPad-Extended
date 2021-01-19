@@ -1345,7 +1345,7 @@ function ResizeDlg(nW, nH)
     nW - nW90 - nW5,
     nH5,
     nW90,
-    Scale.Y(96),
+    Scale.Y(98),
     nFlags);
   for (i = IDREADONLY; i <= IDVCSIGNOREN; ++i) // Skip files
     oSys.Call("User32::SetWindowPos",
@@ -3814,7 +3814,7 @@ function GetLangStrings()
   sTxtHidden      = "Hidden";
   sTxtSystem      = "System";
   sTxtVCSigore    = "&VCS paths";
-  sTxtVCSigoreNest= "&VCS nested";
+  sTxtVCSigoreNest= "VCS nested";
   sTxtInResults   = "&In results";
   sTxtSearch      = "&SEARCH";
   sTxtReplace     = "&Replace";
