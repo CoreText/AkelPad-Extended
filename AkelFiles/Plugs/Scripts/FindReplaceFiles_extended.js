@@ -239,7 +239,7 @@ var aFiles          = [];
 var aFilesSel       = [0];
 var nFilesFoc       = 0;
 var aHist           = [];
-var sFoundResultsColorFG = "#FFFFFF", sFoundResultsColorBG = "#3E9957";
+var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#A6D8B3";
 var aVCSExcludedDirs = ['.git', '.vscode', '.idea', '.history', 'node_modules', 'vendor'];
 
 ReadIni();
@@ -574,8 +574,14 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         if (nID !== IDFILELV)
           oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
-        else if (nID === IDFILELV) {
-          OpenOrCloseFile();
+        else if (nID === IDFILELV)
+        {
+          OpenOrCloseFile(true);
+          if (bMarkResults)
+            highlight();
+
+          if (bBookmarkResults)
+            BookmarkLines('', true);
         }
       }
       else if (Ctrl() && (! Shift()))
@@ -813,6 +819,8 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4199);
+      // else if (wParam == 0x0D /*VK_RETURN*/)
+        // TextSearchOptions('word');
       else if (wParam === 0x26 /*UP ARROW key VK_UP*/)
       {
         oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
@@ -844,7 +852,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4200);
       else if (wParam === 0x0D /*VK_RETURN*/)
+      {
+        // TextSearchOptions('word up');
+        // AkelPad.Command(4333);
         bLogShow = ! bLogShow;
+      }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         TextSearchOptions('word up');
       else if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
@@ -1876,7 +1888,7 @@ function SearchFiles(bReplace)
   var nMaxSize;
   var bNTFS;
   var aStreams;
-  var i, n;
+  var i, n, nDelta;
   var aDirsToSkip;
   var nCurrentLevel;
   var sCurrentRelativeDir;
@@ -1994,7 +2006,6 @@ function SearchFiles(bReplace)
         return;
       }
     }
-
   }
 
   if (bReplace)
@@ -2097,7 +2108,7 @@ function SearchFiles(bReplace)
     nMaxLevel = (nDirLevel < 0) ? Infinity : nDirLevel;
     nMaxSize  = (nMaxFileSize <= 0) ? Infinity : nMaxFileSize;
 
-    for (i = 0; i < aPath.length; ++i)
+    for (i = nDelta = 0; i < aPath.length; ++i)
     {
       hFindFile = oSys.Call("Kernel32::FindFirstFileW", aPath[i] + "*.*", lpBuffer);
 
@@ -2107,8 +2118,17 @@ function SearchFiles(bReplace)
         bLevelOK = (nCurrentLevel < nMaxLevel);
         sCurrentRelativeDir = aPath[i].replace(aPath[0], "").slice(0, -1);
 
-        if (bSkipVCSignore && (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1))
-          continue;
+        if (bSkipVCSignore)
+        {
+          if (nDelta < nCurrentLevel) // skip very first level
+          {
+            ++nDelta;
+            //aDirsToSkip = (GetVCSIgnoreFileToSkip(sCurrentRelativeDir));
+            //AkelPad.MessageBox(0, sCurrentRelativeDir + "\n\n" + nCurrentLevel + ' = ' + nDelta + "\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
+          }
+          if (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1)
+            continue;
+        }
 
         do
         {
@@ -2743,12 +2763,6 @@ function OpenOrCloseFile(bSelect, bCloseOr)
 
           if (bSelect)
             searchSelect()
-
-          if (bBookmarkResults)
-            BookmarkLines('', true);
-
-          if (bMarkResults)
-            highlight();
 
           return true;
         }
@@ -3523,43 +3537,24 @@ function MessageBox(sText, bQuestion)
 
 /**
  * Read VCS File to exclude directories from the search result.
+ * @TODO implement configs for filenames of ignore files
  *
+ * @param string - current directory
  * @return array of directories that should be ignored
  */
-function GetVCSIgnoreFileToSkip()
+function GetVCSIgnoreFileToSkip(sCurrentDir)
 {
-  var strDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1);
-  var sVCSFile = strDir + "\\.gitignore";
-  var oError = {},
+  var sBaseDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1),
+      sCurrentDirLevel = (sCurrentDir ? sCurrentDir +"\\" : "");
       sFileContent = "",
-      aExcludedDirs = aVCSExcludedDirs,
-      aExcludedDirsRaw = [];
+      aExcludedDirs = aVCSExcludedDirs.slice(0),
+      aExcludedDirsRaw = [],
+      aExcludedDirsCollection = [];
 
-  if (IsFileExists(sVCSFile))
-  {
-    try
-    {
-      sFileContent = AkelPad.ReadFile(sVCSFile);
-    }
-    catch (oError)
-    {
-      AkelPad.MessageBox(0, 'Error: ' + oError.description, sScriptName, 0);
-    }
-  }
+      //AkelPad.MessageBox(0, sBaseDir + "\\" + sCurrentDirLevel, WScript.ScriptName, 0);
 
-  sVCSFile = strDir + "\\.svnignore";
-
-  if (IsFileExists(sVCSFile))
-  {
-    try
-    {
-      sFileContent += "\n"+ AkelPad.ReadFile(sVCSFile);
-    }
-    catch (oError)
-    {
-      AkelPad.MessageBox(0, 'Error: '+ oError.description, sScriptName, 0);
-    }
-  }
+  sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + ".gitignore");
+  sFileContent += getVCSIgnoreFileContents(sCurrentDirLevel + ".svnignore");
 
   aExcludedDirsRaw = sFileContent.split("\n");
 
@@ -3567,10 +3562,53 @@ function GetVCSIgnoreFileToSkip()
   {
     var sExcDir = aExcludedDirsRaw[i];
     if (sExcDir.substr(0, 1) === "/")
-      aExcludedDirs.push(sExcDir.slice(1).replace(/\//g, "\\"));
+      aExcludedDirsCollection.push(sExcDir.slice(1).replace(/\//g, "\\"));
   }
 
-  return aExcludedDirs;
+  return ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs));
+}
+
+/**
+ * Array Unique
+ *
+ * @param array
+ * @return array unique
+ */
+function ArrayUnique(array)
+{
+  var a = array.concat();
+  for (var i = 0; i < a.length; ++i)
+  {
+    for (var j = i + 1; j < a.length; ++j)
+    {
+      if (a[i] === a[j])
+        a.splice(j--, 1);
+    }
+  }
+
+  return a;
+}
+
+/**
+ * @return string of file content
+ */
+function getVCSIgnoreFileContents(sFileName)
+{
+  var sFileContent = "",
+      oError = {};
+
+  if (IsFileExists(sFileName))
+  {
+    try
+    {
+      sFileContent = "\n" + AkelPad.ReadFile(sFileName);
+    }
+    catch (oError)
+    {
+      AkelPad.MessageBox(0, sFileName + '\n\nError: ' + oError.description, sScriptName, 0);
+    }
+  }
+  return sFileContent;
 }
 
 function ReadIni()
