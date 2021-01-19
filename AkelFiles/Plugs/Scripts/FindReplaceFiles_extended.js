@@ -240,7 +240,8 @@ var aFilesSel       = [0];
 var nFilesFoc       = 0;
 var aHist           = [];
 var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#A6D8B3";
-var aVCSExcludedDirs = ['.git', '.vscode', '.idea', '.history', 'node_modules', 'vendor'];
+var aVCSIgnoreFileConfs = [".gitignore", ".svnignore"];
+var aVCSExcludedDirs = [".git", ".vscode", ".idea", ".history", "node_modules", "vendor"];
 
 ReadIni();
 
@@ -3071,9 +3072,9 @@ function FindstrLog(pLogOutput)
   var sRETAGS    = "/FILE=\\1 /GOTOLINE=\\2:0";
   var sCOMMAND = "cmd.exe /K cd /d \"" + strDir + "\" & echo. & echo ---------- SEARCHED \""+ strContent +"\" IN DIRECTORY \""+ strDir +"\" "+ ((logOutput===16)?"":" & time /T & date /T ") +" & findstr /S /N "+ ((bContentRE)?"/R":"/L") + ((bSkipBinary)?" /P ":"")+ ((! bMatchCase)?" /I ":"") +" /C:\""+ strContent +"\" \* & exit";
 
-  //AkelPad.MessageBox(0, sCOMMAND, sScriptName, 0);
-  AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc, sREPATTERN, sRETAGS, -2, -2, logOutput);
-  AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
+  AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc, sREPATTERN, sRETAGS, -2, -2, logOutput, ".ss1");
+  if (logOutput < 8388608)
+    AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
 
   return true;
 }
@@ -3101,10 +3102,11 @@ function FindToLog(pLogOutput)
 
   AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc,
     "^(---------- (.+)$)?(\\[(\\d+)\\])?",
-    "/FILE=\\2 /GOTOLINE=\\4:0" , -2, -2, logOutput
+    "/FILE=\\2 /GOTOLINE=\\4:0" , -2, -2, logOutput, ".ss1"
   );
 
-  AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
+  if (logOutput < 8388608)
+    AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
 
   return true;
 }
@@ -3315,7 +3317,7 @@ function searchSelect()
     }
     catch (oError)
     {
-      AkelPad.MessageBox(0, 'searchSelect() Error: '+ oError.description, WScript.Name, 16 /*MB_ICONERROR*/);
+      AkelPad.MessageBox(0, 'searchSelect() Error: '+ oError.description, sScriptName, 16 /*MB_ICONERROR*/);
       return "";
     }
 
@@ -3542,15 +3544,17 @@ function GetVCSIgnoreFileToSkip(sCurrentDir)
 {
   var sBaseDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1),
       sCurrentDirLevel = (sCurrentDir ? sCurrentDir +"\\" : ""),
-      aExcludedDirs = aVCSExcludedDirs.slice(0),
+      aIgnoreFileConfs = aVCSIgnoreFileConfs.slice(0) || [],
+      aExcludedDirs = aVCSExcludedDirs.slice(0) || [],
       aExcludedDirsRaw = [],
       aExcludedDirsCollection = [],
       sFileContent = "";
 
-      //AkelPad.MessageBox(0, sBaseDir + "\\" + sCurrentDirLevel, WScript.ScriptName, 0);
-
-  sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + ".gitignore");
-  sFileContent += getVCSIgnoreFileContents(sCurrentDirLevel + ".svnignore");
+  for (var i = 0; i < aIgnoreFileConfs.length; i++)
+  {
+  	if (aIgnoreFileConfs[i])
+    	sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + aIgnoreFileConfs[i]);
+  }
 
   aExcludedDirsRaw = sFileContent.split("\n");
 
@@ -3565,7 +3569,7 @@ function GetVCSIgnoreFileToSkip(sCurrentDir)
 }
 
 /**
- * Array Unique
+ * Make the passed array unique, to have unique values in it.
  *
  * @param array
  * @return array unique
@@ -3719,6 +3723,7 @@ function WriteIni()
     'bLastMultiline='  + bLastMultiline + ';\r\n' +
     'bLastNotContain=' + bLastNotContain + ';\r\n' +
     'bAfterReplace='   + bAfterReplace + ';\r\n' +
+    'aVCSIgnoreFileConfs=[' + aVCSIgnoreFileConfs.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
     'aVCSExcludedDirs=[' + aVCSExcludedDirs.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
     'aDirs=['          + aDirs.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
     'aNames=['         + aNames.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
