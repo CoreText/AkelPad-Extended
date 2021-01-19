@@ -801,8 +801,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
       else if (wParam === 0x42 /*B key VK_KEY_B*/)
         BookmarkLines('', true);
-      else if (wParam === 0x57 /*W key VK_KEY_W*/)
-        AkelPad.Call("Scripts::Main", 1, "CloseTabByExt.js");
       else if (wParam === 0x4C /*L key VK_KEY_L*/)
         FindstrLog();
       else if (wParam === 0x47 /*G key VK_KEY_G*/)
@@ -849,6 +847,8 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         TextSearchOptions('word up tabs');
       else if (wParam === 0x4D /*M key VK_KEY_M*/)
         AkelPad.Call("Scripts::Main", 1, "MarkerPlus.vbs", '11');
+      else if (wParam === 0x57 /*W key VK_KEY_W*/)
+        AkelPad.Call("Scripts::Main", 1, "CloseTabByExt.js");
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4200);
       else if (wParam === 0x0D /*VK_RETURN*/)
@@ -3267,7 +3267,7 @@ function TextSearchOptions(sParams, prompts)
   if (bMultiline || ~pTextSearch.indexOf('regex_multi'))
     calcBin |= 0x00040000 /*FRF_REGEXPNONEWLINEDOT*/;
 
-  if (~pTextSearch.indexOf('word'))
+  if (bMatchWord || ~pTextSearch.indexOf('word'))
     calcBin |= 0x00000002 /*FRF_WHOLEWORD*/;
 
   if (~pTextSearch.indexOf('escape'))
@@ -3786,7 +3786,7 @@ function GetLangStrings()
   sTxtFiles       = "Files (main streams)";
   sTxtStreams     = "Alternate NTFS streams";
   sTxtTextInFile  = "&Text in file/stream";
-  sTxtMatchWord   = "Match word";
+  sTxtMatchWord   = "Match &word";
   sTxtMatchCase   = "Match c&ase";
   sTxtMultiline   = "M&ultiline";
   sTxtNotContain  = "&Not contain text";
