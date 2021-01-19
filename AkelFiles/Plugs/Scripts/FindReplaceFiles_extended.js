@@ -66,7 +66,7 @@
 
 // Ctrl+W           - Close current document
 // Ctrl+Shift+W     - Close tabs by extension
-// Alt+W            - Close tabs by extension
+// Shift+Alt+W      - Close tabs by extension
 
 // Ctrl+L           - Result in the log (FINDSTR)
 // Ctrl+Shift+L     - Results in the log (FINDSTR), preserving the log output
@@ -853,9 +853,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         AkelPad.Command(4200);
       else if (wParam === 0x0D /*VK_RETURN*/)
       {
-        // TextSearchOptions('word up');
-        // AkelPad.Command(4333);
         bLogShow = ! bLogShow;
+        (new ActiveXObject("WScript.Shell").Popup(
+          (bLogShow ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file." : "Double click will close the result file."),
+          1, // Autoclose after ~2 seconds
+          sScriptName,
+          64 /*MB_ICONINFORMATION*/
+        ));
       }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         TextSearchOptions('word up');
@@ -3017,15 +3021,7 @@ function Settings()
   else if (nCmd === 11)
     FindToLog();
   else if (nCmd === 12)
-  {
-//       (new ActiveXObject("WScript.Shell").Popup(
-//        'The Double Click will show the results in the log.\nUse Ctrl+W to close file.',
-//        2, // Autoclose after 2 seconds
-//        sScriptName,
-//        64 /*MB_ICONINFORMATION*/
-//      ));
     bLogShow = ! bLogShow;
-  }
   else if (nCmd === 13)
   {
     bMarkResults = ! bMarkResults;
@@ -3545,11 +3541,11 @@ function MessageBox(sText, bQuestion)
 function GetVCSIgnoreFileToSkip(sCurrentDir)
 {
   var sBaseDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1),
-      sCurrentDirLevel = (sCurrentDir ? sCurrentDir +"\\" : "");
-      sFileContent = "",
+      sCurrentDirLevel = (sCurrentDir ? sCurrentDir +"\\" : ""),
       aExcludedDirs = aVCSExcludedDirs.slice(0),
       aExcludedDirsRaw = [],
-      aExcludedDirsCollection = [];
+      aExcludedDirsCollection = [],
+      sFileContent = "";
 
       //AkelPad.MessageBox(0, sBaseDir + "\\" + sCurrentDirLevel, WScript.ScriptName, 0);
 
