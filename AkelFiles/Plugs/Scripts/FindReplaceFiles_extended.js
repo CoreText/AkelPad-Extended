@@ -1345,13 +1345,13 @@ function ResizeDlg(nW, nH)
     nW - nW90 - nW5,
     nH5,
     nW90,
-    Scale.Y(80),
+    Scale.Y(96),
     nFlags);
   for (i = IDREADONLY; i <= IDVCSIGNOREN; ++i) // Skip files
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
       nW - nW90,
-      Scale.Y(20 + (i - IDREADONLY) * 16),
+      Scale.Y(19 + (i - IDREADONLY) * 16),
       nW75,
       nH16,
       nFlags);
