@@ -1973,7 +1973,7 @@ function SearchFiles(bReplace)
       try
       {
         if (bMatchWord)
-          strContent = "(?=\\W*)"+ sContent +"(?=\\W|\\b)";
+          strContent = "(?=\\b|\\W)"+ sContent +"(?=\\W|\\b)";
         else
           strContent = sContent;
 
@@ -1992,7 +1992,7 @@ function SearchFiles(bReplace)
       try
       {
         if (bMatchWord)
-          strContent = "(?=\\W*)"+ sContent.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&") +"(?=\\W|\\b)";
+          strContent = "(?=\\b|\\W)"+ sContent.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&") +"(?=\\W|\\b)";
         else
           strContent = sContent.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&");
 
