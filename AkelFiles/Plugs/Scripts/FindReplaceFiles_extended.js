@@ -187,7 +187,7 @@ var nWndMinW = Scale.X(475);
 var nWndMinH = Scale.Y(488);
 var oWndPos  = {"X": 240, "Y": 140, "W": nWndMinW, "H": nWndMinH, "Max": 0};
 
-var bPathShow       = 1;
+var bPathShow       = 0;
 var bSeparateWnd    = 0;
 var bLogShow        = 0;
 var bBookmarkResults= 0;
@@ -205,6 +205,7 @@ var bSkipReadOnly   = 0;
 var bSkipHidden     = 0;
 var bSkipSystem     = 0;
 var bSkipVCSignore  = 0;
+var bSkipVCSignoreN = 0;
 var bInResults      = 0;
 var bContentRE      = 0;
 var bMatchCase      = 0;
@@ -279,17 +280,18 @@ var IDREADONLY   = 2028;
 var IDHIDDEN     = 2029;
 var IDSYSTEM     = 2030;
 var IDVCSIGNORE  = 2031;
-var IDINRESULTS  = 2032;
-var IDSEARCHB    = 2033;
-var IDREPLACEB   = 2034;
-var IDHISTORYB   = 2035;
-var IDEDITB      = 2036;
-var IDCOPYB      = 2037;
-var IDCLEARB     = 2038;
-var IDSETTINGSB  = 2039;
-var IDCLOSEB     = 2040;
-var IDFILELV     = 2041;
-var IDSTATUS     = 2042;
+var IDVCSIGNOREN = 2032;
+var IDINRESULTS  = 2033;
+var IDSEARCHB    = 2034;
+var IDREPLACEB   = 2035;
+var IDHISTORYB   = 2036;
+var IDEDITB      = 2037;
+var IDCOPYB      = 2038;
+var IDCLEARB     = 2039;
+var IDSETTINGSB  = 2040;
+var IDCLOSEB     = 2041;
+var IDFILELV     = 2042;
+var IDSTATUS     = 2043;
 
 //0x50000000=WS_VISIBLE|WS_CHILD
 //0x50000002=WS_VISIBLE|WS_CHILD|SS_RIGHT
@@ -333,6 +335,7 @@ aDlg[IDREADONLY  ]={S:0x50010003, C:"BUTTON", T:sTxtReadOnly};
 aDlg[IDHIDDEN    ]={S:0x50010003, C:"BUTTON", T:sTxtHidden};
 aDlg[IDSYSTEM    ]={S:0x50010003, C:"BUTTON", T:sTxtSystem};
 aDlg[IDVCSIGNORE ]={S:0x50010003, C:"BUTTON", T:sTxtVCSigore};
+aDlg[IDVCSIGNOREN]={S:0x50010003, C:"BUTTON", T:sTxtVCSigoreNest};
 aDlg[IDINRESULTS ]={S:0x50010003, C:"BUTTON", T:sTxtInResults};
 aDlg[IDSEARCHB   ]={S:0x50010000, C:"BUTTON", T:sTxtSearch};
 aDlg[IDREPLACEB  ]={S:0x50010000, C:"BUTTON", T:sTxtReplace};
@@ -1065,6 +1068,8 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       bSkipSystem = ! bSkipSystem;
     else if (nID === IDVCSIGNORE)
       bSkipVCSignore = ! bSkipVCSignore;
+    else if (nID === IDVCSIGNOREN)
+      bSkipVCSignoreN = ! bSkipVCSignoreN;
     else if (nID === IDINRESULTS)
     {
       bInResults = ! bInResults;
@@ -1342,7 +1347,7 @@ function ResizeDlg(nW, nH)
     nW90,
     Scale.Y(80),
     nFlags);
-  for (i = IDREADONLY; i <= IDVCSIGNORE; ++i) // Skip files
+  for (i = IDREADONLY; i <= IDVCSIGNOREN; ++i) // Skip files
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
       nW - nW90,
@@ -1395,6 +1400,7 @@ function SetCheckButtons()
   SendMessage(aDlg[IDHIDDEN    ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipHidden, 0);
   SendMessage(aDlg[IDSYSTEM    ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipSystem, 0);
   SendMessage(aDlg[IDVCSIGNORE ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipVCSignore, 0);
+  SendMessage(aDlg[IDVCSIGNOREN].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipVCSignoreN, 0);
   SendMessage(aDlg[IDINRESULTS ].HWND, 0x00F1 /*BM_SETCHECK*/, bInResults, 0);
 }
 
@@ -1419,6 +1425,7 @@ function EnableButtons()
   oSys.Call("User32::EnableWindow", aDlg[IDHIDDEN    ].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDSYSTEM    ].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDVCSIGNORE ].HWND, bNotInRes);
+  oSys.Call("User32::EnableWindow", aDlg[IDVCSIGNOREN].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDHELP2B    ].HWND, bContentRE);
   oSys.Call("User32::EnableWindow", aDlg[IDMULTILINE ].HWND, bContentRE);
   oSys.Call("User32::EnableWindow", aDlg[IDNOTCONTAIN].HWND, bContent);
@@ -2122,7 +2129,9 @@ function SearchFiles(bReplace)
 
       if (bSkipVCSignore)
       {
-        aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
+        if (bSkipVCSignoreN)
+          aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
+
         if (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1)
           continue;
       }
@@ -2249,6 +2258,7 @@ function SearchFiles(bReplace)
     SortFiles();
   }
 
+  aDirsToSkip = aExcludedDirsCollection = [];
   AkelPad.MemFree(lpFile);
   AkelPad.MemFree(lpDetectFile);
 
@@ -2382,6 +2392,7 @@ function AddToHistory()
         (aHist[n].bSkipHidden === bSkipHidden) &&
         (aHist[n].bSkipSystem === bSkipSystem) &&
         (aHist[n].bSkipVCSignore === bSkipVCSignore) &&
+        (aHist[n].bSkipVCSignoreN === bSkipVCSignoreN) &&
         (aHist[n].bInResults === bInResults) &&
         (aHist[n].bMatchCase === bMatchCase) &&
         (aHist[n].bContentRE === bContentRE) &&
@@ -2413,6 +2424,7 @@ function AddToHistory()
     bSkipHidden: bSkipHidden,
     bSkipSystem: bSkipSystem,
     bSkipVCSignore: bSkipVCSignore,
+    bSkipVCSignoreN: bSkipVCSignoreN,
     bInResults: bInResults,
     bMatchCase: bMatchCase,
     bContentRE: bContentRE,
@@ -2462,6 +2474,7 @@ function History()
     bSkipHidden: bSkipHidden,
     bSkipSystem: bSkipSystem,
     bSkipVCSignore: bSkipVCSignore,
+    bSkipVCSignoreN: bSkipVCSignoreN,
     bInResults: bInResults,
     bMatchCase: bMatchCase,
     bContentRE: bContentRE,
@@ -2582,6 +2595,7 @@ function History()
           bSkipHidden = aHist[i].bSkipHidden;
           bSkipSystem = aHist[i].bSkipSystem;
           bSkipVCSignore = aHist[i].bSkipVCSignore;
+          bSkipVCSignoreN = aHist[i].bSkipVCSignoreN;
           bInResults = aHist[i].bInResults;
           bMatchCase = aHist[i].bMatchCase;
           bContentRE = aHist[i].bContentRE;
@@ -3701,6 +3715,7 @@ function WriteIni()
     'bSkipHidden='     + bSkipHidden + ';\r\n' +
     'bSkipSystem='     + bSkipSystem + ';\r\n' +
     'bSkipVCSignore='  + bSkipVCSignore + ';\r\n' +
+    'bSkipVCSignoreN='  + bSkipVCSignoreN + ';\r\n' +
     'bInResults='      + bInResults + ';\r\n' +
     'bMatchCase='      + bMatchCase + ';\r\n' +
     'bMatchWord='      + bMatchWord + ';\r\n' +
@@ -3747,6 +3762,7 @@ function WriteIni()
       'bSkipHidden:'   + aHist[i].bSkipHidden + ',' +
       'bSkipSystem:'   + aHist[i].bSkipSystem + ',' +
       'bSkipVCSignore:'+ aHist[i].bSkipVCSignore + ',' +
+      'bSkipVCSignoreN:'+ aHist[i].bSkipVCSignoreN + ',' +
       'bInResults:'    + aHist[i].bInResults + ',' +
       'bMatchCase:'    + aHist[i].bMatchCase + ',' +
       'bContentRE:'    + aHist[i].bContentRE + ',' +
@@ -3798,6 +3814,7 @@ function GetLangStrings()
   sTxtHidden      = "Hidden";
   sTxtSystem      = "System";
   sTxtVCSigore    = "&VCS paths";
+  sTxtVCSigoreNest= "&VCS nested";
   sTxtInResults   = "&In results";
   sTxtSearch      = "&SEARCH";
   sTxtReplace     = "&Replace";
