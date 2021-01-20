@@ -2151,7 +2151,7 @@ function SearchFiles(bReplace)
           if (bSkipVCSignoreF)
           {
             //AkelPad.MessageBox(0, sFileName +"\n\n"+ (FindInArray(aDirsToSkip, sFileName, true) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
-            if (FindInArray(aDirsToSkip, sFileName, true) !== -1)
+            if (FindInArrayFiles(aDirsToSkip, sFileName, nCurrentLevel) !== -1)
               continue;
           }
 
@@ -2476,14 +2476,32 @@ function FindInArray(aArray, sText, bIgnoreCase)
  */
 function FindInArrayDirs(aArray, sNeedle, nLevel)
 {
+  var nDirLevel = nLevel || 0,
+      rDir, sPattern
+
   for (var i = 0; i < aArray.length; ++i)
   {
     if ((aArray[i].toUpperCase() === sNeedle.toUpperCase()) || (aArray[i] === sNeedle))
       return i;
     else if (aArray[i].toUpperCase() === (sDir +"\\"+ sNeedle.toUpperCase()) || (aArray[i] === (sDir +"\\"+ sNeedle)))
       return i;
-    //else if (aArray[i].toUpperCase().match(sDir +"\\"+ sNeedle.toUpperCase()) )
-    //  return i;
+  }
+  return -1;
+}
+
+/**
+ * @param aArray
+ * @param sNeedle
+ * @param nLevel
+ * @return number index
+ */
+function FindInArrayFiles(aArray, sText, nLevel)
+{
+  var nDirLevel = nLevel || 0;
+  for (var i = 0; i < aArray.length; ++i)
+  {
+    if ((aArray[i].toUpperCase() === sText.toUpperCase()) || (aArray[i] === sText))
+      return i;
   }
   return -1;
 }
