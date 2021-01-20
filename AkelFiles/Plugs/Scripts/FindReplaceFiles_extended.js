@@ -206,6 +206,7 @@ var bSkipHidden     = 0;
 var bSkipSystem     = 0;
 var bSkipVCSignore  = 0;
 var bSkipVCSignoreN = 0;
+var bSkipVCSignoreF = 0;
 var bInResults      = 0;
 var bContentRE      = 0;
 var bMatchCase      = 0;
@@ -281,17 +282,18 @@ var IDHIDDEN     = 2029;
 var IDSYSTEM     = 2030;
 var IDVCSIGNORE  = 2031;
 var IDVCSIGNOREN = 2032;
-var IDINRESULTS  = 2033;
-var IDSEARCHB    = 2034;
-var IDREPLACEB   = 2035;
-var IDHISTORYB   = 2036;
-var IDEDITB      = 2037;
-var IDCOPYB      = 2038;
-var IDCLEARB     = 2039;
-var IDSETTINGSB  = 2040;
-var IDCLOSEB     = 2041;
-var IDFILELV     = 2042;
-var IDSTATUS     = 2043;
+var IDVCSIGNOREF = 2033;
+var IDINRESULTS  = 2034;
+var IDSEARCHB    = 2035;
+var IDREPLACEB   = 2036;
+var IDHISTORYB   = 2037;
+var IDEDITB      = 2038;
+var IDCOPYB      = 2039;
+var IDCLEARB     = 2040;
+var IDSETTINGSB  = 2041;
+var IDCLOSEB     = 2042;
+var IDFILELV     = 2043;
+var IDSTATUS     = 2044;
 
 //0x50000000=WS_VISIBLE|WS_CHILD
 //0x50000002=WS_VISIBLE|WS_CHILD|SS_RIGHT
@@ -336,6 +338,7 @@ aDlg[IDHIDDEN    ]={S:0x50010003, C:"BUTTON", T:sTxtHidden};
 aDlg[IDSYSTEM    ]={S:0x50010003, C:"BUTTON", T:sTxtSystem};
 aDlg[IDVCSIGNORE ]={S:0x50010003, C:"BUTTON", T:sTxtVCSigore};
 aDlg[IDVCSIGNOREN]={S:0x50010003, C:"BUTTON", T:sTxtVCSigoreNest};
+aDlg[IDVCSIGNOREF]={S:0x50010003, C:"BUTTON", T:sTxtVCSigoreFiles};
 aDlg[IDINRESULTS ]={S:0x50010003, C:"BUTTON", T:sTxtInResults};
 aDlg[IDSEARCHB   ]={S:0x50010000, C:"BUTTON", T:sTxtSearch};
 aDlg[IDREPLACEB  ]={S:0x50010000, C:"BUTTON", T:sTxtReplace};
@@ -859,12 +862,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x0D /*VK_RETURN*/)
       {
         bLogShow = ! bLogShow;
-        (new ActiveXObject("WScript.Shell").Popup(
+        ShowPopup(
           (bLogShow ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file." : "Double click will close the result file."),
-          1, // Autoclose after ~2 seconds
-          sScriptName,
-          64 /*MB_ICONINFORMATION*/
-        ));
+          sScriptName, 1
+        );
       }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         TextSearchOptions('word up');
@@ -1067,9 +1068,14 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     else if (nID === IDSYSTEM)
       bSkipSystem = ! bSkipSystem;
     else if (nID === IDVCSIGNORE)
+    {
       bSkipVCSignore = ! bSkipVCSignore;
+      EnableButtons();
+    }
     else if (nID === IDVCSIGNOREN)
       bSkipVCSignoreN = ! bSkipVCSignoreN;
+    else if (nID === IDVCSIGNOREF)
+      bSkipVCSignoreF = ! bSkipVCSignoreF;
     else if (nID === IDINRESULTS)
     {
       bInResults = ! bInResults;
@@ -1223,22 +1229,22 @@ function ResizeDlg(nW, nH)
     nW5,
     nH5,
     nW - nW90 - nW10 - 2 * nW5,
-    Scale.Y(70),
+    Scale.Y(72),
     nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDDIRCB].HWND, 0,
     2 * nW5,
-    Scale.Y(25),
+    Scale.Y(24),
     nW - nW90 - nW10 - 4 * nW5,
     1,
     nFlags);
   for (i = IDCURRENTB; i <= IDBROWSEB; ++i)
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
-      2 * nW5 + (i - IDCURRENTB) * (nW75 + nW5),
+      2 * nW5 + (i - IDCURRENTB) * (nW75 + nW5) ,
       Scale.Y(49),
-      nW75,
-      nH21,
+      nW75 - 2,
+      nH21 + 2,
       nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDDIRLEVELS].HWND, 0,
@@ -1250,7 +1256,7 @@ function ResizeDlg(nW, nH)
   oSys.Call("User32::SetWindowPos",
     aDlg[IDDIRLEVELCB].HWND, 0,
     nW - nW75 - nW90 - nW10 - 2 * nW5,
-    Scale.Y(49),
+    Scale.Y(50),
     nW75,
     1,
     nFlags);
@@ -1259,19 +1265,19 @@ function ResizeDlg(nW, nH)
     nW5,
     Scale.Y(80),
     nW - nW90 - nW10 - 2 * nW5,
-    Scale.Y(85),
+    Scale.Y(86),
     nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDNAMECB].HWND, 0,
     2 * nW5,
-    Scale.Y(100),
+    Scale.Y(99),
     nW - nW90 - nW20 - nW10 - 4 * nW5,
     1,
     nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDHELP1B].HWND, 0,
     nW - nW90 - nW20 - nW10 - 2 * nW5,
-    Scale.Y(100),
+    Scale.Y(99),
     nW20,
     nH21,
     nFlags);
@@ -1279,28 +1285,28 @@ function ResizeDlg(nW, nH)
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
       2 * nW5 + Math.floor((i - IDNAMERE) / 2) * nW132,
-      Scale.Y(125 + ((i - IDNAMERE) % 2) * 20),
+      Scale.Y(124 + ((i - IDNAMERE) % 2) * 20),
       aDlg[i].W,
       nH16,
       nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDCONTENTG].HWND, 0,
     nW5,
-    Scale.Y(170),
+    Scale.Y(169),
     nW - nW90 - nW10 - 2 * nW5,
-    Scale.Y(146),
+    Scale.Y(157),
     nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDCONTENTCB].HWND, 0,
     2 * nW5,
-    Scale.Y(190),
+    Scale.Y(189),
     nW - nW90 - nW20 - nW10 - 4 * nW5,
     1,
     nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDHELP2B].HWND, 0,
     nW - nW90 - nW20 - nW10 - 2 * nW5,
-    Scale.Y(190),
+    Scale.Y(189),
     nW20,
     nH21,
     nFlags);
@@ -1308,15 +1314,15 @@ function ResizeDlg(nW, nH)
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
       2 * nW5 + Math.floor((i - IDMATCHCASE) / 3) * nW132,
-      Scale.Y(215 + ((i - IDMATCHCASE) % 3) * 20),
+      Scale.Y(214 + ((i - IDMATCHCASE) % 3) * 20),
       aDlg[i].W,
       nH16,
       nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDMAXSIZEE].HWND, 0,
     2 * nW5 + nW132 + aDlg[IDSKIPLARGER].W + 61,
-    Scale.Y(235),
-    Scale.X(72),
+    Scale.Y(233),
+    Scale.X(75),
     Scale.Y(20),
     nFlags);
   oSys.Call("User32::SetWindowPos",
@@ -1329,14 +1335,14 @@ function ResizeDlg(nW, nH)
   oSys.Call("User32::SetWindowPos",
     aDlg[IDREPLACECB].HWND, 0,
     2 * nW5,
-    Scale.Y(290),
+    Scale.Y(294),
     nW - nW90 - nW20 - nW10 - 4 * nW5,
     1,
     nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDHELP3B].HWND, 0,
     nW - nW90 - nW20 - nW10 - 2 * nW5,
-    Scale.Y(290),
+    Scale.Y(294),
     nW20,
     nH21,
     nFlags);
@@ -1344,10 +1350,10 @@ function ResizeDlg(nW, nH)
     aDlg[IDSKIPG].HWND, 0,
     nW - nW90 - nW5,
     nH5,
-    nW90,
-    Scale.Y(98),
+    nW90 -1,
+    Scale.Y(114),
     nFlags);
-  for (i = IDREADONLY; i <= IDVCSIGNOREN; ++i) // Skip files
+  for (i = IDREADONLY; i <= IDVCSIGNOREF; ++i) // Skip files
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
       nW - nW90,
@@ -1357,8 +1363,8 @@ function ResizeDlg(nW, nH)
       nFlags);
   oSys.Call("User32::SetWindowPos",
     aDlg[IDINRESULTS].HWND, 0,
-    nW - nW90 - nW5,
-    Scale.Y(108),
+    nW - nW90 - nW5 + 5,
+    Scale.Y(123),
     nW90,
     nH16,
     nFlags);
@@ -1366,7 +1372,7 @@ function ResizeDlg(nW, nH)
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
       nW - nW90 - nW5,
-      Scale.Y(128 + (i - IDSEARCHB) * 24),
+      Scale.Y(141 + (i - IDSEARCHB) * 22),
       nW90,
       nH21,
       nFlags);
@@ -1401,6 +1407,7 @@ function SetCheckButtons()
   SendMessage(aDlg[IDSYSTEM    ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipSystem, 0);
   SendMessage(aDlg[IDVCSIGNORE ].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipVCSignore, 0);
   SendMessage(aDlg[IDVCSIGNOREN].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipVCSignoreN, 0);
+  SendMessage(aDlg[IDVCSIGNOREF].HWND, 0x00F1 /*BM_SETCHECK*/, bSkipVCSignoreF, 0);
   SendMessage(aDlg[IDINRESULTS ].HWND, 0x00F1 /*BM_SETCHECK*/, bInResults, 0);
 }
 
@@ -1425,7 +1432,8 @@ function EnableButtons()
   oSys.Call("User32::EnableWindow", aDlg[IDHIDDEN    ].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDSYSTEM    ].HWND, bNotInRes);
   oSys.Call("User32::EnableWindow", aDlg[IDVCSIGNORE ].HWND, bNotInRes);
-  oSys.Call("User32::EnableWindow", aDlg[IDVCSIGNOREN].HWND, bNotInRes);
+  oSys.Call("User32::EnableWindow", aDlg[IDVCSIGNOREN].HWND, bSkipVCSignore);
+  oSys.Call("User32::EnableWindow", aDlg[IDVCSIGNOREF].HWND, bSkipVCSignore);
   oSys.Call("User32::EnableWindow", aDlg[IDHELP2B    ].HWND, bContentRE);
   oSys.Call("User32::EnableWindow", aDlg[IDMULTILINE ].HWND, bContentRE);
   oSys.Call("User32::EnableWindow", aDlg[IDNOTCONTAIN].HWND, bContent);
@@ -1568,7 +1576,7 @@ function SetHeaderLV()
   var nFmt     = 0x4000 /*HDF_STRING*/ | (bSortDesc ? 0x0200 /*HDF_SORTDOWN*/ : 0x0400 /*HDF_SORTUP*/);
   var hHeader  = SendMessage(aDlg[IDFILELV].HWND, 0x101F /*LVM_GETHEADER*/, 0, 0);
 
-  AkelPad.MemCopy(lpBuffer, bAfterReplace ? sTxtFilesRepl : sTxtFilesFound, DT_UNICODE);
+  AkelPad.MemCopy(lpBuffer, bAfterReplace ? sTxtFilesRepl.toUpperCase() +":" : sTxtFilesFound.toUpperCase() +":" , DT_UNICODE);
   AkelPad.MemCopy(lpHDITEM, 0x06, DT_DWORD); //mask=HDI_FORMAT|HDI_TEXT
   AkelPad.MemCopy(_PtrAdd(lpHDITEM, 8), lpBuffer, DT_QWORD); //pszText
   AkelPad.MemCopy(_PtrAdd(lpHDITEM, _X64 ? 24 : 16), nBufSize, DT_DWORD); //cchTextMax
@@ -1696,7 +1704,7 @@ function SetTextSB(nItem)
         lpBuffer,
         64);
       oSys.Call("Kernel32::GetTimeFormatW",
-        0x400, //LOCALE_USER_DEFAULT
+        0x1F /* 0x400 */, //LOCALE_USER_DEFAULT
         0x8,   //TIME_FORCE24HOURFORMAT
         lpSysTime,
         0,
@@ -2025,12 +2033,7 @@ function SearchFiles(bReplace)
   {
     if ((! bContentRE) && (sContent === sReplace))
     {
-      (new ActiveXObject("WScript.Shell").Popup(
-        'THE TEXT IS THE SAME',
-        1.2, // Autoclose after ~2 seconds
-        'NO REPLACE!',
-        64 /*MB_ICONINFORMATION*/
-      ));
+      ShowPopup('THE TEXT IS THE SAME', 'NO REPLACE!', 1);
       return;
     }
 
@@ -2393,6 +2396,7 @@ function AddToHistory()
         (aHist[n].bSkipSystem === bSkipSystem) &&
         (aHist[n].bSkipVCSignore === bSkipVCSignore) &&
         (aHist[n].bSkipVCSignoreN === bSkipVCSignoreN) &&
+        (aHist[n].bSkipVCSignoreF === bSkipVCSignoreF) &&
         (aHist[n].bInResults === bInResults) &&
         (aHist[n].bMatchCase === bMatchCase) &&
         (aHist[n].bContentRE === bContentRE) &&
@@ -2425,6 +2429,7 @@ function AddToHistory()
     bSkipSystem: bSkipSystem,
     bSkipVCSignore: bSkipVCSignore,
     bSkipVCSignoreN: bSkipVCSignoreN,
+    bSkipVCSignoreF: bSkipVCSignoreF,
     bInResults: bInResults,
     bMatchCase: bMatchCase,
     bContentRE: bContentRE,
@@ -2475,6 +2480,7 @@ function History()
     bSkipSystem: bSkipSystem,
     bSkipVCSignore: bSkipVCSignore,
     bSkipVCSignoreN: bSkipVCSignoreN,
+    bSkipVCSignoreF: bSkipVCSignoreF,
     bInResults: bInResults,
     bMatchCase: bMatchCase,
     bContentRE: bContentRE,
@@ -2596,6 +2602,7 @@ function History()
           bSkipSystem = aHist[i].bSkipSystem;
           bSkipVCSignore = aHist[i].bSkipVCSignore;
           bSkipVCSignoreN = aHist[i].bSkipVCSignoreN;
+          bSkipVCSignoreF = aHist[i].bSkipVCSignoreF;
           bInResults = aHist[i].bInResults;
           bMatchCase = aHist[i].bMatchCase;
           bContentRE = aHist[i].bContentRE;
@@ -3624,6 +3631,28 @@ function getVCSIgnoreFileContents(sFileName)
   return sFileContent;
 }
 
+/**
+ * Show the popup.
+ * 
+ * @param strContent of the popup
+ * @param strTitle of the popup
+ * @param nSec seconds
+ * @return bool|obj WScript.Shell
+ */
+function ShowPopup(strContent, strTitle, nSec) 
+{
+  var nSeconds = nSec || 2;
+  if (strContent && strTitle)
+    return (new ActiveXObject("WScript.Shell").Popup(
+      strContent,
+      nSeconds, // Autoclose after ~2 seconds
+      strTitle,
+      64 /*MB_ICONINFORMATION*/
+    ));
+
+  return false;
+}
+
 function ReadIni()
 {
   var sLngFile = WScript.ScriptFullName.replace(/\.js$/i, "_" + AkelPad.GetLangId(0 /*LANGID_FULL*/).toString() + ".lng");
@@ -3716,6 +3745,7 @@ function WriteIni()
     'bSkipSystem='     + bSkipSystem + ';\r\n' +
     'bSkipVCSignore='  + bSkipVCSignore + ';\r\n' +
     'bSkipVCSignoreN='  + bSkipVCSignoreN + ';\r\n' +
+    'bSkipVCSignoreF='  + bSkipVCSignoreF + ';\r\n' +
     'bInResults='      + bInResults + ';\r\n' +
     'bMatchCase='      + bMatchCase + ';\r\n' +
     'bMatchWord='      + bMatchWord + ';\r\n' +
@@ -3763,6 +3793,7 @@ function WriteIni()
       'bSkipSystem:'   + aHist[i].bSkipSystem + ',' +
       'bSkipVCSignore:'+ aHist[i].bSkipVCSignore + ',' +
       'bSkipVCSignoreN:'+ aHist[i].bSkipVCSignoreN + ',' +
+      'bSkipVCSignoreF:'+ aHist[i].bSkipVCSignoreF + ',' +
       'bInResults:'    + aHist[i].bInResults + ',' +
       'bMatchCase:'    + aHist[i].bMatchCase + ',' +
       'bContentRE:'    + aHist[i].bContentRE + ',' +
@@ -3815,6 +3846,7 @@ function GetLangStrings()
   sTxtSystem      = "System";
   sTxtVCSigore    = "&VCS paths";
   sTxtVCSigoreNest= "VCS nested";
+  sTxtVCSigoreFiles= "VCS files";
   sTxtInResults   = "&In results";
   sTxtSearch      = "&SEARCH";
   sTxtReplace     = "&Replace";
