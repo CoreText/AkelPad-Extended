@@ -2479,11 +2479,12 @@ function FindInArrayDirs(aArray, sNeedle, nLevel)
   var nDirLevel = nLevel || 0,
       rDir, sPattern
 
-  for (var i = 0; i < aArray.length; ++i)
+  for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
   {
-    if ((aArray[i].toUpperCase() === sNeedle.toUpperCase()) || (aArray[i] === sNeedle))
+    a = aArray[i];
+    if ((a.toUpperCase() === sNeedle.toUpperCase()) || (a === sNeedle))
       return i;
-    else if (aArray[i].toUpperCase() === (sDir +"\\"+ sNeedle.toUpperCase()) || (aArray[i] === (sDir +"\\"+ sNeedle)))
+    else if (a.toUpperCase() === (sDir +"\\"+ sNeedle.toUpperCase()) || (a === (sDir +"\\"+ sNeedle)))
       return i;
   }
   return -1;
@@ -2498,9 +2499,10 @@ function FindInArrayDirs(aArray, sNeedle, nLevel)
 function FindInArrayFiles(aArray, sText, nLevel)
 {
   var nDirLevel = nLevel || 0;
-  for (var i = 0; i < aArray.length; ++i)
+  for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
   {
-    if ((aArray[i].toUpperCase() === sText.toUpperCase()) || (aArray[i] === sText))
+    a = aArray[i];
+    if ((a.toUpperCase() === sText.toUpperCase()) || (a === sText))
       return i;
   }
   return -1;
