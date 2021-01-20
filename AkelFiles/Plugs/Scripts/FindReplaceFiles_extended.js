@@ -191,7 +191,7 @@ var bPathShow       = 0;
 var bSeparateWnd    = 0;
 var bLogShow        = 0;
 var bBookmarkResults= 0;
-var bMarkResults    = 0;
+var bMarkResults    = 1;
 var bKeepHist       = 1;
 var bKeepFiles      = 1;
 var nPathLen        = 0;
@@ -243,7 +243,7 @@ var nFilesFoc       = 0;
 var aHist           = [];
 var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#A6D8B3";
 var aVCSIgnoreFileConfs = [".gitignore", ".svnignore"];
-var aVCSExcludedDirs = [".git", ".vscode", ".idea", ".history", "node_modules", "vendor"];
+var aVCSExcludedDirs = [".git\\", ".vscode\\", ".idea\\", ".history\\", "node_modules\\", "vendor\\"];
 var aExcludedDirsCollection = [];
 
 ReadIni();
@@ -2134,8 +2134,9 @@ function SearchFiles(bReplace)
       {
         if (bSkipVCSignoreN)
           aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
+          //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
 
-        if (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1)
+        if (FindInArrayDirs(aDirsToSkip, sCurrentRelativeDir + "\\", nCurrentLevel) !== -1)
           continue;
       }
 
@@ -2146,6 +2147,14 @@ function SearchFiles(bReplace)
         do
         {
           sFileName = AkelPad.MemRead(_PtrAdd(lpBuffer, 44 /*offsetof(WIN32_FIND_DATAW, cFileName)*/), DT_UNICODE);
+
+          if (bSkipVCSignoreF)
+          {
+            //AkelPad.MessageBox(0, sFileName +"\n\n"+ (FindInArray(aDirsToSkip, sFileName, true) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
+            if (FindInArray(aDirsToSkip, sFileName, true) !== -1)
+              continue;
+          }
+
           sFullName = aPath[i] + sFileName;
           nAttr     = AkelPad.MemRead(lpBuffer, DT_DWORD);
 
@@ -2455,6 +2464,26 @@ function FindInArray(aArray, sText, bIgnoreCase)
   {
     if (bIgnoreCase && (aArray[i].toUpperCase() === sText.toUpperCase()) || (aArray[i] === sText))
       return i;
+  }
+  return -1;
+}
+
+/**
+ * @param aArray
+ * @param sNeedle
+ * @param nLevel
+ * @return number index
+ */
+function FindInArrayDirs(aArray, sNeedle, nLevel)
+{
+  for (var i = 0; i < aArray.length; ++i)
+  {
+    if ((aArray[i].toUpperCase() === sNeedle.toUpperCase()) || (aArray[i] === sNeedle))
+      return i;
+    else if (aArray[i].toUpperCase() === (sDir +"\\"+ sNeedle.toUpperCase()) || (aArray[i] === (sDir +"\\"+ sNeedle)))
+      return i;
+    //else if (aArray[i].toUpperCase().match(sDir +"\\"+ sNeedle.toUpperCase()) )
+    //  return i;
   }
   return -1;
 }
@@ -3571,18 +3600,24 @@ function GetVCSIgnoreFileToSkip(sCurrentDir)
   	if (aIgnoreFileConfs[i])
     	sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + aIgnoreFileConfs[i]);
 
-  aExcludedDirsRaw = sFileContent.split("\n");
+  aExcludedDirsRaw = sFileContent.replace(/^\s+|\s+$/g, '').split("\n");
 
   for (var i = 0, nLen = aExcludedDirsRaw.length; i < nLen; i++)
   {
-    var sExcDir = aExcludedDirsRaw[i];
-    if (sExcDir.substr(0, 1) === "/")
-      aExcludedDirsCollection
-        .push(
-          sCurrentDirLevel
-            .concat(sExcDir.slice(1))
-            .replace(/^\s+|\s+$/g, '')
-        );
+    var sExcDir = aExcludedDirsRaw[i].replace(/^\s+|\s+$/g, '');
+    if (sExcDir && sExcDir.substr(0, 1) !== "#")
+    {
+      if (sExcDir.substr(0, 1) === "/" && (~sExcDir.indexOf("*.")))
+        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")));
+      else if (sExcDir.substr(0, 1) === "/")
+        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")) +"\\");
+      else if (sExcDir.substr(0, -1) === "/")
+        aExcludedDirsCollection.push(sCurrentDirLevel.concat(sExcDir.replace(/\//g, "\\")));
+      else if (sExcDir.substr(0, 1) === "\\")
+        aExcludedDirsCollection.push(sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")));
+      else
+        aExcludedDirsCollection.push(sExcDir.replace(/\//g, "\\"));
+    }
   }
 
   return ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs));
@@ -3598,13 +3633,9 @@ function ArrayUnique(array)
 {
   var a = array.concat();
   for (var i = 0; i < a.length; ++i)
-  {
     for (var j = i + 1; j < a.length; ++j)
-    {
       if (a[i] === a[j])
         a.splice(j--, 1);
-    }
-  }
 
   return a;
 }
@@ -3633,13 +3664,13 @@ function getVCSIgnoreFileContents(sFileName)
 
 /**
  * Show the popup.
- * 
+ *
  * @param strContent of the popup
  * @param strTitle of the popup
  * @param nSec seconds
  * @return bool|obj WScript.Shell
  */
-function ShowPopup(strContent, strTitle, nSec) 
+function ShowPopup(strContent, strTitle, nSec)
 {
   var nSeconds = nSec || 2;
   if (strContent && strTitle)
