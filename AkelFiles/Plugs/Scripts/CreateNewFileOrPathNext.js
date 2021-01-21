@@ -13,7 +13,7 @@
 //   "Create new file in same directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js") Icon("%a\AkelFiles\icons\ToolbarEx.dll", 0)
 //   "Copy File to some directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=1 -bCopyFile=1")
 //
-// The hot keys you could bind:═════════════════════╗
+// Possible key bindings:═══════════════════════════╗
 // ║ Alt+N      - Create new file in same dir       ║ Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=0")
 // ║ Ctrl+Alt+N - Create new file and edit the path ║ Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=1")
 // ╚════════════════════════════════════════════════╝
