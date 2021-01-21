@@ -151,7 +151,7 @@ function HandleSelected(sSelectedTxt)
   var sTmp = sSelectedTxt = sSelectedText || "";
   var rMatch;
 
-  if (sSelectedTxt.substr(0, 1))
+  if (sSelectedTxt.substr(0, 1) === "\\")
     sSelectedTxt = sSelectedTxt.replace(/^\\/, "");
 
   if (~sSelectedTxt.indexOf("..\\"))
