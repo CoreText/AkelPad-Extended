@@ -233,5 +233,5 @@ function BuildFullFilePath(sName, sAddDir)
   else if ((! bFullPath) && fso.FileExists(sFileFolder + '\\' + strFilePath))
     strFilePath = fNameIncrement(strFilePath);
 
-  return (bFullPath) ? strFilePath : strFilePath;
+  return strFilePath;
 }
