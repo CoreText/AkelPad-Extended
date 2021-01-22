@@ -11,7 +11,7 @@
 // Usage:
 //   Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js")
 //   "Create new file in same directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js") Icon("%a\AkelFiles\icons\ToolbarEx.dll", 0)
-//   "Copy File to some directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=1 -bCopyFile=1")
+//   "Copy file to some directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=1 -bCopyFile=1")
 //
 // Possible key bindings:═══════════════════════════╗
 // ║ Alt+N      - Create new file in same dir       ║ Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=0")
@@ -34,7 +34,7 @@ var fso = new ActiveXObject("Scripting.FileSystemObject");
 if ((! sFileFolder) || (! fso.FolderExists(sFileFolder)))
 { // если каталог удалён, например файл из архива в %temp%
   // if (! fso.FileExists(sEditFile)) // если файл удалён, но в принципе создать файл в той же папке можно
-  PopupShow("THE FOLDER OF THE FILE IS NOT FOUND!");
+  popupShow("THE FOLDER OF THE FILE IS NOT FOUND!");
   WScript.Quit();
 }
 
@@ -47,7 +47,7 @@ if (bSelected)
     sNewName = HandleSelected(sSelectedText);
 }
 
-FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", "File Name", BuildFullFilePath());
+InputFilePath();
 
 if (! FilePath)
   WScript.Quit();
@@ -88,7 +88,7 @@ if (! fso.FolderExists(sFileDir))
     }
   }
   else
-    WScript.Quit();
+    InputFilePath();
 
   if (! sFileDir)
     WScript.Quit();
@@ -114,6 +114,12 @@ if (fso.FileExists(sFullPath))
 
 //////////////////////////////////////////////////////////////////////////
 
+function InputFilePath()
+{
+  FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", "File Name", BuildFullFilePath());
+  return FilePath
+}
+
 /**
  * Show the popup.
  *
@@ -122,7 +128,7 @@ if (fso.FileExists(sFullPath))
  * @param nSec seconds
  * @return bool|obj WScript.Shell
  */
-function PopupShow(sContent, sTitle, nSec)
+function popupShow(sContent, sTitle, nSec)
 {
   var nSeconds = nSec || 2,
       strContent = sContent || WScript.ScriptFullName,
