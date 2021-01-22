@@ -10,7 +10,7 @@
 // ╚═════════════════════════════════════════════════════════════════════════════════╝
 // Usage:
 //   Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js")
-//   "Create new file in same directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js") Icon("%a\AkelFiles\icons\ToolbarEx.dll", 0)
+//   "Create new file in the same directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js") Icon("%a\AkelFiles\icons\ToolbarEx.dll", 0)
 //   "Copy file to some directory" Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=1 -bCopyFile=1")
 //
 // Possible key bindings:═══════════════════════════╗
@@ -27,6 +27,8 @@ var sSelectedText;
 var bSelected = AkelPad.GetArgValue("bSelected", 1);
 var bFullPath = AkelPad.GetArgValue("bFullPath", 1);
 var bCopyFile = AkelPad.GetArgValue("bCopyFile", 0);
+var sFileDir;
+var sFullPath;
 var oError;
 
 var fso = new ActiveXObject("Scripting.FileSystemObject");
@@ -47,7 +49,7 @@ if (bSelected)
     sNewName = HandleSelected(sSelectedText);
 }
 
-InputFilePath();
+FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", "File Name", BuildFullFilePath());
 
 if (! FilePath)
   WScript.Quit();
@@ -70,8 +72,8 @@ else if ((bFullPath && fso.FileExists(FilePath)) || ((! bFullPath) && fso.FileEx
     WScript.Quit();
 }
 
-var sFileDir = (bFullPath) ? AkelPad.GetFilePath(FilePath, 1) : AkelPad.GetFilePath(sFileFolder + "\\" + FilePath, 1);
-var sFullPath = (bFullPath) ? FilePath : sFileFolder + "\\" + FilePath;
+sFileDir = (bFullPath) ? AkelPad.GetFilePath(FilePath, 1) : AkelPad.GetFilePath(sFileFolder + "\\" + FilePath, 1);
+sFullPath = (bFullPath) ? FilePath : sFileFolder + "\\" + FilePath;
 
 if (! fso.FolderExists(sFileDir))
 {
@@ -88,7 +90,7 @@ if (! fso.FolderExists(sFileDir))
     }
   }
   else
-    InputFilePath();
+    WScript.Quit();
 
   if (! sFileDir)
     WScript.Quit();
@@ -114,12 +116,6 @@ if (fso.FileExists(sFullPath))
 
 //////////////////////////////////////////////////////////////////////////
 
-function InputFilePath()
-{
-  FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", "File Name", BuildFullFilePath());
-  return FilePath
-}
-
 /**
  * Show the popup.
  *
@@ -132,7 +128,7 @@ function popupShow(sContent, sTitle, nSec)
 {
   var nSeconds = nSec || 2,
       strContent = sContent || WScript.ScriptFullName,
-      strTitle = sTitle || WScript.Name;
+      strTitle = sTitle || WScript.ScriptName;
 
   if (sContent && strTitle)
     return (new ActiveXObject("WScript.Shell").Popup(
