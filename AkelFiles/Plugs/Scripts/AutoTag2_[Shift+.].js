@@ -137,8 +137,8 @@ if (hWndEdit)
         AkelPad.GetTextRange(ntag, ntag + lEnd) !== qEnd &&    // закрывающий символ тэга перед значением
         AkelPad.GetTextRange(nCaret - lEnd, nCaret) !== qEnd)  // закрывающий символ тэга, когда нет текста
       {
-        text = qEnd + text;
-        nCaret += lEnd;
+        text = (bCloseTag)? text : qEnd + text;
+        nCaret += (bCloseTag)? lEnd - 1 : lEnd;
       }
 
       if (tag.substr(tag.length - lEnd) !== qEnd)
