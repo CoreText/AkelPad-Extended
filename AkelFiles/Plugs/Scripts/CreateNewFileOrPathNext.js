@@ -92,7 +92,7 @@ sFullPath = correctFileNameFull((bFullPath) ? FilePath : sFileFolder + "\\" + Fi
 
 if (! fso.FolderExists(sFileDir))
 {
-  var confirmation = AkelPad.MessageBox(hMainWnd, "Path:\n"+sFileDir +"\n\nWill create:\n"+ FilePath, "Create New File In New Path?", 33);
+  var confirmation = AkelPad.MessageBox(hMainWnd, "Path:\n"+ sFileFolder +"\n\nWill create:\n"+ FilePath, "Create New File In New Path?", 33);
   if (confirmation === 1)
   {
     try
@@ -105,7 +105,10 @@ if (! fso.FolderExists(sFileDir))
     }
   }
   else
+  {
+    AkelPad.Call("Scripts::Main", 1, WScript.ScriptName, "-bSelected="+ (+bSelected) +" -bFullPath="+ (+bFullPath) +" -bCopyFile="+ (+bCopyFile));
     WScript.Quit();
+  }
 
   if (! sFileDir)
     WScript.Quit();
