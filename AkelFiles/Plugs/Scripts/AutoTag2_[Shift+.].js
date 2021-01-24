@@ -1,9 +1,11 @@
+// Tag Auto Close
+//
 // http://akelpad.sourceforge.net/forum/viewtopic.php?p=9326#9326
 // http://outstanding.hmarka.net/akelpad/scripts/autotag.js
 //
 // Version: 2.0 (2021.01.23) (by texter)
 //    Добавлена возможность закрытия тэга где угодно, при условии что после оператора сравнения "<" где-нибудь в коде
-//    будет всегда пробел и тогда не должно быть никаких проблем забиндить скрипт (например Shift+.),
+//    будет всегда пробел и тогда не должно быть никаких проблем забиндить скрипт (например на Shift+.),
 //    чтобы не вспоминать какое нужно для этого сочетание клавиш
 // Version: 1.4 (2013.05.20) (by VladSh)
 //    Исправлено неверное определение тэга при указании нескольких слов текста после открывающего тэга
@@ -19,7 +21,7 @@
 // Version: 1.0 (2010.09.26) (by FeyFre)
 //    Initial release
 //
-//////////////////////////////////////////////////////////////////////////// AUTO CLOSE TAG
+//////////////////////////////////////////////////////////////////////////// Description
 //
 // Arguments:
 //  1 = "<" - the first argument
@@ -38,14 +40,19 @@
 //  and Shift+. for XML/HTML/SGML derived markups, but only if you normally use spaces between
 //  comparisons in your code like so: " <= ", so to avoid unwanted autoclose.
 //
-// ╔In the Hotkeys Plugin you can set:══════════════════════════════════════════════════════╦══════════════╗
-// ║ Name:                   ║ Command:                                                     ║ Hotkey (446) ║
-// ║ AUTOTAG_HTML_AUTOCLOSE  ║ Call("Scripts::Main", 1, "AutoTag2_[Shift+.].js", `"<" ">"`) ║ Shift + .    ║
-// ╚═════════════════════════╩══════════════════════════════════════════════════════════════╩══════════════╝
+// ╔Possible hot keys:══════════════════╦══════════════════════════════════════════════════════════════════╦══════════════════╗
+// ║ Name:                              ║ Command:                                                         ║ Hotkey (446)     ║
+// ║ AUTOTAG_HTML_AUTOCLOSE             ║ Call("Scripts::Main", 1, "AutoTag2_[Shift+.].js", `"<" ">"`)     ║ Shift + .        ║
+// ║ AUTOTAG_HTML_AUTOCLOSE_COMPLETE    ║ Call("Scripts::Main", 1, "AutoTag2_[Shift+.].js", `"<" ">" "1"`) ║ Shift + Alt + W  ║
+// ║ AUTOTAG_BBCode_AUTOCLOSE           ║ Call("Scripts::Main", 1, "AutoTag2_[Shift+.].js", `"[" "]"`)     ║ Ctrl + ]         ║
+// ║ AUTOTAG_BBCode_AUTOCLOSE_COMPLETE  ║ Call("Scripts::Main", 1, "AutoTag2_[Shift+.].js", `"[" "]" "1"`) ║ Ctrl + Shift + ] ║
+// ╚════════════════════════════════════╩══════════════════════════════════════════════════════════════════╩══════════════════╝
+//
 // P.s.:
 //  You can use AutoTag script in addition with Call("Scripts::Main", 1, "autoInsertTab.js")
 //  that you can bind to Enter key and also bind Call("Scripts::Main", 1, "autoInsertQuotes.js") to '=' key
 //
+//  <a href="./index.html"
 //  <a href="javascript:my_function();window.print();"
 //
 
@@ -98,11 +105,11 @@ if (hWndEdit)
     ntag = worker + lEnd;                                      // текущая позиция
     sText = text = AkelPad.GetTextRange(worker, ntag);
 
-    if (sText === '"')                                         // skip a level in HTML/XML attributes that is between double the quotes
+    if (sText === '"')                                         // skip the level in HTML/XML attributes that is between the double quotes
       bSkipSymbol = ! bSkipSymbol;                             // in order to remove slashes from the unwanted range,
     if (bSkipSymbol)                                           // so the script could apply autoclose only for the pair tags
       sText = "*";                                             //
-    else                                                       // so you'll be able to autoclose this code:
+    else                                                       // you'll be able to autoclose this code:
       sText = text;                                            //   <a href="javascript:my_function();window.print();"
 
     if (sText && rPattern.test(sText))                         // собираем тэг
