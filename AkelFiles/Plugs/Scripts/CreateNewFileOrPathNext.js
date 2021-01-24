@@ -52,11 +52,11 @@ if (bSelected)
 {
   var sSelectedText = (AkelPad.GetSelText()).replace(/^\s+|\s+$/g, "").replace(/\//g, "\\");
   if (sSelectedText && (sSelectedText.length <= 255))
-    sNewName = HandleSelected(sSelectedText);
+    sNewName = (HandleSelected(sSelectedText));
 }
 
 FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", ((! bFullPath)? "Path:\n"+sFileFolder+"\n\n" : "Current Path:\n"+sFileFolder+"\n\n") + "File Name:", BuildFullFilePath());
-FilePath = ParseThePath(FilePath);
+FilePath = (ParseThePath(FilePath));
 
 if (! FilePath)
   WScript.Quit();
@@ -89,7 +89,7 @@ if (! fso.FolderExists(sFileFolder))
   sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
 
 sFileDir = (bFullPath) ? AkelPad.GetFilePath(FilePath, 1) : AkelPad.GetFilePath(sFileFolder + "\\" + FilePath, 1);
-sFullPath = correctFileNameFull((bFullPath) ? FilePath : sFileFolder + "\\" + FilePath);
+sFullPath = (correctFileNameFull((bFullPath) ? FilePath : sFileFolder + "\\" + FilePath));
 
 if (! fso.FolderExists(sFileDir))
 {
@@ -186,13 +186,13 @@ function HandleSelected(sSelectedTxt)
     if (~sSelectedTxt.indexOf("*"))
     {
       sNewName = sSelectedTxt.replace("\*", sNewName);
-      sFileExt = AkelPad.GetFilePath(sSelectedTxt, 4 ) || "txt";
+      sFileExt = AkelPad.GetFilePath(sSelectedTxt, 4) || AkelPad.GetFilePath(sEditFile, 4) || "txt";
       sNewName = getFileName(sNewName.replace("."+sFileExt, ""));
     }
     else
     {
       sNewName = sSelectedTxt;
-      sFileExt = AkelPad.GetFilePath(sSelectedTxt, 4 ) || "txt";
+      sFileExt = AkelPad.GetFilePath(sSelectedTxt, 4) || AkelPad.GetFilePath(sEditFile, 4) || "txt";
       if (~sSelectedTxt.indexOf(sFileExt))
         sNewName = sNewName.replace("\."+sFileExt, "");
     }
@@ -200,7 +200,7 @@ function HandleSelected(sSelectedTxt)
   else
   {
     sNewName = sSelectedTxt;
-    sFileExt = AkelPad.GetFilePath(sSelectedTxt, 4 ) || "txt";
+    sFileExt = AkelPad.GetFilePath(sSelectedTxt, 4) || AkelPad.GetFilePath(sEditFile, 4) || "txt";
   }
 
   sNewName = sNewName.replace(/^\s+|\s+$/g, "");
@@ -398,7 +398,7 @@ function correctFileName(pFileNameOnly)
 {
 	pFileNameOnly = pFileNameOnly.replace(/\t/g, " ");		    // валим табуляции, т.к. диалог с ними иногда просто не отображается
 	pFileNameOnly = pFileNameOnly.replace(/  /g, " ");		    // убираем повторяющиеся пробелы
-	return pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, "").replace(/^\s+|\s+$/g, "").replace(/\\+/g, "");
+	return (pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, "").replace(/^\s+|\s+$/g, "").replace(/["']*/g, "").replace(/\\+/g, ""));
 }
 
 /**
