@@ -26,6 +26,7 @@ var sFileDir;
 var sFullPath;
 var FilePath;
 var sSelectedText;
+var pSlash = "\\";
 var oError;
 
 // script arguments
@@ -225,7 +226,7 @@ function ParseThePath(sFileP)
     AkelPad.MessageBox(0, "Error: \n\n"+ Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
   }
 
-  return sFileP;
+  return correctFileNameFull(sFileP) ;
 }
 
 /**
@@ -304,4 +305,70 @@ function popupShow(sContent, nSec, sTitle)
     ));
 
   return false;
+}
+
+/**
+ * Get the file name.
+ *
+ * @param string
+ * @return string
+ */
+function getFileName(pFile)
+{
+	return pFile.slice(pFile.lastIndexOf(pSlash) + 1);
+}
+
+/**
+ * Возвращает имя файла БЕЗ расширения.
+ *
+ * @param string pFile
+ * @return string pFileName
+ */
+function getFileNameOnly(pFile)
+{
+	var pFileName = getFileName(pFile);
+	var pos = pFileName.lastIndexOf(".");
+	if (pos !== -1)
+		pFileName = pFileName.slice(0, pos);
+	return pFileName;
+}
+
+/**
+ * Возвращает полное имя папки БЕЗ закрывающего \
+ *
+ * @param string pFile
+ * @return string pDir
+ */
+function getParent(pFile)
+{
+	var pDir = "";
+	var pozLastSep = pFile.lastIndexOf(pSlash);
+	if (pozLastSep !== -1)
+		pDir = pFile.slice(0, pozLastSep);
+	return pDir;
+}
+
+/**
+ * Remove inadmissible symbols (from wisgest).
+ *
+ * @param string pFileNameOnly
+ * @return string pFileNameOnly sanitized
+ */
+function correctFileName(pFileNameOnly)
+{
+	pFileNameOnly = pFileNameOnly.replace(/\t/g, " ");		    // валим табуляции, т.к. диалог с ними иногда просто не отображается
+	pFileNameOnly = pFileNameOnly.replace(/  /g, " ");		    // убираем повторяющиеся пробелы
+	return pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, "");
+}
+
+/**
+ *
+ * @param string pFile
+ * @return string
+ */
+function correctFileNameFull(pFile)
+{
+	pFileNameOnly = getFileName(pFile);
+	pFileNameOnly = correctFileName(pFileNameOnly);
+	return getParent(pFile) + pSlash + pFileNameOnly;
 }
