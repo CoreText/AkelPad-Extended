@@ -102,7 +102,9 @@ if (! fso.FolderExists(sFileDir))
     }
     catch (oError)
     {
-      AkelPad.MessageBox(0, Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
+      AkelPad.MessageBox(0, "Can't create folder!", WScript.ScriptName, 48);
+      sFileDir.Close();
+      WScript.Quit();
     }
   }
   else
@@ -117,21 +119,34 @@ if (! fso.FolderExists(sFileDir))
 
 if (FilePath)
 {
-  try
+  var oFile;
+  if (bCopyFile)
+    oFile = fso.CopyFile(sEditFile, correctFileNameFull(sFullPath), false);  // можно копировать со старым содержимым
+  else
+    oFile = fso.CreateTextFile(correctFileNameFull(sFullPath), false, true); // флаги UTF8, без перезаписи
+  
+  if (! oFile) 
   {
-    if (bCopyFile)
-      fso.CopyFile(sEditFile, correctFileNameFull(sFullPath), false);  // можно копировать со старым содержимым
-    else
-      fso.CreateTextFile(correctFileNameFull(sFullPath), false, true); // флаги UTF8, без перезаписи
+    oFile.Close();
+    WScript.Quit();
   }
-  catch (oError)
-  {
-    AkelPad.MessageBox(0, Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
-  }
+
+  oFile.Close();
 }
 
+
+var nResult = -1;
 if (fso.FileExists(correctFileNameFull(sFullPath)))
-  AkelPad.OpenFile(correctFileNameFull(sFullPath));
+  nResult = AkelPad.OpenFile(correctFileNameFull(sFullPath));
+else
+  popupShow("SOMETHING WENT WRONG!");
+  
+if (nResult < 0)
+  throw ("SOMETHING WENT WRONG! Can't open the file!\n\n" + sFullPath);
+
+
+fso = null;
+WScript.Quit();
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -240,7 +255,8 @@ function ParseThePath(sFileP)
   }
   catch (oError)
   {
-    AkelPad.MessageBox(0, "Error: \n\n"+ Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
+    AkelPad.MessageBox(0, "Error: \n\nCan't parse the file!\n\n" + sFileP, WScript.ScriptName, 48);
+    WScript.Quit();
   }
 
   sFileP = sFileP.replace(/^\s+|\s+$/g, "");
@@ -277,6 +293,12 @@ function BuildFullFilePath(sName, sAddDir)
     do {
       i += 1;
       strFilePathIncrement = ((bWithFullPath === "no") ? "" : sFileFolder + "\\") + (strName ? strName : "new") + ("_" + i) + (sFileExt ? "." + sFileExt : "");
+      if (! fso.FolderExists(sFileFolder))
+      {
+        popupShow("THE BASE FOLDER DOES NOT EXIST!");
+        WScript.Quit();
+        break;
+      }
     }
     while (fso.FileExists(strFilePathIncrement))
     return strFilePathIncrement;
@@ -379,7 +401,7 @@ function correctFileName(pFileNameOnly)
 {
 	pFileNameOnly = pFileNameOnly.replace(/\t/g, " ");		    // валим табуляции, т.к. диалог с ними иногда просто не отображается
 	pFileNameOnly = pFileNameOnly.replace(/  /g, " ");		    // убираем повторяющиеся пробелы
-	return pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, "");
+	return pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, "").replace(/^\s+|\s+$/g, "").replace(/\\+/g, "");
 }
 
 /**
