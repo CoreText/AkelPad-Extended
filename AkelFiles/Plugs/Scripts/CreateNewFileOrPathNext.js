@@ -92,7 +92,7 @@ sFullPath = correctFileNameFull((bFullPath) ? FilePath : sFileFolder + "\\" + Fi
 
 if (! fso.FolderExists(sFileDir))
 {
-  var confirmation = AkelPad.MessageBox(hMainWnd, FilePath, "Create New File In New Path?", 33);
+  var confirmation = AkelPad.MessageBox(hMainWnd, "Path:\n"+sFileDir +"\n\nWill create:\n"+ FilePath, "Create New File In New Path?", 33);
   if (confirmation === 1)
   {
     try
