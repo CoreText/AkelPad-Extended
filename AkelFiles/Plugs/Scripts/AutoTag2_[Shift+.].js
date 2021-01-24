@@ -105,7 +105,7 @@ if (hWndEdit)
     ntag = worker + lEnd;                                      // текущая позиция
     sText = text = AkelPad.GetTextRange(worker, ntag);
 
-    if (sText === '"' || sText === "'")                        // skip the level in HTML/XML attributes that is between the double quotes
+    if (sText === '"')                        // skip the level in HTML/XML attributes that is between the double quotes
       bSkipSymbol = ! bSkipSymbol;                             // in order to remove slashes from the unwanted range,
     if (bSkipSymbol)                                           // so the script could apply autoclose only for the pair tags
       sText = "*";                                             //
