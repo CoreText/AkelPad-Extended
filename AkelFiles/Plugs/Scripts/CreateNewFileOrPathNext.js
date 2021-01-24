@@ -117,30 +117,45 @@ if (! fso.FolderExists(sFileDir))
     WScript.Quit();
 }
 
-if (FilePath)
+try
 {
-  var oFile;
-  if (bCopyFile)
-    oFile = fso.CopyFile(sEditFile, correctFileNameFull(sFullPath), false);  // можно копировать со старым содержимым
-  else
-    oFile = fso.CreateTextFile(correctFileNameFull(sFullPath), false, true); // флаги UTF8, без перезаписи
+	if (FilePath)
+	{
+	  var oFile;
+	  if (bCopyFile)
+	    oFile = fso.CopyFile(sEditFile, correctFileNameFull(sFullPath), false);  // можно копировать со старым содержимым
+	  else
+	    oFile = fso.CreateTextFile(correctFileNameFull(sFullPath), false, true); // флаги UTF8, без перезаписи
 
-  if (! oFile)
-  {
-    oFile.Close();
-    WScript.Quit();
-  }
+	  if (! oFile)
+	  {
+	    oFile.Close();
+	    WScript.Quit();
+	  }
 
+	  oFile.Close();
+	}
+}
+catch (oError)
+{
   oFile.Close();
+  WScript.Echo("SOMETHING IS WRONG!\n\n" + sFullPath);
+  WScript.Quit();
 }
 
-
-var nResult = -1;
-if (fso.FileExists(correctFileNameFull(sFullPath)))
-  nResult = AkelPad.OpenFile(correctFileNameFull(sFullPath));
-else
-  popupShow("SOMETHING WENT WRONG!");
-
+try
+{
+	var nResult = -1;
+	if (fso.FileExists(correctFileNameFull(sFullPath)))
+	  nResult = AkelPad.OpenFile(correctFileNameFull(sFullPath));
+	else
+	  popupShow("SOMETHING WENT WRONG!");
+}
+catch (oError)
+{
+  WScript.Echo("CAN'T OPEN THE FILE\n\n" + sFullPath);
+  WScript.Quit();
+}
 
 fso = null;
 WScript.Quit();
