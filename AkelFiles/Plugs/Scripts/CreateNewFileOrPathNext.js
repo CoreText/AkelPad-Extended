@@ -17,6 +17,8 @@
 // ║ Alt+N      - Create new file in same dir       ║ Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=0")
 // ║ Ctrl+Alt+N - Create new file and edit the path ║ Call("Scripts::Main", 1, "CreateNewFileOrPathNext.js", "-bSelected=1 -bFullPath=1")
 // ╚════════════════════════════════════════════════╝
+// ../test/new.js
+//
 var hMainWnd  = AkelPad.GetMainWnd();
 var sEditFile = AkelPad.GetEditFile(0);
 var sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
@@ -52,7 +54,7 @@ if (bSelected)
     sNewName = HandleSelected(sSelectedText);
 }
 
-FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", "File Name", BuildFullFilePath());
+FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", ((! bFullPath)? "Path:\n"+sFileFolder+"\n\n" : "Current Path:\n"+sFileFolder+"\n\n") + "File Name:", BuildFullFilePath());
 FilePath = ParseThePath(FilePath);
 
 if (! FilePath)
@@ -64,7 +66,7 @@ else if ((bFullPath && fso.FileExists(FilePath)) || ((! bFullPath) && fso.FileEx
   sNewName = FilePath.slice(0, FilePath.lastIndexOf("." + sFileExt));
 
   do {
-    FilePath = AkelPad.InputBox(hMainWnd, "File In Path Already Exists!", "New File Name", BuildFullFilePath(sNewName, "no"));
+    FilePath = AkelPad.InputBox(hMainWnd, "File In Path Already Exists!", ((! bFullPath)? "Path:\n"+sFileFolder+"\n\n" : "Current Path:\n"+sFileFolder+"\n\n") +"New File Name", BuildFullFilePath(sNewName, "no"));
     if (FilePath)
     {
       sFileExt = AkelPad.GetFilePath(FilePath, 4);
@@ -86,7 +88,7 @@ if (! fso.FolderExists(sFileFolder))
   sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
 
 sFileDir = (bFullPath) ? AkelPad.GetFilePath(FilePath, 1) : AkelPad.GetFilePath(sFileFolder + "\\" + FilePath, 1);
-sFullPath = (bFullPath) ? FilePath : sFileFolder + "\\" + FilePath;
+sFullPath = correctFileNameFull((bFullPath) ? FilePath : sFileFolder + "\\" + FilePath);
 
 if (! fso.FolderExists(sFileDir))
 {
@@ -147,6 +149,7 @@ function HandleSelected(sSelectedTxt)
   if (~sSelectedTxt.indexOf("..\\"))
   {
     rMatch = sSelectedTxt.match(/(\.\.)+?/g);
+    sSelectedTxt = sSelectedTxt.replace(/(\.\.\\)+/g, "");
     if (typeof rMatch === "object")
     {
       for (var i = 0, nLen = rMatch.length; i < nLen; i++)
@@ -157,6 +160,12 @@ function HandleSelected(sSelectedTxt)
   }
 
   if (~sSelectedTxt.indexOf(".")) {
+    if (sSelectedTxt.substr(0, 2) === ".\\")
+      sSelectedTxt = sSelectedTxt.slice(2);
+    
+    if (sSelectedTxt.substr(0, 1) === ".")
+      sSelectedTxt = sSelectedTxt.slice(1);
+      
     if (~sSelectedTxt.indexOf("*"))
     {
       sNewName = sSelectedTxt.replace("\*", sNewName);
@@ -165,19 +174,19 @@ function HandleSelected(sSelectedTxt)
     }
     else
     {
-      sNewName = AkelPad.GetFilePath(sSelectedTxt, 3 );
+      sNewName = sSelectedTxt;
       sFileExt = AkelPad.GetFilePath(sSelectedTxt, 4 );
+      if (~sSelectedTxt.indexOf(sFileExt))
+        sNewName = sNewName.replace("\."+sFileExt, "")
     }
   }
   else
   {
-    sNewName = sSelectedTxt;
-    if (~sSelectedTxt.indexOf("."))
-      sFileExt = "";
+    sNewName = getFileName(sSelectedTxt);
   }
   
   sNewName = sNewName.replace(/^\s+|\s+$/g, "");
-  return (bFullPath)? correctFileNameFull(sNewName) : correctFileName(sNewName);
+  return correctFileNameFull(sNewName);
 }
 
 /**
@@ -229,7 +238,7 @@ function ParseThePath(sFileP)
   }
 
   sFileP = sFileP.replace(/^\s+|\s+$/g, "");
-  return (bFullPath)? correctFileNameFull(sFileP) : correctFileName(sFileP);
+  return sFileP;
 }
 
 /**
@@ -253,7 +262,7 @@ function BuildFullFilePath(sName, sAddDir)
   if (! fso.FolderExists(sFileFolder))
     sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
 
-  strFilePath = ((! bFullPath || bWithFullPath === "no") ? "" : sFileFolder + "\\") + (strName ? strName : "new") + (sFileExt ? "." + sFileExt : "");
+  strFilePath = correctFileNameFull(((! bFullPath || bWithFullPath === "no") ? "" : sFileFolder + "\\") + (strName ? strName : "new") + (sFileExt ? "." + sFileExt : ""));
 
   function fFullNameIncrement(sArg)
   {
