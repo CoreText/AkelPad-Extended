@@ -19,17 +19,19 @@
 // ╚════════════════════════════════════════════════╝
 var hMainWnd  = AkelPad.GetMainWnd();
 var sEditFile = AkelPad.GetEditFile(0);
-var FilePath;
 var sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
-var sNewName = "new";
 var sFileExt = AkelPad.GetFilePath(sEditFile, 4 /*CPF_FILEEXT*/ );
+var sNewName = "new";
+var sFileDir;
+var sFullPath;
+var FilePath;
 var sSelectedText;
+var oError;
+
+// script arguments
 var bSelected = AkelPad.GetArgValue("bSelected", 1);
 var bFullPath = AkelPad.GetArgValue("bFullPath", 1);
 var bCopyFile = AkelPad.GetArgValue("bCopyFile", 0);
-var sFileDir;
-var sFullPath;
-var oError;
 
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 
@@ -50,6 +52,7 @@ if (bSelected)
 }
 
 FilePath = AkelPad.InputBox(hMainWnd, "New File In Path", "File Name", BuildFullFilePath());
+FilePath = ParseThePath(FilePath);
 
 if (! FilePath)
   WScript.Quit();
@@ -65,12 +68,21 @@ else if ((bFullPath && fso.FileExists(FilePath)) || ((! bFullPath) && fso.FileEx
     {
       sFileExt = AkelPad.GetFilePath(FilePath, 4);
       sNewName = FilePath.slice(0, FilePath.lastIndexOf("." + sFileExt));
+      FilePath = ParseThePath(FilePath);
+    }
+    else
+    {
+      WScript.Quit();
+      break;
     }
   } while ((bFullPath && fso.FileExists(FilePath)) || ((! bFullPath) && fso.FileExists(sFileFolder + "\\" + FilePath)));
 
   if (! FilePath)
     WScript.Quit();
 }
+
+if (! fso.FolderExists(sFileFolder))
+  sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
 
 sFileDir = (bFullPath) ? AkelPad.GetFilePath(FilePath, 1) : AkelPad.GetFilePath(sFileFolder + "\\" + FilePath, 1);
 sFullPath = (bFullPath) ? FilePath : sFileFolder + "\\" + FilePath;
@@ -115,31 +127,6 @@ if (fso.FileExists(sFullPath))
   AkelPad.OpenFile(sFullPath);
 
 //////////////////////////////////////////////////////////////////////////
-
-/**
- * Show the popup.
- *
- * @param sContent of the popup
- * @param sTitle of the popup
- * @param nSec seconds
- * @return bool|obj WScript.Shell
- */
-function popupShow(sContent, sTitle, nSec)
-{
-  var nSeconds = nSec || 2,
-      strContent = sContent || WScript.ScriptFullName,
-      strTitle = sTitle || WScript.ScriptName;
-
-  if (sContent && strTitle)
-    return (new ActiveXObject("WScript.Shell").Popup(
-      strContent,
-      nSeconds, // Autoclose after ~2 seconds
-      strTitle,
-      64 /*MB_ICONINFORMATION*/
-    ));
-
-  return false;
-}
 
 /**
  * If the text is selected - use selection as a new file path.
@@ -192,6 +179,56 @@ function HandleSelected(sSelectedTxt)
 }
 
 /**
+ * Parse and sanitize the user's input.
+ *
+ * @param string sFileP
+ * @return string sFileP
+ */
+function ParseThePath(sFileP)
+{
+  var sFileP = sFileP || "",
+      rMatch, oError;
+
+  if (! sFileP)
+    return "";
+
+  try
+  {
+    sFileP = sFileP.replace(/\/+/g         , "\\")
+                   .replace(/(\/\\)+/g     , "\\")
+                   .replace(/\\\\+/g       , "\\")
+                   .replace(/\\\\+/g       , "\\")
+                   .replace(/\\\.\\/g      , "\\\.\.\\")
+                   .replace(/\\\.\\/g      , "\\\.\.\\")
+                   .replace(/(\\\.\.\.+)+/g, "\\\.\.");
+
+    if (sFileP.substr(0, 2) === ".\\")
+      sFileP = sFileP.replace(/^\.\\/, "");
+    if (sFileP.substr(0, 1) === "\\")
+      sFileP = sFileP.replace(/^\\/, "");
+
+    if (~sFileP.indexOf("..\\"))
+    {
+      rMatch = sFileP.match(/(\.\.\\)+?/g);
+      sFileP = sFileP.replace(/(\.\.\\)+/g, "");
+
+      if (typeof rMatch === "object")
+      {
+        for (var i = 0, nLen = rMatch.length; i < nLen; i++)
+          sFileFolder = AkelPad.GetFilePath(sFileFolder, 1);
+      }
+    }
+
+  }
+  catch (oError)
+  {
+    AkelPad.MessageBox(0, "Error: \n\n"+ Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
+  }
+
+  return sFileP;
+}
+
+/**
  * Build the full file name path.
  *
  * @param stirng sName
@@ -203,6 +240,12 @@ function BuildFullFilePath(sName, sAddDir)
   var strName = sName || sNewName,
       bWithFullPath = sAddDir || true,
       strFilePath = "";
+
+  if (strName.substr(0, 1) === "\\")
+    strName = strName.replace(/^\\/, "");
+
+  if (! fso.FolderExists(sFileFolder))
+    sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
 
   strFilePath = ((! bFullPath || bWithFullPath === "no") ? "" : sFileFolder + "\\") + (strName ? strName : "new") + (sFileExt ? "." + sFileExt : "");
 
@@ -236,4 +279,29 @@ function BuildFullFilePath(sName, sAddDir)
     strFilePath = fNameIncrement(strFilePath);
 
   return strFilePath;
+}
+
+/**
+ * Show the popup.
+ *
+ * @param sContent of the popup
+ * @param nSec seconds
+ * @param sTitle of the popup
+ * @return bool|obj WScript.Shell
+ */
+function popupShow(sContent, nSec, sTitle)
+{
+  var nSeconds = nSec || 4,
+      strContent = sContent || WScript.ScriptFullName,
+      strTitle = sTitle || WScript.ScriptName;
+
+  if (sContent && strTitle)
+    return (new ActiveXObject("WScript.Shell").Popup(
+      strContent,
+      nSeconds, // Autoclose after ~2 seconds
+      strTitle,
+      64 /*MB_ICONINFORMATION*/
+    ));
+
+  return false;
 }
