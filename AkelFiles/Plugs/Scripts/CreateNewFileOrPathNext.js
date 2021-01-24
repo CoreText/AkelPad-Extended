@@ -175,8 +175,9 @@ function HandleSelected(sSelectedTxt)
     if (~sSelectedTxt.indexOf("."))
       sFileExt = "";
   }
-
-  return sNewName;
+  
+  sNewName = sNewName.replace(/^\s+|\s+$/g, "");
+  return (bFullPath)? correctFileNameFull(sNewName) : correctFileName(sNewName);
 }
 
 /**
@@ -201,7 +202,8 @@ function ParseThePath(sFileP)
                    .replace(/\\\\+/g       , "\\")
                    .replace(/\\\.\\/g      , "\\\.\.\\")
                    .replace(/\\\.\\/g      , "\\\.\.\\")
-                   .replace(/(\\\.\.\.+)+/g, "\\\.\.");
+                   .replace(/(\\\.\.\.+)+/g, "\\\.\.")
+                   .replace(/^\s+|\s+$/g   , "");
 
     if (sFileP.substr(0, 2) === ".\\")
       sFileP = sFileP.replace(/^\.\\/, "");
@@ -226,7 +228,8 @@ function ParseThePath(sFileP)
     AkelPad.MessageBox(0, "Error: \n\n"+ Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
   }
 
-  return correctFileNameFull(sFileP) ;
+  sFileP = sFileP.replace(/^\s+|\s+$/g, "");
+  return (bFullPath)? correctFileNameFull(sFileP) : correctFileName(sFileP);
 }
 
 /**
@@ -244,6 +247,8 @@ function BuildFullFilePath(sName, sAddDir)
 
   if (strName.substr(0, 1) === "\\")
     strName = strName.replace(/^\\/, "");
+    
+  strName = strName.replace(/^\s+|\s+$/g, "");
 
   if (! fso.FolderExists(sFileFolder))
     sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
@@ -362,6 +367,7 @@ function correctFileName(pFileNameOnly)
 }
 
 /**
+ * Sanitize the given full path.
  *
  * @param string pFile
  * @return string
