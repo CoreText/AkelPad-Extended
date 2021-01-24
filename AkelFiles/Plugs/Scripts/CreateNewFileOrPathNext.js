@@ -22,7 +22,7 @@
 var hMainWnd  = AkelPad.GetMainWnd();
 var sEditFile = AkelPad.GetEditFile(0);
 var sFileFolder = AkelPad.GetFilePath(sEditFile, 1);
-var sFileExt = AkelPad.GetFilePath(sEditFile, 4 /*CPF_FILEEXT*/ );
+var sFileExt = AkelPad.GetFilePath(sEditFile, 4 /*CPF_FILEEXT*/ ) || "txt";
 var sNewName = "new";
 var sFileDir;
 var sFullPath;
