@@ -66,7 +66,7 @@ else if ((bFullPath && fso.FileExists(FilePath)) || ((! bFullPath) && fso.FileEx
   sNewName = FilePath.slice(0, FilePath.lastIndexOf("." + sFileExt));
 
   do {
-    FilePath = AkelPad.InputBox(hMainWnd, "File In Path Already Exists!", ((! bFullPath)? "Path:\n"+sFileFolder+"\n\n" : "Current Path:\n"+sFileFolder+"\n\n") +"New File Name", BuildFullFilePath(sNewName, "no"));
+    FilePath = AkelPad.InputBox(hMainWnd, "File In Path Already Exists!", ((! bFullPath)? "Path:\n"+sFileFolder+"\n\n" : "Current Path:\n"+sFileFolder+"\n\n") +"New File Name:", BuildFullFilePath(sNewName, "no"));
     if (FilePath)
     {
       sFileExt = AkelPad.GetFilePath(FilePath, 4);
