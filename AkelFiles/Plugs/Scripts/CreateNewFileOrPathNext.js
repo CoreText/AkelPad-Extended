@@ -124,8 +124,8 @@ if (FilePath)
     oFile = fso.CopyFile(sEditFile, correctFileNameFull(sFullPath), false);  // можно копировать со старым содержимым
   else
     oFile = fso.CreateTextFile(correctFileNameFull(sFullPath), false, true); // флаги UTF8, без перезаписи
-  
-  if (! oFile) 
+
+  if (! oFile)
   {
     oFile.Close();
     WScript.Quit();
@@ -140,9 +140,6 @@ if (fso.FileExists(correctFileNameFull(sFullPath)))
   nResult = AkelPad.OpenFile(correctFileNameFull(sFullPath));
 else
   popupShow("SOMETHING WENT WRONG!");
-  
-if (nResult < 0)
-  throw ("SOMETHING WENT WRONG! Can't open the file!\n\n" + sFullPath);
 
 
 fso = null;
