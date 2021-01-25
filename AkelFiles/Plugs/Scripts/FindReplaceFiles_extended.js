@@ -7,7 +7,7 @@
 // *** search files by name/content and replace content. ***
 //
 // Usage:
-//   Call("Scripts::Main", 1, "FindReplaceFiles.js")
+//   Call("Scripts::Main", 1, "FindReplaceFiles_extended.js")
 //
 // Required to include: BrowseForFolder_function.js, FileAndStream_functions.js
 //
