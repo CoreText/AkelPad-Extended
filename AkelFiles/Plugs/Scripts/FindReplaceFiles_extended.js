@@ -2574,7 +2574,7 @@ function FindInArrayDirs(aArray, sNeedle, nLevel)
   }
   catch (oError)
   {
-    AkelPad.MessageBox(0, "Find in directories Error:\n\n" + oError.description, sScriptName, 48);
+    //AkelPad.MessageBox(0, "Find in directories Error:\n\n" + oError.description, sScriptName, 48);
   }
   return -1;
 }
@@ -2672,23 +2672,6 @@ function FindInArrayFiles(aArray, sNeedle, sCurrentDir, nLevel)
     //AkelPad.MessageBox(0, "File Match Error:\n\n" + aUpp + "\n\n" + sPattern + "\n\n" + sNeedleUpp + "\n\n" + oError.description, sScriptName, 48);
   }
   return -1;
-}
-
-/**
- * @param sPattern to pass to construct RegExp object.
- * @return object RegExp
- */
-function ConstructRegExp(sPattern) {
-  var rObj;
-  try
-  {
-    rObj = new RegExp(sPattern);
-  }
-  catch (oError)
-  {
-    AkelPad.MessageBox(0, Error.message +"\n\n"+ oError.description, sScriptName, 48);
-  }
-  return rObj;
 }
 
 /**
