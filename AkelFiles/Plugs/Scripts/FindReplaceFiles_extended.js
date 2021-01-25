@@ -121,6 +121,7 @@ var hInstDLL = AkelPad.GetInstanceDll();
 var sScriptName = WScript.ScriptName;
 var sClass   = "AkelPad::Scripts::" + sScriptName + "::" + hInstDLL;
 var hDlg;
+var pSlash = "\\";
 // var bCoderHighLightIsRunning = AkelPad.IsPluginRunning("Coder::HighLight");
 // var bQSearchIsRunning = AkelPad.IsPluginRunning("QSearch::QSearch");
 
@@ -245,6 +246,8 @@ var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#A6D8B3";
 var aVCSIgnoreFileConfs = [".gitignore", ".svnignore"];
 var aVCSExcludedDirs = [".git\\", ".vscode\\", ".idea\\", ".history\\", "node_modules\\", "vendor\\"];
 var aExcludedDirsCollection = [];
+var aDirsToSkip = [];
+var sCurrentRelativeDir = "";
 
 ReadIni();
 
@@ -862,9 +865,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x0D /*VK_RETURN*/)
       {
         bLogShow = ! bLogShow;
-        ShowPopup(
+        popupShow(
           (bLogShow ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file." : "Double click will close the result file."),
-          sScriptName, 1
+          2, sScriptName
         );
       }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
@@ -1910,9 +1913,7 @@ function SearchFiles(bReplace)
   var bNTFS;
   var aStreams;
   var i, n, nDelta;
-  var aDirsToSkip;
   var nCurrentLevel;
-  var sCurrentRelativeDir;
   var strContent = "";
 
   if (! (bInResults && aFiles.length))
@@ -2033,7 +2034,7 @@ function SearchFiles(bReplace)
   {
     if ((! bContentRE) && (sContent === sReplace))
     {
-      ShowPopup('THE TEXT IS THE SAME', 'NO REPLACE!', 1);
+      popupShow('THE TEXT IS THE SAME', 4, 'NO REPLACE!');
       return;
     }
 
@@ -2133,9 +2134,14 @@ function SearchFiles(bReplace)
       if (bSkipVCSignore)
       {
         if (bSkipVCSignoreN)
-          aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
-          //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArray(aDirsToSkip, sCurrentRelativeDir, true) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
+        {
+          if (FindInArrayExcludeNested(aDirsToSkip, sCurrentRelativeDir, nCurrentLevel) !== -1)
+            continue;
 
+          aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
+          //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayDirs(aDirsToSkip, sCurrentRelativeDir + "\\", nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
+
+        }
         if (FindInArrayDirs(aDirsToSkip, sCurrentRelativeDir + "\\", nCurrentLevel) !== -1)
           continue;
       }
@@ -2150,8 +2156,8 @@ function SearchFiles(bReplace)
 
           if (bSkipVCSignoreF)
           {
-            //AkelPad.MessageBox(0, sFileName +"\n\n"+ (FindInArray(aDirsToSkip, sFileName, true) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
-            if (FindInArrayFiles(aDirsToSkip, sFileName, nCurrentLevel) !== -1)
+            //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
+            if (FindInArrayFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1)
               continue;
           }
 
@@ -2469,6 +2475,70 @@ function FindInArray(aArray, sText, bIgnoreCase)
 }
 
 /**
+ * Find the element in array and remove it.
+ *
+ * @param array aArray
+ * @param string sNeedle
+ * @return bool|array if the passed element is found
+ */
+function FindRemoveFromArray(aArray, sNeedle)
+{
+  var s = sNeedle || "",
+      a = aArray.slice(0) || [];
+
+  if (typeof a === "object" && "indexOf" in a)
+  {
+    //AkelPad.MessageBox(0, a.join("\n"), WScript.ScriptName, 0);
+    var index = a.indexOf(s),
+        sFileFullPath = sDir + "\\" + sCurrentRelativeDir + "\\" + s + "\\";
+
+    AkelPad.MessageBox(0, sFileFullPath, WScript.ScriptName, 0);
+
+    if (index > -1 && (FindInArray(aVCSIgnoreFileConfs, sDir + "\\" + sCurrentRelativeDir + "\\" + s + "\\", true) !== -1))
+    {
+      a.splice(index, 1);
+      aDirsToSkip = null;
+      aDirsToSkip = a;
+    }
+    else
+      a = [];
+  }
+
+  return (a.length)? a : false;
+}
+
+/**
+ * Filter nested VCS.
+ *
+ * @param aArray
+ * @param sNeedle
+ * @return number index if found
+ */
+function FindInArrayExcludeNested(aArray, sNeedle, nLevel)
+{
+  var nDirLevel = nLevel || 0,
+      sNeedleUpp = sNeedle.toUpperCase(),
+      sDirUpp = sDir.toUpperCase(),
+      aUpp,
+      rDir, sPattern
+
+  for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+  {
+    a = aArray[i];
+    aUpp = a.toUpperCase();
+
+    // if (aUpp.substr(0, 1) === "!")
+    // {
+    //   FindRemoveFromArray(aDirsToSkip, aUpp.substr(1));
+    // }
+    // else
+    if (aUpp === (sDirUpp +"\\"+ sNeedleUpp +"\\"))
+      return i;
+  }
+  return -1;
+}
+
+/**
  * @param aArray
  * @param sNeedle
  * @param nLevel
@@ -2482,15 +2552,29 @@ function FindInArrayDirs(aArray, sNeedle, nLevel)
       aUpp,
       rDir, sPattern
 
-  for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+  try
   {
-    a = aArray[i];
-    aUpp = a.toUpperCase();
-    
-    if (aUpp === sNeedleUpp)
-      return i;
-    else if (aUpp === (sDirUpp +"\\"+ sNeedleUpp))
-      return i;
+    for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+    {
+      a = aArray[i];
+      aUpp = a.toUpperCase();
+
+      if (aUpp === sNeedleUpp)
+        return i;
+      else if (aUpp === (sDirUpp +"\\"+ sNeedleUpp))
+        return i;
+      else if (~aUpp.indexOf("**"))
+      {
+        sPattern = aUpp.replace(/\\/g, "\\\\").replace(/\*\*/g, ".+?" /* "\(.*\)" */);
+        rDir = new RegExp(sPattern);
+        if (rDir.test(sNeedleUpp) || rDir.test(sDirUpp +"\\"+ sNeedleUpp))
+          return i;
+      }
+    }
+  }
+  catch (oError)
+  {
+    AkelPad.MessageBox(0, "Find in directories Error:\n\n" + oError.description, sScriptName, 48);
   }
   return -1;
 }
@@ -2498,27 +2582,182 @@ function FindInArrayDirs(aArray, sNeedle, nLevel)
 /**
  * @param aArray
  * @param sNeedle
+ * @param sCurrentDir
  * @param nLevel
  * @return number index
  */
-function FindInArrayFiles(aArray, sNeedle, nLevel)
+function FindInArrayFiles(aArray, sNeedle, sCurrentDir, nLevel)
 {
   var nDirLevel = nLevel || 0,
       sNeedleUpp = sNeedle.toUpperCase(),
-      sDirUpp = sDir.toUpperCase(),
-      aUpp,
-      rDir, sPattern
-
-  for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+      sDirUpp = sDir.toUpperCase() + "\\" + sCurrentDir.toUpperCase(),
+      aUpp, strFile, correctedFilePath, sTmp,
+      rFile, sPattern,
+      oError
+  try
   {
-    a = aArray[i];
-    aUpp = a.toUpperCase();
-    
-    if (aUpp === sNeedleUpp)
-      return i;
+    for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+    {
+      a = aArray[i];
+      aUpp = a.toUpperCase();
+
+      //AkelPad.MessageBox(0, sDirUpp +"\\"+ sNeedleUpp , WScript.ScriptName, 0);
+      if (aUpp === sNeedleUpp || aUpp === (sDirUpp + sNeedleUpp))
+        return i;
+      else if (aUpp.substr(0, -2) === "\\\\")
+        return i;
+      else if (~aUpp.indexOf("["))          // parse fnmatch
+      {
+        if (/[\[].*[\]\*\+]/.test(aUpp))
+        {
+          sPattern = new RegExp(aUpp.replace(".", "\\."), "gi");
+          if (sPattern.test(sNeedle))
+            return i;
+        }
+      }
+      // else if (~aUpp.indexOf("**"))         // glob match
+      // {
+      //   sPattern = aUpp.replace(/\\/g, "\\\\").replace(/\*\*/g, "\(.*\)");
+      //   rFile = new RegExp(sPattern, "gi");
+      //   if (rFile.test(sPattern))
+      //     return i;
+      //
+      // }
+      else if (~aUpp.indexOf("\\*."))       // dir/*.extension
+      {
+        strFile = aUpp.replace(/^(.*)\*(\..*)$/g, "$1"+getFileNameOnly(sNeedleUpp)+"$2");
+        //AkelPad.MessageBox(0, sDirUpp +"\\"+ sNeedleUpp +"\n\n"+strFile, WScript.ScriptName, 0);
+        if (strFile === sDirUpp +"\\"+ sNeedleUpp)
+          return i;
+      }
+      else if (~aUpp.indexOf("\\*"))        // dir/* level
+      {
+        strFile = aUpp.replace(/^(.*)\*(\\*)$/g, "$1"+getFileName(sNeedleUpp)+"$2");
+        if (strFile +"\\" === sDirUpp +"\\"+ sNeedleUpp)
+          return i;
+      }
+      else if (~aUpp.indexOf("*"))
+      {
+        sPattern = correctFileNameFull(aUpp).replace(/(?=\*\.)(.+)/g, ".$2").replace(/^\\/i, "\.*?") + "$";
+        rFile = new RegExp(sPattern);
+        if (rFile.test(sNeedleUpp) || rFile.test(sDirUpp + sNeedleUpp))
+          return i;
+      }
+      else if (~aUpp.indexOf("?"))
+      {
+        sPattern = aUpp
+          .replace(/^\\/, "")
+          .replace(/\./g, "\\.")
+          .replace(/\?/g, ".");
+
+        rFile = new RegExp(sPattern, "gi");
+        if (rFile.test(sNeedleUpp) || rFile.test(sDirUpp + sNeedleUpp))
+          return i;
+      }
+      // else
+      // {
+      //   sPattern = new RegExp(aUpp.replace(".", "\\."), "gi");
+      //   if (sPattern.test(sNeedle))
+      //     return i;
+      // }
+
+      // else if (aUpp.substr(0, -2) === "\\")
+      // {
+      //   //AkelPad.MessageBox(0, aUpp, WScript.ScriptName, 0);
+      // }
+    }
+  }
+  catch (oError)
+  {
+    //AkelPad.MessageBox(0, "File Match Error:\n\n" + aUpp + "\n\n" + sPattern + "\n\n" + sNeedleUpp + "\n\n" + oError.description, sScriptName, 48);
   }
   return -1;
 }
+
+/**
+ * @param sPattern to pass to construct RegExp object.
+ * @return object RegExp
+ */
+function ConstructRegExp(sPattern) {
+  var rObj;
+  try
+  {
+    rObj = new RegExp(sPattern);
+  }
+  catch (oError)
+  {
+    AkelPad.MessageBox(0, Error.message +"\n\n"+ oError.description, sScriptName, 48);
+  }
+  return rObj;
+}
+
+/**
+ * Get the file name.
+ *
+ * @param string
+ * @return string
+ */
+function getFileName(pFile)
+{
+	return pFile.slice(pFile.lastIndexOf(pSlash) + 1);
+}
+
+/**
+ * Возвращает имя файла БЕЗ расширения.
+ *
+ * @param string pFile
+ * @return string pFileName
+ */
+function getFileNameOnly(pFile)
+{
+	var pFileName = getFileName(pFile);
+	var pos = pFileName.lastIndexOf(".");
+	if (pos !== -1)
+		pFileName = pFileName.slice(0, pos);
+	return pFileName;
+}
+
+/**
+ * Возвращает полное имя папки БЕЗ закрывающего \
+ *
+ * @param string pFile
+ * @return string pDir
+ */
+function getParent(pFile)
+{
+	var pDir = "";
+	var pozLastSep = pFile.lastIndexOf(pSlash);
+	if (pozLastSep !== -1)
+		pDir = pFile.slice(0, pozLastSep);
+	return pDir;
+}
+
+/**
+ * Remove inadmissible symbols (from wisgest).
+ *
+ * @param string pFileNameOnly
+ * @return string pFileNameOnly sanitized
+ */
+function correctFileName(pFileNameOnly)
+{
+	pFileNameOnly = pFileNameOnly.replace(/\t/g, " ");		    // валим табуляции, т.к. диалог с ними иногда просто не отображается
+	pFileNameOnly = pFileNameOnly.replace(/  /g, " ");		    // убираем повторяющиеся пробелы
+	return (pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, ""));
+}
+
+/**
+ * Sanitize the given full path.
+ *
+ * @param string pFile
+ * @return string
+ */
+function correctFileNameFull(pFile)
+{
+	pFileNameOnly = getFileName(pFile);
+	pFileNameOnly = correctFileName(pFileNameOnly);
+	return getParent(pFile) + pSlash + pFileNameOnly;
+}
+
 
 function History()
 {
@@ -3120,7 +3359,7 @@ function Settings()
 }
 
 /**
- * Find in files using FINDSTR search util and show search results in log
+ * Find in files using FINDSTR search util and show search results in the log.
  * @TODO: Match exact word
  *
  * @param int pLogOutput - flags for Log::Output, default no scroll (16)
@@ -3269,7 +3508,7 @@ function qSearchLog(searchFlag)
 }
 
 /**
- * qSearch FindAll
+ * qSearch FindAll method.
  *
  * @param string selText    - text to search
  * @param number flag       - search flag
@@ -3697,15 +3936,18 @@ function getVCSIgnoreFileContents(sFileName)
 /**
  * Show the popup.
  *
- * @param strContent of the popup
- * @param strTitle of the popup
+ * @param sContent of the popup
  * @param nSec seconds
+ * @param sTitle of the popup
  * @return bool|obj WScript.Shell
  */
-function ShowPopup(strContent, strTitle, nSec)
+function popupShow(sContent, nSec, sTitle)
 {
-  var nSeconds = nSec || 2;
-  if (strContent && strTitle)
+  var nSeconds = nSec || 4,
+      strContent = sContent || WScript.ScriptFullName,
+      strTitle = sTitle || WScript.ScriptName;
+
+  if (sContent && strTitle)
     return (new ActiveXObject("WScript.Shell").Popup(
       strContent,
       nSeconds, // Autoclose after ~2 seconds
