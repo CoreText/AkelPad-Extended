@@ -2626,7 +2626,6 @@ function FindInArrayFiles(aArray, sNeedle, sCurrentDir, nLevel)
       else if (~aUpp.indexOf("\\*."))       // dir/*.extension
       {
         strFile = aUpp.replace(/^(.*)\*(\..*)$/g, "$1"+getFileNameOnly(sNeedleUpp)+"$2");
-        //AkelPad.MessageBox(0, sDirUpp +"\\"+ sNeedleUpp +"\n\n"+strFile, WScript.ScriptName, 0);
         if (strFile === sDirUpp +"\\"+ sNeedleUpp)
           return i;
       }
@@ -2653,6 +2652,12 @@ function FindInArrayFiles(aArray, sNeedle, sCurrentDir, nLevel)
         rFile = new RegExp(sPattern, "gi");
         if (rFile.test(sNeedleUpp) || rFile.test(sDirUpp + sNeedleUpp))
           return i;
+        else if (~aUpp.indexOf("{"))        // .{1,}
+        {
+          sPattern = new RegExp(sPattern, "gi");
+          if (sPattern.test(sNeedle))
+            return i;
+        }
       }
       // else
       // {
