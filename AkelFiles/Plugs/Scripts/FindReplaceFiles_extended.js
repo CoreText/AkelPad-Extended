@@ -192,6 +192,7 @@ var bPathShow       = 0;
 var bSeparateWnd    = 0;
 var bLogShow        = 0;
 var bBookmarkResults= 0;
+var bCloseToggler   = 0;
 var bMarkResults    = 1;
 var bKeepHist       = 1;
 var bKeepFiles      = 1;
@@ -284,8 +285,8 @@ var IDREADONLY   = 2028;
 var IDHIDDEN     = 2029;
 var IDSYSTEM     = 2030;
 var IDVCSIGNORE  = 2031;
-var IDVCSIGNOREN = 2032;
-var IDVCSIGNOREF = 2033;
+var IDVCSIGNOREF = 2032;
+var IDVCSIGNOREN = 2033;
 var IDINRESULTS  = 2034;
 var IDSEARCHB    = 2035;
 var IDREPLACEB   = 2036;
@@ -340,8 +341,8 @@ aDlg[IDREADONLY  ]={S:0x50010003, C:"BUTTON", T:sTxtReadOnly};
 aDlg[IDHIDDEN    ]={S:0x50010003, C:"BUTTON", T:sTxtHidden};
 aDlg[IDSYSTEM    ]={S:0x50010003, C:"BUTTON", T:sTxtSystem};
 aDlg[IDVCSIGNORE ]={S:0x50010003, C:"BUTTON", T:sTxtVCSigore};
-aDlg[IDVCSIGNOREN]={S:0x50010003, C:"BUTTON", T:sTxtVCSigoreNest};
 aDlg[IDVCSIGNOREF]={S:0x50010003, C:"BUTTON", T:sTxtVCSigoreFiles};
+aDlg[IDVCSIGNOREN]={S:0x50010003, C:"BUTTON", T:sTxtVCSigoreNest};
 aDlg[IDINRESULTS ]={S:0x50010003, C:"BUTTON", T:sTxtInResults};
 aDlg[IDSEARCHB   ]={S:0x50010000, C:"BUTTON", T:sTxtSearch};
 aDlg[IDREPLACEB  ]={S:0x50010000, C:"BUTTON", T:sTxtReplace};
@@ -936,7 +937,19 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         if (bLogShow)
           qSearching(searchSelect());
         else
-          OpenOrCloseFile();
+        {
+          if (bCloseToggler)
+            OpenOrCloseFile();
+          else
+          {
+            OpenFileAndFindBeginOrFindNext();
+            if (bMarkResults)
+              highlight();
+
+            if (bBookmarkResults)
+              BookmarkLines('', true);
+          }
+        }
       }
     }
     else if (inputCode === -2 /*NM_CLICK*/)
@@ -1356,7 +1369,7 @@ function ResizeDlg(nW, nH)
     nW90 -1,
     Scale.Y(114),
     nFlags);
-  for (i = IDREADONLY; i <= IDVCSIGNOREF; ++i) // Skip files
+  for (i = IDREADONLY; i <= IDVCSIGNOREN; ++i) // Skip files
     oSys.Call("User32::SetWindowPos",
       aDlg[i].HWND, 0,
       nW - nW90,
@@ -3280,6 +3293,7 @@ function Settings()
   oSys.Call("User32::AppendMenuW", hMenu, MF_SEPARATOR);
   oSys.Call("User32::AppendMenuW", hMenu, (bMarkResults ? MF_CHECKED : MF_STRING), 13, sTxtMarkResults);
   oSys.Call("User32::AppendMenuW", hMenu, (bBookmarkResults ? MF_CHECKED : MF_STRING), 14, sTxtBookmarkResults);
+  oSys.Call("User32::AppendMenuW", hMenu, (bCloseToggler ? MF_CHECKED : MF_STRING), 15, sTxtCloseToggle);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShow     ? MF_CHECKED : MF_STRING), 12, sTxtLogShow);
   oSys.Call("User32::AppendMenuW", hMenu, MF_SEPARATOR);
   oSys.Call("User32::AppendMenuW", hMenu, (bLogShowNewT ? MF_CHECKED : MF_STRING), 5, sTxtLogResultsN);
@@ -3343,6 +3357,10 @@ function Settings()
       BookmarkLines('', true);
     else
       BookmarkLines('', false);
+  }
+  else if (nCmd === 15)
+  {
+    bCloseToggler = ! bCloseToggler;
   }
 }
 
@@ -4023,6 +4041,7 @@ function WriteIni()
     'bLogShow='        + bLogShow + ';\r\n' +
     'bMarkResults='    + bMarkResults + ';\r\n' +
     'bBookmarkResults='+ bBookmarkResults + ';\r\n' +
+    'bCloseToggler='   + bCloseToggler + ';\r\n' +
     'bSeparateWnd='    + bSeparateWnd + ';\r\n' +
     'bKeepHist='       + bKeepHist + ';\r\n' +
     'bKeepFiles='      + bKeepFiles + ';\r\n' +
@@ -4164,7 +4183,8 @@ function GetLangStrings()
   sTxtLogResults  = "Show results in the &Log (FINDSTR)\tCtrl+L";
   sTxtLogResultsK = "Show results in the log, but &Keep the previous results (FINDSTR)\tCtrl+Shift+L";
   sTxtLogResultsN = "Show results in the &New tab (FINDSTR)\tCtrl+N";
-  sTxtLogShow     = "&Double click to show results in the Log instead closing the file";
+  sTxtCloseToggle = "Double click to &Close opened result";
+  sTxtLogShow     = "&Double click to show results in the Log\tShift+Alt+Enter";
   sTxtMarkResults = "&Highlight | Mark the results\tCtrl+Q/Ctrl+Shift+Q";
   sTxtBookmarkResults = "&Bookmark the results\tAlt+B/Shift+Alt+B";
   sTxtSeparateWnd = "Run in separate window";
