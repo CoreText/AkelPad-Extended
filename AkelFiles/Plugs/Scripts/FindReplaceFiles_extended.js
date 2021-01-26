@@ -867,8 +867,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         bLogShow = ! bLogShow;
         popupShow(
-          (bLogShow ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file." : "Double click will close the result file."),
-          2, sScriptName
+          (bLogShow 
+            ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file." 
+            : ((bCloseToggler)
+              ? "Double click will close the result file." 
+              : "Double click has default behaviour.")),
+          1, sScriptName
         );
       }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
