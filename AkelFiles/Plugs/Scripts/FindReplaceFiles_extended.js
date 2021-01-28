@@ -453,7 +453,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     PostMessage(hWnd, 0x8000 /*WM_APP*/, 0, 0);
 
     //hFocus = aDlg[(bInResults && aFiles.length) ? IDCONTENTCB : IDDIRCB].HWND;
-    hFocus = aDlg[IDCONTENTCB].HWND;
+    //hFocus = aDlg[IDCONTENTCB].HWND;
   }
 
   else if (uMsg === 0x8000 /*WM_APP*/)
@@ -720,7 +720,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (Ctrl() && (! Shift()))
         AkelPad.Command(4318);
       else if (Ctrl() && Shift())
-        AkelPad.Call("Scripts::Main", 1, "TabCloseExts.vbs")
+      {
+        AkelPad.Command(4333);
+        AkelPad.Call("Scripts::Main", 2, "TabCloseExts.vbs");
+        AkelPad.Call("Scripts::Main", 2, WScript.ScriptName);
+        //oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+      }
     }
     else if (wParam === 0x54 /*T key VK_KEY_T*/)
     {
@@ -733,11 +738,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
       else if (Ctrl() && Shift())
       {
-        if (! bSeparateWnd)
-          PostMessage(hWnd, 16 /*WM_CLOSE*/, 0, 0);
+        //if (! bSeparateWnd)
+        //PostMessage(hWnd, 16 /*WM_CLOSE*/, 0, 0);
 
-        //AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' -bWord='"+ bMatchWord +"' -bCase='"+ bMatchCase +"' -bRegEx='"+ bContentRE +"' ");
-        AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' ");
+        //AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' ");
+        AkelPad.Call("Scripts::Main", 2, WScript.ScriptName, "-sWhat='"+ sContent +"'");
+        //oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+        SetWindowText(aDlg[IDCONTENTCB].HWND, AkelPad.GetSelText() || sContent);
       }
     }
     else if (wParam === 0x52 /*R key VK_KEY_R*/)
@@ -782,9 +789,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     }
     else if (wParam === 0x09 /*TAB key VK_TAB*/) {
       if (Ctrl() && (! Shift()))
-        AkelPad.Call("Scripts::Main", 1, "TabSwitch.js", '-Next=false -OnlyNames=true -FontSize=11 -LineGap=4');
+        AkelPad.Call("Scripts::Main", 2, "TabSwitch.js", '-Next=false -OnlyNames=true -FontSize=11 -LineGap=4');
       else if (Ctrl() && Shift())
-        AkelPad.Call("Scripts::Main", 1, "TabSwitch.js", '-Next=-1 -CtrlTab=false -MinTabs=1 -WindowLeft=-1 -WindowTop=-1 -OnlyNames=true -FontSize=12');
+      {
+        AkelPad.Command(4333);
+        AkelPad.Call("Scripts::Main", 2, "TabSwitch.js", '-Next=-1 -CtrlTab=false -MinTabs=1 -WindowLeft=-1 -WindowTop=-1 -OnlyNames=true -FontSize=12');
+        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+      }
     }
     else if ((wParam === 186/*VK_OEM_1*/)) {
       if (Ctrl() && (! Shift()))
@@ -847,6 +858,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         AkelPad.Command(4316);
     }
     else if ((! Ctrl()) && Shift() /* && Alt() */) {
+      if (wParam === 0x46 /*F key VK_KEY_F*/)
+      {
+        if (! bSeparateWnd)
+          PostMessage(hWnd, 16 /*WM_CLOSE*/, 0, 0);
+        //AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' -bWord='"+ bMatchWord +"' -bCase='"+ bMatchCase +"' -bRegEx='"+ bContentRE +"' ");
+        AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' ");
+      }
       if (wParam === 0x4C /*L key VK_KEY_L*/)
         FindstrLog(24);
       else if (wParam === 0x4E /*N key VK_KEY_N*/)
@@ -860,17 +878,22 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x4D /*M key VK_KEY_M*/)
         AkelPad.Call("Scripts::Main", 1, "MarkerPlus.vbs", '11');
       else if (wParam === 0x57 /*W key VK_KEY_W*/)
-        AkelPad.Call("Scripts::Main", 1, "CloseTabByExt.js");
+      {
+        AkelPad.Command(4333);
+        AkelPad.Call("Scripts::Main", 2, "CloseTabByExt.js");
+        //AkelPad.Call("Scripts::Main", 2, WScript.ScriptName);
+        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+      }
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4200);
       else if (wParam === 0x0D /*VK_RETURN*/)
       {
         bLogShow = ! bLogShow;
         popupShow(
-          (bLogShow 
-            ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file." 
+          (bLogShow
+            ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file."
             : ((bCloseToggler)
-              ? "Double click will close the result file." 
+              ? "Double click will close the result file."
               : "Double click has default behaviour.")),
           1, sScriptName
         );
@@ -2156,8 +2179,8 @@ function SearchFiles(bReplace)
             continue;
 
           aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
+          //AkelPad.MessageBox(0, aDirsToSkip.join("\n"), WScript.ScriptName, 0);
           //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayDirs(aDirsToSkip, sCurrentRelativeDir + "\\", nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
-
         }
         if (FindInArrayDirs(aDirsToSkip, sCurrentRelativeDir + "\\", nCurrentLevel) !== -1)
           continue;
@@ -2173,8 +2196,8 @@ function SearchFiles(bReplace)
 
           if (bSkipVCSignoreF)
           {
-            //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
-            if (FindInArrayFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1)
+            //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayOfFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
+            if (FindInArrayOfFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1)
               continue;
           }
 
@@ -2498,30 +2521,28 @@ function FindInArray(aArray, sText, bIgnoreCase)
  * @param string sNeedle
  * @return bool|array if the passed element is found
  */
-function FindRemoveFromArray(aArray, sNeedle)
+function FindRuleRemoveFromArrayDirsToSkip(aArray, sNeedle)
 {
-  var s = sNeedle || "",
-      a = aArray.slice(0) || [];
+  var s = sNeedle || sDir + "\\" + s + "\\",
+      a = aArray.slice(0) || aDirsToSkip,
+      sNeedleUp = s.toUpperCase(),
+      sArrayItemUp,
+      sFileFullPath = sDir + "\\" + s + "\\",
+      aNew = [];
 
-  if (typeof a === "object" && "indexOf" in a)
+  for (var i = 0, nLen = a.length; i < nLen; i++)
   {
-    //AkelPad.MessageBox(0, a.join("\n"), WScript.ScriptName, 0);
-    var index = a.indexOf(s),
-        sFileFullPath = sDir + "\\" + sCurrentRelativeDir + "\\" + s + "\\";
-
-    AkelPad.MessageBox(0, sFileFullPath, WScript.ScriptName, 0);
-
-    if (index > -1 && (FindInArray(aVCSIgnoreFileConfs, sDir + "\\" + sCurrentRelativeDir + "\\" + s + "\\", true) !== -1))
+    sArrayItemUp = a[i].toUpperCase();
+    if (sArrayItemUp === ("!"+s.toUpperCase()) && (sArrayItemUp === sFileFullPath.toUpperCase()) && (! (FindInArray(aVCSIgnoreFileConfs, s, true) !== -1)))
     {
-      a.splice(index, 1);
-      aDirsToSkip = null;
-      aDirsToSkip = a;
+      //aNew.push(a[i]);
+      aNew.push("|"+a[i]);
     }
-    else
-      a = [];
   }
 
-  return (a.length)? a : false;
+  AkelPad.MessageBox(0, a.join("\n") + "\n\n" + s + "\n\n" + sFileFullPath.toUpperCase() + "\n\n" + aNew.join("\n"), WScript.ScriptName, 0);
+
+  return aNew;
 }
 
 /**
@@ -2534,23 +2555,46 @@ function FindRemoveFromArray(aArray, sNeedle)
 function FindInArrayExcludeNested(aArray, sNeedle, nLevel)
 {
   var nDirLevel = nLevel || 0,
-      sNeedleUpp = sNeedle.toUpperCase(),
-      sDirUpp = sDir.toUpperCase(),
-      aUpp,
+      sNeedleUp = sNeedle.toUpperCase(),
+      sDirUp = sDir.toUpperCase(),
+      sNeedleUpDirUpFull = sDirUp +"\\"+ sNeedleUp +"\\",
       rDir, sPattern
 
-  for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+  if (! sNeedle)
+    return -1;
+  try
   {
-    a = aArray[i];
-    aUpp = a.toUpperCase();
+    for (var i = 0, a, aUp, aLen = aArray.length; i < aLen; ++i)
+    {
+      if (sNeedleUp === "." || sNeedleUp === "..")
+        return -1;
 
-    // if (aUpp.substr(0, 1) === "!")
-    // {
-    //   FindRemoveFromArray(aDirsToSkip, aUpp.substr(1));
-    // }
-    // else
-    if (aUpp === (sDirUpp +"\\"+ sNeedleUpp +"\\"))
-      return i;
+      a = aArray[i];
+      aUp = a.toUpperCase();
+
+      if (aUp === sNeedleUpDirUpFull || aUp === sNeedleUpDirUpFull +"\\")
+        return i;
+
+      sPattern = aUp
+        .replace(/\\/g, "\\\\")
+        .replace(/\./g, "\\.")
+        .replace(/\?/g, ".")
+        .replace("[!", "[^")
+        .replace(/\*\*/g, "(.+)?")
+        .replace("*", "(.*)?")
+        .concat("?")
+        .concat("$")
+      ;
+
+      rDir = new RegExp(sPattern, "gi");
+      //AkelPad.MessageBox(0, "Nested Match Error:\n\n" + aUp +"\n\n"+ sPattern +"\n\nsNeedleUp: "+ sNeedleUp +"\n\nMatch: "+ (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull)) +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
+      if (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull))
+        return i;
+    }
+  }
+  catch (oError)
+  {
+    //AkelPad.MessageBox(0, "Nested Match Error:\n\n" + oError.name +"\n\n"+ oError.description +"\n\n"+ aUp +"\n\n"+ sPattern +"\n\n"+ sNeedleUp +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
   }
   return -1;
 }
@@ -2564,34 +2608,45 @@ function FindInArrayExcludeNested(aArray, sNeedle, nLevel)
 function FindInArrayDirs(aArray, sNeedle, nLevel)
 {
   var nDirLevel = nLevel || 0,
-      sNeedleUpp = sNeedle.toUpperCase(),
-      sDirUpp = sDir.toUpperCase(),
-      aUpp,
+      sNeedleUp = sNeedle.toUpperCase(),
+      sDirUp = sDir.toUpperCase(),
+      sNeedleUpDirUpFull = sDirUp +"\\"+ sNeedleUp,
       rDir, sPattern
 
+  if (! sNeedle)
+    return -1;
   try
   {
-    for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+    for (var i = 0, a, aUp, aLen = aArray.length; i < aLen; ++i)
     {
-      a = aArray[i];
-      aUpp = a.toUpperCase();
+      if (sNeedleUp === "." || sNeedleUp === "..")
+        return -1;
 
-      if (aUpp === sNeedleUpp)
+      a = aArray[i];
+      aUp = a.toUpperCase();
+
+      if ((aUp === sNeedleUp) || (aUp === sNeedleUpDirUpFull))
         return i;
-      else if (aUpp === (sDirUpp +"\\"+ sNeedleUpp))
+
+      sPattern = aUp
+        .replace(/\\/g, "\\\\")
+        .replace(/\./g, "\\.")
+        .replace(/\?/g, ".")
+        .replace("[!", "[^")
+        .replace(/\*\*/g, "(.+)?")
+        .replace("*", "(.*)?")
+        .concat("$")
+      ;
+
+      rDir = new RegExp(sPattern, "gi");
+      //AkelPad.MessageBox(0, "Nested Match Error:\n\n" + aUp +"\n\n"+ sPattern +"\n\nsNeedleUp: "+ sNeedleUp +"\n\nMatch: "+ (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull)) +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
+      if (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull))
         return i;
-      else if (~aUpp.indexOf("**"))
-      {
-        sPattern = aUpp.replace(/\\/g, "\\\\").replace(/\*\*/g, ".+?" /* "\(.*\)" */);
-        rDir = new RegExp(sPattern);
-        if (rDir.test(sNeedleUpp) || rDir.test(sDirUpp +"\\"+ sNeedleUpp))
-          return i;
-      }
     }
   }
   catch (oError)
   {
-    //AkelPad.MessageBox(0, "Find in directories Error:\n\n" + oError.description, sScriptName, 48);
+    //AkelPad.MessageBox(0, "Directory Match Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\n"+ aUp +"\n\n"+ sPattern +"\n\n"+ sNeedleUp +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
   }
   return -1;
 }
@@ -2603,95 +2658,63 @@ function FindInArrayDirs(aArray, sNeedle, nLevel)
  * @param nLevel
  * @return number index
  */
-function FindInArrayFiles(aArray, sNeedle, sCurrentDir, nLevel)
+function FindInArrayOfFiles(aArray, sNeedle, sCurrentDir, nLevel)
 {
   var nDirLevel = nLevel || 0,
-      sNeedleUpp = sNeedle.toUpperCase(),
-      sDirUpp = sDir.toUpperCase() + "\\" + sCurrentDir.toUpperCase(),
-      aUpp, strFile, correctedFilePath, sTmp,
+      sNeedleUp = sNeedle.toUpperCase(),
+      sCurrDirUp = sCurrentDir.toUpperCase(),
+      sDirFullUp = sDir.toUpperCase() + "\\" + sCurrDirUp,
+      sNeedleFullPathUp = sDirFullUp + "\\" + sNeedleUp,
       rFile, sPattern,
       oError
+
+  var sNeedleFName     = getFileName(sNeedleFullPathUp),
+      sNeedleFNameOnly = getFileNameOnly(sNeedleFullPathUp),
+      sNeedleFNameExt  = AkelPad.GetFilePath(sNeedleFullPathUp, 4);
+  //AkelPad.MessageBox(0, sNeedleFName + "\n" + sNeedleFNameOnly + "\n" + sNeedleFNameExt + "\n", WScript.ScriptName, 0);
+
+  if ((! sNeedle) || (! sNeedleFNameOnly) || (sNeedleUp === "." || sNeedleUp === ".."))
+    return -1;
+
   try
   {
-    for (var i = 0, a, aLen = aArray.length; i < aLen; ++i)
+    for (var i = 0, a, aUp, aLen = aArray.length; i < aLen; ++i)
     {
+      if (sNeedleUp === "." || sNeedleUp === "..")
+        return -1;
+
       a = aArray[i];
-      aUpp = a.toUpperCase();
+      aUp = a.toUpperCase();
 
-      //AkelPad.MessageBox(0, sDirUpp +"\\"+ sNeedleUpp , WScript.ScriptName, 0);
-      if (aUpp === sNeedleUpp || aUpp === (sDirUpp + sNeedleUpp))
+      if ((aUp === sNeedleUp) || (aUp === (sDirFullUp +"\\"+ sNeedleUp)))
         return i;
-      else if (aUpp.substr(0, -2) === "\\\\")
+
+      // sNeedleFName = AkelPad.GetFilePath(aUp, 2);
+      // sNeedleFNameOnly = AkelPad.GetFilePath(aUp, 3);
+      // sNeedleFNameExt = AkelPad.GetFilePath(aUp, 4);
+      //AkelPad.MessageBox(0, sNeedleFName +"\n\n"+ sNeedleFNameOnly +"\n\n"+ sNeedleFNameExt, WScript.ScriptName, 0);
+
+      sPattern = aUp
+        .replace(/\\/g, "\\\\")
+        .replace(/\./g, "\\.")
+        .replace(/\?/g, ".")
+        .replace("[!", "[^")
+        .replace(/\*\*/g, "(.+)?")
+        .replace("*", "(.*)?")
+      ;
+
+      sPattern = (~sNeedleFName.indexOf("."))? sPattern.concat("$") : sPattern;
+
+      rFile = new RegExp(sPattern, "gi");
+      if (rFile.test(sNeedleUp) || rFile.test(sDirFullUp +"\\"+ sNeedleUp))
         return i;
-      else if (~aUpp.indexOf("["))          // parse fnmatch
-      {
-        if (/[\[].*[\]\*\+]/.test(aUpp))
-        {
-          sPattern = new RegExp(aUpp.replace(".", "\\."), "gi");
-          if (sPattern.test(sNeedle))
-            return i;
-        }
-      }
-      // else if (~aUpp.indexOf("**"))         // glob match
-      // {
-      //   sPattern = aUpp.replace(/\\/g, "\\\\").replace(/\*\*/g, "\(.*\)");
-      //   rFile = new RegExp(sPattern, "gi");
-      //   if (rFile.test(sPattern))
-      //     return i;
-      //
-      // }
-      else if (~aUpp.indexOf("\\*."))       // dir/*.extension
-      {
-        strFile = aUpp.replace(/^(.*)\*(\..*)$/g, "$1"+getFileNameOnly(sNeedleUpp)+"$2");
-        if (strFile === sDirUpp +"\\"+ sNeedleUpp)
-          return i;
-      }
-      else if (~aUpp.indexOf("\\*"))        // dir/* level
-      {
-        strFile = aUpp.replace(/^(.*)\*(\\*)$/g, "$1"+getFileName(sNeedleUpp)+"$2");
-        if (strFile +"\\" === sDirUpp +"\\"+ sNeedleUpp)
-          return i;
-      }
-      else if (~aUpp.indexOf("*"))
-      {
-        sPattern = correctFileNameFull(aUpp).replace(/(?=\*\.)(.+)/g, ".$2").replace(/^\\/i, "\.*?") + "$";
-        rFile = new RegExp(sPattern);
-        if (rFile.test(sNeedleUpp) || rFile.test(sDirUpp + sNeedleUpp))
-          return i;
-      }
-      else if (~aUpp.indexOf("?"))
-      {
-        sPattern = aUpp
-          .replace(/^\\/, "")
-          .replace(/\./g, "\\.")
-          .replace(/\?/g, ".");
 
-        rFile = new RegExp(sPattern, "gi");
-        if (rFile.test(sNeedleUpp) || rFile.test(sDirUpp + sNeedleUpp))
-          return i;
-        else if (~aUpp.indexOf("{"))        // .{1,}
-        {
-          sPattern = new RegExp(sPattern, "gi");
-          if (sPattern.test(sNeedle))
-            return i;
-        }
-      }
-      // else
-      // {
-      //   sPattern = new RegExp(aUpp.replace(".", "\\."), "gi");
-      //   if (sPattern.test(sNeedle))
-      //     return i;
-      // }
-
-      // else if (aUpp.substr(0, -2) === "\\")
-      // {
-      //   //AkelPad.MessageBox(0, aUpp, WScript.ScriptName, 0);
-      // }
+      //if (aUp.substr(-1) === "*")
     }
   }
   catch (oError)
   {
-    //AkelPad.MessageBox(0, "File Match Error:\n\n" + aUpp + "\n\n" + sPattern + "\n\n" + sNeedleUpp + "\n\n" + oError.description, sScriptName, 48);
+    //AkelPad.MessageBox(0, "File Match Error:\n\n" + oError.name + "\n\n" + oError.description + "\n\n" + aUp + "\n\n" + sPattern + "\n\n" + sNeedleUp, sScriptName, 48);
   }
   return -1;
 }
@@ -3874,7 +3897,8 @@ function GetVCSIgnoreFileToSkip(sCurrentDir)
       aIgnoreFileConfs = aVCSIgnoreFileConfs.slice(0) || [],
       aExcludedDirs = aVCSExcludedDirs.slice(0) || [],
       aExcludedDirsRaw = [],
-      sFileContent = ""
+      sFileContent = "",
+      sTmp = "";
   ;
 
   for (var i = 0; i < aIgnoreFileConfs.length; i++)
@@ -3891,16 +3915,20 @@ function GetVCSIgnoreFileToSkip(sCurrentDir)
       if (sExcDir.substr(0, 1) === "/" && (~sExcDir.indexOf("*.")))
         aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")));
       else if (sExcDir.substr(0, 1) === "/")
-        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")) +"\\");
+        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")) + ((sExcDir.slice(-1) === "*")? "":"\\"));
       else if (sExcDir.substr(0, -1) === "/")
         aExcludedDirsCollection.push(sCurrentDirLevel.concat(sExcDir.replace(/\//g, "\\")));
       else if (sExcDir.substr(0, 1) === "\\")
         aExcludedDirsCollection.push(sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")));
       else
         aExcludedDirsCollection.push(sExcDir.replace(/\//g, "\\"));
+
+      //AkelPad.MessageBox(0, sExcDir , WScript.ScriptName, 0);
+      // if (sExcDir.substr(0, 1) === "!")
+      //   aExcludedDirsCollection.concat(FindRuleRemoveFromArrayDirsToSkip(aDirsToSkip, sExcDir.slice(1).replace(/\//g, "\\")));
     }
   }
-
+  //AkelPad.MessageBox(0, aExcludedDirsCollection.join("\n") , WScript.ScriptName, 0);
   return ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs));
 }
 
