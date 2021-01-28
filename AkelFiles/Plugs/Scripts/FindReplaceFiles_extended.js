@@ -2673,7 +2673,7 @@ function FindInArrayOfFiles(aArray, sNeedle, sCurrentDir, nLevel)
       sNeedleFNameExt  = AkelPad.GetFilePath(sNeedleFullPathUp, 4);
   //AkelPad.MessageBox(0, sNeedleFName + "\n" + sNeedleFNameOnly + "\n" + sNeedleFNameExt + "\n", WScript.ScriptName, 0);
 
-  if ((! sNeedle) || (! sNeedleFNameOnly) || (sNeedleUp === "." || sNeedleUp === ".."))
+  if ((! sNeedle) || (sNeedleUp === "." || sNeedleUp === ".."))
     return -1;
 
   try
