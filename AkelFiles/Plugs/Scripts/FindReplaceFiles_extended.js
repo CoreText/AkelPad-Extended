@@ -81,6 +81,7 @@
 
 // Ctrl+R,
 // Ctrl+Shift+F     - Open FindReplaceFiles_extended.js
+// Shift+Alt+F      - Open FindFiles_extended.js
 // Ctrl+H           - Open TextReplacer.js
 // Alt+H            - Highlight the text in the log results
 
@@ -2073,7 +2074,7 @@ function SearchFiles(bReplace)
         else
           strContent = sContent.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&");
 
-      	rContent = new RegExp(strContent, "g" + (bMatchCase ? "" : "i"));
+        rContent = new RegExp(strContent, "g" + (bMatchCase ? "" : "i"));
       }
       catch (oError)
       {
@@ -2560,8 +2561,8 @@ function GetVCSIgnoreFileFilter(sCurrentDir)
   oIgnoreFile.unexcludePaths = [];
 
   for (var i = 0; i < aIgnoreFileConfs.length; i++)
-  	if (aIgnoreFileConfs[i])
-    	sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + aIgnoreFileConfs[i]);
+    if (aIgnoreFileConfs[i])
+      sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + aIgnoreFileConfs[i]);
 
   aExcludedDirsRaw = sFileContent.replace(/^\s+|\s+$/g, "").split("\n");
 
@@ -2581,9 +2582,7 @@ function GetVCSIgnoreFileFilter(sCurrentDir)
         sExcDir = sExcDir.replace(/^\\\\(.)/, replaceEscapedSymbol).replace(/\//g, "\\");
         aExcludedDirsCollection.push((sDir +"#"+ sExcDir).toUpperCase());
       }
-
-      else
-      if (sExcDir.substr(0, 1) === "!")
+      else if (sExcDir.substr(0, 1) === "!")
       {
         var sUnexcludedPathSlashesUp = sExcDir.slice(1).replace(/\//g, "\\");
         aExcludedDirsCollection.push(sUnexcludedPathSlashesUp);
@@ -2598,7 +2597,7 @@ function GetVCSIgnoreFileFilter(sCurrentDir)
         else if (~sExcDir.indexOf("*."))
           aUnexcludedDirsCollection.push((sDir +"#"+ sCurrentDirLevel + sUnexcludedPathSlashesUp).toUpperCase());
         else
-          aUnexcludedDirsCollection.push((sDir +"#"+ sCurrentDirLevel + sUnexcludedPathSlashesUp /* + ((sExcDir.slice(-1) === "*")? "" : "\\") */).toUpperCase());
+          aUnexcludedDirsCollection.push((sDir +"#"+ sCurrentDirLevel + sUnexcludedPathSlashesUp).toUpperCase());
       }
 
       else if (sExcDir.slice(-1) === "/" && (~sExcDir.indexOf("/", 2)))
@@ -2607,13 +2606,11 @@ function GetVCSIgnoreFileFilter(sCurrentDir)
         aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel + sExcDir.slice(1).replace(/\//g, "\\"));
       else if (sExcDir.substr(0, 1) === "/")
         aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel + sExcDir.slice(1).replace(/\//g, "\\") + ((sExcDir.slice(-1) === "*")? "" : "\\"));
-
       else
       {
         aExcludedDirsCollection.push(sDir +"#"+ sExcDir.replace(/\//g, "\\"));
         aUnexcludedDirsCollection.push((sDir +"#"+ ".gitattributes").toUpperCase());
       }
-
     }
   }
 
@@ -2636,9 +2633,9 @@ function isDirExists(sFolder)
   if (! fso)
     fso = new ActiveXObject("Scripting.FileSystemObject");
 
-	if (result = fso.FolderExists(sFolder))
- 		return result;
-	return result;
+  if (result = fso.FolderExists(sFolder))
+    return result;
+  return result;
 }
 
 /**
@@ -2994,7 +2991,7 @@ function FindInArrayOfFiles(aDirsToSkip, aUnexcludedPathUp, sNeedle, sCurrentDir
  */
 function getFileName(pFile)
 {
-	return pFile.slice(pFile.lastIndexOf(pSlash) + 1);
+  return pFile.slice(pFile.lastIndexOf(pSlash) + 1);
 }
 
 /**
@@ -3005,11 +3002,11 @@ function getFileName(pFile)
  */
 function getFileNameOnly(pFile)
 {
-	var pFileName = getFileName(pFile);
-	var pos = pFileName.lastIndexOf(".");
-	if (pos !== -1)
-		pFileName = pFileName.slice(0, pos);
-	return pFileName;
+  var pFileName = getFileName(pFile);
+  var pos = pFileName.lastIndexOf(".");
+  if (pos !== -1)
+    pFileName = pFileName.slice(0, pos);
+  return pFileName;
 }
 
 /**
@@ -3020,11 +3017,11 @@ function getFileNameOnly(pFile)
  */
 function getParent(pFile)
 {
-	var pDir = "";
-	var pozLastSep = pFile.lastIndexOf(pSlash);
-	if (pozLastSep !== -1)
-		pDir = pFile.slice(0, pozLastSep);
-	return pDir;
+  var pDir = "";
+  var pozLastSep = pFile.lastIndexOf(pSlash);
+  if (pozLastSep !== -1)
+    pDir = pFile.slice(0, pozLastSep);
+  return pDir;
 }
 
 /**
@@ -3035,9 +3032,9 @@ function getParent(pFile)
  */
 function correctFileName(pFileNameOnly)
 {
-	pFileNameOnly = pFileNameOnly.replace(/\t/g, " ");		    // валим табуляции, т.к. диалог с ними иногда просто не отображается
-	pFileNameOnly = pFileNameOnly.replace(/  /g, " ");		    // убираем повторяющиеся пробелы
-	return (pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, ""));
+  pFileNameOnly = pFileNameOnly.replace(/\t/g, " ");        // валим табуляции, т.к. диалог с ними иногда просто не отображается
+  pFileNameOnly = pFileNameOnly.replace(/  /g, " ");        // убираем повторяющиеся пробелы
+  return (pFileNameOnly.replace(/[\\\/:\*\?"{}<>\|]/g, ""));
 }
 
 /**
@@ -3048,9 +3045,9 @@ function correctFileName(pFileNameOnly)
  */
 function correctFileNameFull(pFile)
 {
-	pFileNameOnly = getFileName(pFile);
-	pFileNameOnly = correctFileName(pFileNameOnly);
-	return getParent(pFile) + pSlash + pFileNameOnly;
+  pFileNameOnly = getFileName(pFile);
+  pFileNameOnly = correctFileName(pFileNameOnly);
+  return getParent(pFile) + pSlash + pFileNameOnly;
 }
 
 
