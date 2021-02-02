@@ -122,6 +122,7 @@ var sScriptName = WScript.ScriptName;
 var sClass   = "AkelPad::Scripts::" + sScriptName + "::" + hInstDLL;
 var hDlg;
 var pSlash = "\\";
+var fso = new ActiveXObject("Scripting.FileSystemObject");
 // var bCoderHighLightIsRunning = AkelPad.IsPluginRunning("Coder::HighLight");
 // var bQSearchIsRunning = AkelPad.IsPluginRunning("QSearch::QSearch");
 
@@ -245,9 +246,12 @@ var nFilesFoc       = 0;
 var aHist           = [];
 var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#A6D8B3";
 var aVCSIgnoreFileConfs = [".gitignore", ".svnignore"];
-var aVCSExcludedDirs = [".git\\", ".vscode\\", ".idea\\", ".history\\", "node_modules\\", "vendor\\"];
+var aVCSExcludedPaths = [".git\\", ".vscode\\", ".idea\\", ".history\\", "node_modules\\", "vendor\\"];
+var aVCSUnexcludedPaths = [".gitattributes"];
 var aExcludedDirsCollection = [];
+var aUnexcludedDirsCollection = [];
 var aDirsToSkip = [];
+var aUnexcludedPathUp = [];
 var sCurrentRelativeDir = "";
 
 ReadIni();
@@ -1955,6 +1959,7 @@ function SearchFiles(bReplace)
   var i, n, nDelta;
   var nCurrentLevel;
   var strContent = "";
+  var oIgnoreFile;
 
   if (! (bInResults && aFiles.length))
   {
@@ -2025,7 +2030,17 @@ function SearchFiles(bReplace)
 
   if (bSkipVCSignore)
   {
-    aDirsToSkip = GetVCSIgnoreFileToSkip();
+    oIgnoreFile = GetVCSIgnoreFileFilter();
+    if ("excludedPaths" in oIgnoreFile)
+    {
+      aDirsToSkip = oIgnoreFile.excludedPaths;
+      aUnexcludedPathUp = oIgnoreFile.unexcludePaths;
+    }
+    else
+    {
+      popupShow("Can't run the search!\n\n" + oIgnoreFile.toString());
+      return false;
+    }
   }
 
   if (sContent)
@@ -2074,7 +2089,7 @@ function SearchFiles(bReplace)
   {
     if ((! bContentRE) && (sContent === sReplace))
     {
-      popupShow('THE TEXT IS THE SAME', 4, 'NO REPLACE!');
+      popupShow('THE TEXT IS THE SAME', 4, 'NOTHING TO REPLACE!');
       return;
     }
 
@@ -2175,15 +2190,23 @@ function SearchFiles(bReplace)
       {
         if (bSkipVCSignoreN)
         {
-          if (FindInArrayExcludeNested(aDirsToSkip, sCurrentRelativeDir, nCurrentLevel) !== -1)
+          if (FindInArrayExcludeNested(aDirsToSkip, aUnexcludedPathUp, sCurrentRelativeDir, nCurrentLevel) !== -1)
+          {
+            //AkelPad.MessageBox(0, "NESTED\n\nDir Relative:\n"+ sCurrentRelativeDir +"\n\n"+ 'CONTINUE' +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
             continue;
+          }
 
-          aDirsToSkip = GetVCSIgnoreFileToSkip(sCurrentRelativeDir);
-          //AkelPad.MessageBox(0, aDirsToSkip.join("\n"), WScript.ScriptName, 0);
-          //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayDirs(aDirsToSkip, sCurrentRelativeDir + "\\", nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
+          oIgnoreFile = GetVCSIgnoreFileFilter(sCurrentRelativeDir);
+          aDirsToSkip = oIgnoreFile.excludedPaths;
+          aUnexcludedPathUp = oIgnoreFile.unexcludePaths;
+          //AkelPad.MessageBox(0, "Exclude:\n"+ aDirsToSkip.join("\n") +"\n\nUnexclude:\n"+ aUnexcludedPathUp.join("\n"), WScript.ScriptName, 0);
+          //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayDirs(aDirsToSkip, aUnexcludedPathUp, sCurrentRelativeDir + "\\", nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n") + "\n\n" + aUnexcludedPathUp.join("\n"), WScript.ScriptName, 0);
         }
-        if (FindInArrayDirs(aDirsToSkip, sCurrentRelativeDir, nCurrentLevel) !== -1)
+        if (FindInArrayDirs(aDirsToSkip, aUnexcludedPathUp, sCurrentRelativeDir, nCurrentLevel) !== -1)
+        {
+          //AkelPad.MessageBox(0, "Dir Relative:\n"+ sCurrentRelativeDir +"\n\n"+ 'CONTINUE' +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
           continue;
+        }
       }
 
       hFindFile = oSys.Call("Kernel32::FindFirstFileW", aPath[i] + "*.*", lpBuffer);
@@ -2197,8 +2220,11 @@ function SearchFiles(bReplace)
           if (bSkipVCSignoreF)
           {
             //AkelPad.MessageBox(0, sCurrentRelativeDir +"\n\n"+ (FindInArrayOfFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1) +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
-            if (FindInArrayOfFiles(aDirsToSkip, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1)
+            if (FindInArrayOfFiles(aDirsToSkip, aUnexcludedPathUp, sFileName, sCurrentRelativeDir, nCurrentLevel) !== -1)
+            {
+              //AkelPad.MessageBox(0, "File Name:\n"+ sFileName +"\n\nDir Relative:\n"+ sCurrentRelativeDir +"\n\n"+ 'CONTINUE' +"\n\n"+ aDirsToSkip.join("\n"), WScript.ScriptName, 0);
               continue;
+            }
           }
 
           sFullName = aPath[i] + sFileName;
@@ -2316,7 +2342,11 @@ function SearchFiles(bReplace)
     SortFiles();
   }
 
-  aDirsToSkip = aExcludedDirsCollection = [];
+  aDirsToSkip = [];
+  aUnexcludedPathUp = [];
+  aExcludedDirsCollection = [];
+  aUnexcludedDirsCollection = [];
+
   AkelPad.MemFree(lpFile);
   AkelPad.MemFree(lpDetectFile);
 
@@ -2504,6 +2534,145 @@ function AddToHistory()
     aHist.length = nHistMax;
 }
 
+
+/**
+ * Read VCS File to exclude directories from the search result.
+ * @TODO implement configs for filenames of ignore files
+ *
+ * @param string - current directory
+ * @return object that should have array of excluded paths and array to unexclude paths
+ */
+function GetVCSIgnoreFileFilter(sCurrentDir)
+{
+  var sBaseDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1),
+      sCurrentDirLevel = (sCurrentDir ? sCurrentDir +"\\" : ""),
+      aIgnoreFileConfs = aVCSIgnoreFileConfs.slice(0) || [],
+      aExcludedDirs = aVCSExcludedPaths.slice(0) || [],
+      aExcludedDirsRaw = [],
+      aUnexcludedDirs = aVCSUnexcludedPaths.slice(0) || [],
+      sFileContent = "",
+      sTmp = ""
+  ;
+
+  oIgnoreFile = new Object();     // attempts to use the older ES standard
+  oIgnoreFile.excludedPaths = [];
+  oIgnoreFile.unexcludePaths = [];
+
+  for (var i = 0; i < aIgnoreFileConfs.length; i++)
+  	if (aIgnoreFileConfs[i])
+    	sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + aIgnoreFileConfs[i]);
+
+  aExcludedDirsRaw = sFileContent.replace(/^\s+|\s+$/g, "").split("\n");
+
+  for (var i = 0, nLen = aExcludedDirsRaw.length; i < nLen; i++)
+  {
+    var sExcDir = aExcludedDirsRaw[i].replace(/^\s+|\s+$/g, "");
+    if (sExcDir && sExcDir.substr(0, 1) !== "#")
+    {
+      if (sExcDir.substr(0, 1) === "\\")
+      {
+        aExcludedDirsCollection.push(sDir +"#"+ sExcDir.replace(/^\\(.)/, "$1").replace(/\//g, "\\"));
+      }
+      else if (sExcDir.substr(0, 1) === "!")
+      {
+        var sUnexcludedPathSlashesUp = sExcDir.slice(1).replace(/\//g, "\\");
+        aExcludedDirsCollection.push(sUnexcludedPathSlashesUp);
+
+        if ((~sExcDir.indexOf("*.")) && (~sExcDir.indexOf("/")))
+          aUnexcludedDirsCollection.push((sDir +"#"+ sUnexcludedPathSlashesUp).toUpperCase());
+        else if ((! ~sExcDir.indexOf("*.")) && (~sExcDir.indexOf("/")))
+        {
+          aUnexcludedDirsCollection.push((sDir +"#"+ sUnexcludedPathSlashesUp + ((sExcDir.slice(-1) === "\\")? "" : "\\")).toUpperCase());
+          aUnexcludedDirsCollection.push((sDir +"#"+ sUnexcludedPathSlashesUp + "\\*").toUpperCase());
+        }
+        else if (~sExcDir.indexOf("*."))
+          aUnexcludedDirsCollection.push((sDir +"#"+ sCurrentDirLevel + sUnexcludedPathSlashesUp).toUpperCase());
+        else
+          aUnexcludedDirsCollection.push((sDir +"#"+ sCurrentDirLevel + sUnexcludedPathSlashesUp + ((sExcDir.slice(-1) === "*")? "" : "\\")).toUpperCase());
+      }
+
+      else if (sExcDir.slice(-1) === "/" && (~sExcDir.indexOf("/", 2)))
+        aExcludedDirsCollection.push(sDir +"#"+ sExcDir.replace(/\//g, "\\"));
+      else if (sExcDir.substr(0, 1) === "/" && (~sExcDir.indexOf("*.")))
+        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel + sExcDir.slice(1).replace(/\//g, "\\"));
+      else if (sExcDir.substr(0, 1) === "/")
+        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel + sExcDir.slice(1).replace(/\//g, "\\") + ((sExcDir.slice(-1) === "*")? "" : "\\"));
+
+      else
+      {
+        aExcludedDirsCollection.push(sDir +"#"+ sExcDir.replace(/\//g, "\\"));
+        aUnexcludedDirsCollection.push((sDir +"#"+ ".gitattributes").toUpperCase());
+      }
+
+      // escaped
+      //if (sExcDir.substr(0, 1) === "\\")
+      //  aExcludedDirsCollection.push(sDir +"#|"+ sExcDir.slice(1).replace(/\//g, "\\"));
+    }
+  }
+
+  //AkelPad.MessageBox(0, "aExcludedDirsCollection:\n"+ aExcludedDirsCollection.join("\n") +"\n\naUnexcludedDirsCollection:\n"+ aUnexcludedDirsCollection.join("\n"), WScript.ScriptName, 0);
+  oIgnoreFile.excludedPaths = ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs)).sort();
+  oIgnoreFile.unexcludePaths = ArrayUnique(aUnexcludedDirsCollection.concat(aUnexcludedDirs)).sort();
+  return oIgnoreFile;
+}
+
+/**
+ * Checks if folder exists.
+ *
+ * @param string sFolder to check
+ * @return bool if directory exists
+ */
+function isDirExists(sFolder)
+{
+  var result = false;
+
+  if (! fso)
+    fso = new ActiveXObject("Scripting.FileSystemObject");
+
+	if (result = fso.FolderExists(sFolder))
+ 		return result;
+	return result;
+}
+
+/**
+ * Make the passed array unique, to have unique values in it.
+ *
+ * @param array
+ * @return array unique
+ */
+function ArrayUnique(array)
+{
+  var a = array.concat();
+  for (var i = 0; i < a.length; ++i)
+    for (var j = i + 1; j < a.length; ++j)
+      if (a[i] === a[j])
+        a.splice(j--, 1);
+
+  return a;
+}
+
+/**
+ * @return string of file content
+ */
+function getVCSIgnoreFileContents(sFileName)
+{
+  var sFileContent = "",
+      oError = {};
+
+  if (IsFileExists(sFileName))
+  {
+    try
+    {
+      sFileContent = "\n" + AkelPad.ReadFile(sFileName);
+    }
+    catch (oError)
+    {
+      AkelPad.MessageBox(0, sFileName + '\n\nError: ' + oError.description, sScriptName, 0);
+    }
+  }
+  return sFileContent;
+}
+
 function FindInArray(aArray, sText, bIgnoreCase)
 {
   for (var i = 0; i < aArray.length; ++i)
@@ -2515,82 +2684,81 @@ function FindInArray(aArray, sText, bIgnoreCase)
 }
 
 /**
- * Find the element in array and remove it,
- * in order to unexclude excluded.
- *
- * @param array aArray
- * @param string sNeedle
- * @return bool|array if the passed element is found
- */
-function UnexcludeFromDirsToSkip(aArray, sNeedle)
-{
-  var s = sNeedle || sDir + "\\" + s + "\\",
-      a = aArray.slice(0) || aDirsToSkip,
-      sNeedleUp = s.toUpperCase(),
-      sArrayItemUp,
-      sFileFullPath = sDir + "\\" + s + "\\",
-      aNew = [];
-
-  for (var i = 0, nLen = a.length; i < nLen; i++)
-  {
-    sArrayItemUp = a[i].toUpperCase();
-    if (sArrayItemUp === ("!"+s.toUpperCase()) && (sArrayItemUp === sFileFullPath.toUpperCase()) && (! (FindInArray(aVCSIgnoreFileConfs, s, true) !== -1)))
-    {
-      //aNew.push(a[i]);
-      aNew.push("|"+a[i]);
-    }
-  }
-
-  AkelPad.MessageBox(0, a.join("\n") + "\n\n" + s + "\n\n" + sFileFullPath.toUpperCase() + "\n\n" + aNew.join("\n"), WScript.ScriptName, 0);
-
-  return aNew;
-}
-
-/**
  * Filter nested VCS.
  *
- * @param aArray
- * @param sNeedle
+ * @param array aDirsToSkip
+ * @param array aUnexcludedPathUp
+ * @param sNeedle sCurrentRelativeDir
  * @return number index if found
  */
-function FindInArrayExcludeNested(aArray, sNeedle, nLevel)
+function FindInArrayExcludeNested(aDirsToSkip, aUnexcludedPathUp, sNeedle, nLevel)
 {
-  var nDirLevel = nLevel || 0,
+  if (! sNeedle || (sNeedle === "." || sNeedle === ".."))
+    return -1;
+
+  var aDirs = aDirsToSkip || [],
+      aUnDirs = aUnexcludedPathUp || [],
+      nDirLevel = nLevel || 0,
       sNeedleUp = sNeedle.toUpperCase(),
       sDirUp = sDir.toUpperCase(),
       sNeedleUpDirUpFull = sDirUp +"\\"+ sNeedleUp +"\\",
-      rDir, sPattern
+      rDir, sPattern = ""
 
-  if (! sNeedle)
-    return -1;
   try
   {
-    for (var i = 0, a, aUp, aLen = aArray.length; i < aLen; ++i)
+    for (var i = 0, a, aUp, aLen = aDirs.length; i < aLen; ++i)
     {
-      if (sNeedleUp === "." || sNeedleUp === "..")
-        return -1;
-
-      a = aArray[i];
+      a = aDirs[i];
       aUp = a.toUpperCase();
 
+      if (bSkipVCSignoreN)
+      {
+        //AkelPad.MessageBox(0, aUp + "\n\n" + aUnDirs.join("\n"), WScript.ScriptName, 0);
+        for (var j = 0, aUnLen = aUnDirs.length; j < aUnLen; ++j)
+        {
+          var sPatternUnex = aUnDirs[j]
+            .replace(/\\\\/g, "\\")
+            .replace(/\\/g, "\\\\")
+            .replace(/\./g, "\\.")
+            .replace(/\?/g, ".")
+            .replace(/\[\!/g, "[^")
+            .replace(/\*\*\\\\/g, "#")
+            .replace(/\#/g, "(\\\\)?*")
+            .replace(/\*/g, "(.*)?")
+            .concat("(\\\\)?$")
+          ;
+          var rDirUnex = new RegExp(sPatternUnex, "gi");
+          if (rDirUnex.test(sNeedleUpDirUpFull) && aUnDirs[j].slice(-2) !== "\\*" && isDirExists(sNeedleUpDirUpFull))
+          {
+            //AkelPad.MessageBox(0, "Nest Dir Match Unexclude:\n\n" + aUp +"\n\sPatternUnex\n"+ sPatternUnex +"\n\nsNeedleUp: "+ sNeedleUp +"\n\nMatch: "+ (rDirUnex.test(sNeedleUp) || rDirUnex.test(sNeedleUpDirUpFull)) +"\n\nsNeedleUpDirUpFull:\n"+ sNeedleUpDirUpFull, sScriptName, 48);
+            return -1;
+          }
+        }
+      }
+
       if (aUp === sNeedleUpDirUpFull || aUp === sNeedleUpDirUpFull +"\\")
+      {
+        //AkelPad.MessageBox(0, aUp +"\n\nEnding: "+ (aUp.slice(-2)) + "\n\n" + sNeedleUpDirUpFull, sScriptName, 0);
         return i;
+      }
 
       sPattern = aUp
+        .replace(/\\\\/g, "\\")
         .replace(/\\/g, "\\\\")
         .replace(/\./g, "\\.")
         .replace(/\?/g, ".")
         .replace(/\[\!/g, "[^")
-        .replace(/\*\*/g, "(.+)?")
+        .replace(/\*\*\\\\/g, "#")
+        .replace(/\#/g, "(\\\\)?*")
         .replace(/\*/g, "(.*)?")
-        .concat("?")
-        .concat("$")
+        .concat("(\\\\)?$")
       ;
-
       rDir = new RegExp(sPattern, "gi");
-      //AkelPad.MessageBox(0, "Nested Match Error:\n\n" + aUp +"\n\n"+ sPattern +"\n\nsNeedleUp: "+ sNeedleUp +"\n\nMatch: "+ (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull)) +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
-      if (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull))
+      if ((rDir.test(sNeedleUp) || (rDir.test(sNeedleUpDirUpFull) && isDirExists(sNeedleUpDirUpFull))) && aUp.slice(-2) !== "\\*" )
+      {
+        //AkelPad.MessageBox(0, "Nested Match:" + "\n\n" + aUp +"\n\n"+ sPattern +"\n\nsNeedleUp: "+ sNeedleUp +"\n\nMatch: "+ (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull)) +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
         return i;
+      }
     }
   }
   catch (oError)
@@ -2603,98 +2771,117 @@ function FindInArrayExcludeNested(aArray, sNeedle, nLevel)
 /**
  * Exclude directories.
  *
- * @param aArray
+ * @param array aDirsToSkip
+ * @param array aUnexcludedPathUp
  * @param sNeedle
  * @param nLevel
  * @return number found index
  */
-function FindInArrayDirs(aArray, sNeedle, nLevel)
+function FindInArrayDirs(aDirsToSkip, aUnexcludedPathUp, sNeedle, nLevel)
 {
-  var nDirLevel = nLevel || 0,
-      sNeedleUp = sNeedle.toUpperCase() +"\\",
+  if ((! sNeedle) || (sNeedle === "." || sNeedle === ".."))
+    return -1;
+
+  var aDirs = aDirsToSkip || [],
+      aUnDirs = aUnexcludedPathUp || [],
+      nDirLevel = nLevel || 0,
+      sNeedleUp = (sNeedle +"\\").toUpperCase(),
       sDirUp = sDir.toUpperCase(),
       sNeedleUpDirUpFull = sDirUp +"\\"+ sNeedleUp,
-      rDir, sPattern,
-      aUnexcludedPathUp = [],
       oError
-
-  if ((! sNeedle) || (sNeedleUp === "." || sNeedleUp === ".."))
-    return -1;
 
   try
   {
-    for (var i = 0, a, aUp, aLen = aArray.length; i < aLen; ++i)
+    for (var i = 0, a, aUp, aLen = aDirs.length; i < aLen; ++i)
     {
-      if (sNeedleUp === "." || sNeedleUp === "..")
-        return -1;
-
-      a = aArray[i];
+      a = aDirs[i];
       aUp = a.toUpperCase();
 
-      // if (aUp.substr(0, 1) === "!")
-      //   aUnexcludedPathUp.push((sDirUp + "\\" + aUp.slice(1) + ((aUp.substr(0, -1) === "\\")? "" : "\\")).toUpperCase());
-      // 
-      // if (FindInArray(aUnexcludedPathUp, sNeedleUpDirUpFull, true) !== -1)
-      //   return -1;
-      // 
-      // for (var j = 0, aUnLen = aUnexcludedPathUp.length; j < aUnLen; ++j)
-      // {
-      //   var sPatternUnex = aUnexcludedPathUp[j]
-      //     .replace(/\\/g, "\\\\")
-      //     .replace(/\./g, "\\.")
-      //     .replace(/\?/g, ".")
-      //     .replace("[!", "[^")
-      //     .replace(/\*\*/g, "(.+)?")
-      //     .replace("*", "(.*)?")
-      //     .concat("$")
-      //   ;
-      //   var rDirUnex = new RegExp(sPatternUnex, "gi");
-      //   if ((rDirUnex).test(sNeedleUp) || (rDirUnex).test(sNeedleUpDirUpFull))
-      //     return -1;
-      // }
+      //AkelPad.MessageBox(0, aUp, WScript.ScriptName, 0);
+      if (bSkipVCSignoreN)
+      {
+        //AkelPad.MessageBox(0, aUp + "\n\n" + aDirs.join("\n") + "\n\n" + aUnDirs.join("\n"), WScript.ScriptName, 0);
+        for (var j = 0, aUnLen = aUnDirs.length; j < aUnLen; ++j)
+        {
+          var sPatternUnex = aUnDirs[j]
+            .replace(/\\\\/g, "\\")
+            .replace(/\\/g, "\\\\")
+            .replace(/\./g, "\\.")
+            .replace(/\?/g, ".")
+            .replace(/\[\!/g, "[^")
+            .replace(/\*\*\\\\/g, "#")
+            .replace(/\#/g, "(\\\\)?*")
+            .replace(/\*/g, "(.*)?")
+            .concat("(\\\\)?$")
+          ;
+          var rDirUnex = new RegExp(sPatternUnex, "gi");
+          if (rDirUnex.test(sNeedleUpDirUpFull) && aUnDirs[j].slice(-2) !== "\\*" && isDirExists(sNeedleUpDirUpFull))
+          {
+            //AkelPad.MessageBox(0, "Dir Match Unexclude:\n\n"+ aUp +"\n\n\sPatternUnex:\n"+ sPatternUnex +"\n\nMatch: "+ (rDirUnex.test(sNeedleUp)||rDirUnex.test(sNeedleUpDirUpFull)) +"\n\nsNeedleUp:\n"+ sNeedleUp +"\n\nsNeedleUpDirUpFull:\n"+ sNeedleUpDirUpFull +"\n\nisDirExists:\n"+ isDirExists(sNeedleUpDirUpFull) +"\n\naUnexcludedPathUp:\n"+ aUnDirs.join("\n"), sScriptName, 48);
+            return -1;
+          }
+        } // end for unexcluded loop
+      }
 
       if ((aUp === sNeedleUp) || (aUp === sNeedleUpDirUpFull))
+      {
+        //AkelPad.MessageBox(0, aUp +"\n\nEnding: "+ (aUp.slice(-2)) +"\n\nsNeedleUp:\n"+ sNeedleUp +"\n\nsNeedleUpDirUpFull:\n"+ sNeedleUpDirUpFull, sScriptName, 0);
         return i;
+      }
 
-      sPattern = aUp
+      var sPattern = aUp
+        .replace(/\\\\/g, "\\")
         .replace(/\\/g, "\\\\")
         .replace(/\./g, "\\.")
         .replace(/\?/g, ".")
         .replace(/\[\!/g, "[^")
-        .replace(/\*\*/g, "(.+)?")
+        .replace(/\*\*\\\\/g, "#")
+        .replace(/\#/g, "(\\\\)?*")
         .replace(/\*/g, "(.*)?")
-        .concat("$")
+        .concat("(\\\\)?$")
       ;
-      rDir = new RegExp(sPattern, "gi");
-      //AkelPad.MessageBox(0, "Nested Match Error:\n\n" + aUp +"\n\n"+ sPattern +"\n\nsNeedleUp: "+ sNeedleUp +"\n\nMatch: "+ (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull)) +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
-      if (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull))
-        return i;
-    }
+      if (sPattern)
+      {
+        var rDir = new RegExp(sPattern, "gi");
+        if ((rDir.test(sNeedleUp) || (rDir.test(sNeedleUpDirUpFull) && isDirExists(sNeedleUpDirUpFull))) && aUp.slice(-2) !== "\\*")
+        {
+          //AkelPad.MessageBox(0, "Dir Match:\n\n" + aUp +"\n\nsPattern:\n"+ sPattern +"\n\nsNeedleUp:\n"+ sNeedleUp +"\n\nMatch: "+ (rDir.test(sNeedleUp) || rDir.test(sNeedleUpDirUpFull)) +"\n\nsNeedleUp:\n"+ sNeedleUp +"\n\nsNeedleUpDirUpFull:\n"+ sNeedleUpDirUpFull, sScriptName, 48);
+          return i;
+        }
+      }
+    } // end for loop
   }
   catch (oError)
   {
-    AkelPad.MessageBox(0, "Directory Match Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\n"+ aUp +"\n\n"+ sPattern +"\n\n"+ sNeedleUp +"\n\n"+ sNeedleUpDirUpFull, sScriptName, 48);
+    AkelPad.MessageBox(0,
+      "Directory Match Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\naDirsToSkip item:\n"+ aUp +"\n\nsPattern:\n"+ sPattern +"\n\nsNeedleUp"+ sNeedleUp +"\n\nsNeedleUpDirUpFull"+ sNeedleUpDirUpFull
+      , sScriptName, 48);
   }
   return -1;
 }
 
 /**
- * @param aArray
- * @param sNeedle
+ * @param array aDirsToSkip
+ * @param array aUnexcludedPathUp
+ * @param sNeedle sFileName
  * @param sCurrentDir
  * @param nLevel
  * @return number index
  */
-function FindInArrayOfFiles(aArray, sNeedle, sCurrentDir, nLevel)
+function FindInArrayOfFiles(aDirsToSkip, aUnexcludedPathUp, sNeedle, sCurrentDir, nLevel)
 {
-  var nDirLevel = nLevel || 0,
+  if ((! sNeedle) || (sNeedle === "." || sNeedle === ".."))
+    return -1;
+
+  var aDirs = aDirsToSkip || [],
+      aUnDirs = aUnexcludedPathUp || [],
+      nDirLevel = nLevel || 0,
       sNeedleUp = sNeedle.toUpperCase(),
       sCurrDirUp = sCurrentDir.toUpperCase(),
       sDirUp = sDir.toUpperCase(),
       sDirFullUp = sDir.toUpperCase() + "\\" + sCurrDirUp,
       sNeedleFullPathUp = sDirFullUp + "\\" + sNeedleUp,
-      rFile, sPattern,
-      aUnexcludedPathUp = [],
+      rFile, sPattern = "",
       oError
 
   var sNeedleFName     = getFileName(sNeedleFullPathUp);
@@ -2702,42 +2889,65 @@ function FindInArrayOfFiles(aArray, sNeedle, sCurrentDir, nLevel)
   //  sNeedleFNameExt  = AkelPad.GetFilePath(sNeedleFullPathUp, 4);
   //AkelPad.MessageBox(0, sNeedleFName + "\n" + sNeedleFNameOnly + "\n" + sNeedleFNameExt + "\n", WScript.ScriptName, 0);
 
-  if ((! sNeedle) || (sNeedleUp === "." || sNeedleUp === ".."))
-    return -1;
-
   try
   {
-    for (var i = 0, a, aUp, aLen = aArray.length; i < aLen; ++i)
+    for (var i = 0, a, aUp, aLen = aDirs.length; i < aLen; ++i)
     {
-      if (sNeedleUp === "." || sNeedleUp === "..")
-        return -1;
-
-      a = aArray[i];
+      a = aDirs[i];
       aUp = a.toUpperCase();
 
-      // if (aUp.substr(0, 1) === "!")
-      //   aUnexcludedPathUp.push((sDirUp + "\\" + aUp.slice(1)).toUpperCase());
-      // 
-      // if (FindInArray(aUnexcludedPathUp, sNeedleFullPathUp, true) !== -1)
-      //   return -1;
-      // 
-      // for (var j = 0, aUnLen = aUnexcludedPathUp.length; j < aUnLen; ++j)
-      // {
-      //   var sPatternUnex = aUnexcludedPathUp[j]
-      //     .replace(/\\/g, "\\\\")
-      //     .replace(/\./g, "\\.")
-      //     .replace(/\?/g, ".")
-      //     .replace("[!", "[^")
-      //     .replace(/\*\*/g, "(.+)?")
-      //     .replace("*", "(.*)?")
-      //   ;
-      //   var rFileUnex = new RegExp(sPatternUnex, "gi");
-      //   if ((rFileUnex).test(sNeedleUp) || (rFileUnex).test(sNeedleFullPathUp))
-      //     return -1;
-      // }
+      if (bSkipVCSignoreN)
+      {
+        unexcludeLoop: for (var j = 0, aUnLen = aUnDirs.length; j < aUnLen; ++j)
+        {
+          var sUnDirsItem = aUnDirs[j].toUpperCase();
+          var sPatternUnex = sUnDirsItem
+            .replace(/\\\\/g, "\\")
+            .replace(/\\/g, "\\\\")
+            .replace(/\./g, "\\.")
+            .replace(/\?/g, ".")
+            .replace(/\[\!/g, "[^")
+            .replace(/\*\*\\\\/g, "#")
+            .replace(/\#/g, "(\\\\)?*")
+            .replace(/\*/g, "(.*)")
+            .concat("(\\\\)?$")
+          ;
+          var rFileUnex = new RegExp(sPatternUnex, "gi");
+          //AkelPad.MessageBox(0, (sDirUp +"#"+ aUp.slice(1)).toUpperCase() +"\n\n"+ sUnDirsItem /* +"\n\n"+ (~((sDirUp + "#" + aUp.slice(1)).toUpperCase()).indexOf(sUnDirsItem)) +"\n\n"+ (~(sUnDirsItem).indexOf((sDirUp + "#" + aUp.slice(1)).toUpperCase())) */, sScriptName, 48);
+          if (rFileUnex.test(sNeedleFullPathUp) && (! isDirExists(sNeedleFullPathUp)))
+          {
+            //AkelPad.MessageBox(0, "File Match UNEXCLUDE:\n\n"+ aUp +"\n\nsPatternUnex:\n"+ sPatternUnex +"\n\nMatch:"+ (rFileUnex.test(sNeedleFullPathUp)) +"\n\nsNeedleUp:\n"+ sNeedleUp +"\n\nsNeedleFullPathUp:\n"+ sNeedleFullPathUp +"\n\n"+ aUnDirs.join("\n"), sScriptName, 48);
+
+            if (sUnDirsItem.slice(-2) === "\\*"
+              //&& !~((sDirUp + "#" + aUp.slice(1)).toUpperCase()).indexOf(sUnDirsItem.slice(0, -2))
+            )
+            {
+              for (var k = 0, nExcPathsLen = aDirs.length, aDirsItem; k < nExcPathsLen; k++)
+              {
+                aDirsItem = aDirs[k].replace(/\#/g, "\\").replace(/\\\\/g, "\\").toUpperCase();
+                sUnDirsItemPath = sUnDirsItem.replace(/\#/g, "\\");
+
+                if ( (~aDirsItem.indexOf(sUnDirsItemPath.slice(0, -2))
+                  && !(sUnDirsItemPath.slice(0, -2) !== aDirsItem.slice(0, -2)) )
+                  //&& (getParent(sUnDirsItemPath)).length < getParent(aDirsItem).length
+                )
+                {
+                  //AkelPad.MessageBox(0, "aDirsItem:\n"+ aDirsItem + "\n\nsNeedleFullPathUp:\n" + sNeedleFullPathUp + "\n\nsUnDirsItemPath:\n" + sUnDirsItemPath +"\n\n"+ getParent(sUnDirsItemPath) +"\n\n"+ getParent(sNeedleFullPathUp), WScript.ScriptName, 0);
+                  continue unexcludeLoop;
+                }
+              }
+            }
+
+            return -1;
+          }
+        }
+      }
 
       if ((aUp === sNeedleUp) || (aUp === sNeedleFullPathUp))
+      {
+        //AkelPad.MessageBox(0, aUp +"\n\nEnding: "+ (aUp.slice(-2)) +"\n\nsNeedleUp:\n"+ sNeedleUp +"\n\nsNeedleFullPathUp:\n"+ sNeedleFullPathUp, sScriptName, 0);
         return i;
+      }
 
       // sNeedleFName = AkelPad.GetFilePath(aUp, 2);
       // sNeedleFNameOnly = AkelPad.GetFilePath(aUp, 3);
@@ -2745,20 +2955,23 @@ function FindInArrayOfFiles(aArray, sNeedle, sCurrentDir, nLevel)
       //AkelPad.MessageBox(0, sNeedleFName +"\n\n"+ sNeedleFNameOnly +"\n\n"+ sNeedleFNameExt, WScript.ScriptName, 0);
 
       sPattern = aUp
+        .replace(/\\\\/g, "\\")
         .replace(/\\/g, "\\\\")
         .replace(/\./g, "\\.")
         .replace(/\?/g, ".")
         .replace(/\[\!/g, "[^")
-        .replace(/\*\*/g, "(.+)?")
+        .replace(/\*\*\\\\/g, "#")
+        .replace(/\#/g, "(\\\\)?*")
         .replace(/\*/g, "(.*)?")
+        .concat("(\\\\)?$")
       ;
-      sPattern = (~sNeedleFName.indexOf("."))? sPattern.concat("$") : sPattern;
+      //sPattern = (~sNeedleFName.indexOf("."))? sPattern.concat("$") : sPattern;
       rFile = new RegExp(sPattern, "gi");
-      //AkelPad.MessageBox(0, sNeedleUp +"\n\n"+ sNeedleFullPathUp +"\n\n"+ sPattern, WScript.ScriptName, 0);
-      if (rFile.test(sNeedleUp) || rFile.test(sNeedleFullPathUp))
+      if (rFile.test(sNeedleUp) || (rFile.test(sNeedleFullPathUp) && (! isDirExists(sNeedleFullPathUp))))
+      {
+        //AkelPad.MessageBox(0, "File Match:\n\n"+ aUp +"\n\n"+ sPattern +"\n\nMatch:\n"+ (rFile.test(sNeedleUp) || rFile.test(sNeedleFullPathUp)) +"\n\nsNeedleUp:\n"+ sNeedleUp +"\n\nsNeedleFullPathUp:\n"+ sNeedleFullPathUp, sScriptName, 48);
         return i;
-
-      //if (aUp.substr(-1) === "*")
+      }
     }
   }
   catch (oError)
@@ -3558,7 +3771,7 @@ function qSearchLog(searchFlag)
     }
     catch (oError)
     {
-      AkelPad.MessageBox(0, 'qSearchLog() -> searching() Error: '+ oError.description, sScriptName, 16 /*MB_ICONERROR*/);
+      AkelPad.MessageBox(0, 'qSearchLog() -> searching() Error: '+ oError.name +"\n"+ oError.description, sScriptName, 16 /*MB_ICONERROR*/);
       return false;
     }
 
@@ -3933,94 +4146,6 @@ function MessageBox(sText, bQuestion)
 }
 
 /**
- * Read VCS File to exclude directories from the search result.
- * @TODO implement configs for filenames of ignore files
- *
- * @param string - current directory
- * @return array of directories that should be ignored
- */
-function GetVCSIgnoreFileToSkip(sCurrentDir)
-{
-  var sBaseDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1),
-      sCurrentDirLevel = (sCurrentDir ? sCurrentDir +"\\" : ""),
-      aIgnoreFileConfs = aVCSIgnoreFileConfs.slice(0) || [],
-      aExcludedDirs = aVCSExcludedDirs.slice(0) || [],
-      aExcludedDirsRaw = [],
-      sFileContent = "",
-      sTmp = "";
-  ;
-
-  for (var i = 0; i < aIgnoreFileConfs.length; i++)
-  	if (aIgnoreFileConfs[i])
-    	sFileContent += getVCSIgnoreFileContents(sBaseDir + "\\" + sCurrentDirLevel + aIgnoreFileConfs[i]);
-
-  aExcludedDirsRaw = sFileContent.replace(/^\s+|\s+$/g, '').split("\n");
-
-  for (var i = 0, nLen = aExcludedDirsRaw.length; i < nLen; i++)
-  {
-    var sExcDir = aExcludedDirsRaw[i].replace(/^\s+|\s+$/g, '');
-    if (sExcDir && sExcDir.substr(0, 1) !== "#")
-    {
-      if (sExcDir.substr(0, 1) === "/" && (~sExcDir.indexOf("*.")))
-        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")));
-      else if (sExcDir.substr(0, 1) === "/")
-        aExcludedDirsCollection.push(sDir +"\\"+ sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")) + ((sExcDir.slice(-1) === "*")? "":"\\"));
-      else if (sExcDir.substr(0, -1) === "/")
-        aExcludedDirsCollection.push(sCurrentDirLevel.concat(sExcDir.replace(/\//g, "\\")));
-      else if (sExcDir.substr(0, 1) === "\\")
-        aExcludedDirsCollection.push(sCurrentDirLevel.concat(sExcDir.slice(1).replace(/\//g, "\\")));
-      else
-        aExcludedDirsCollection.push(sExcDir.replace(/\//g, "\\"));
-
-      //AkelPad.MessageBox(0, sExcDir , WScript.ScriptName, 0);
-      // if (sExcDir.substr(0, 1) === "!")
-      //   aExcludedDirsCollection.concat(UnexcludeFromDirsToSkip(aDirsToSkip, sExcDir.slice(1).replace(/\//g, "\\")));
-    }
-  }
-  //AkelPad.MessageBox(0, aExcludedDirsCollection.join("\n") , WScript.ScriptName, 0);
-  return (ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs))).sort();
-}
-
-/**
- * Make the passed array unique, to have unique values in it.
- *
- * @param array
- * @return array unique
- */
-function ArrayUnique(array)
-{
-  var a = array.concat();
-  for (var i = 0; i < a.length; ++i)
-    for (var j = i + 1; j < a.length; ++j)
-      if (a[i] === a[j])
-        a.splice(j--, 1);
-
-  return a;
-}
-
-/**
- * @return string of file content
- */
-function getVCSIgnoreFileContents(sFileName)
-{
-  var sFileContent = "",
-      oError = {};
-
-  if (IsFileExists(sFileName))
-  {
-    try
-    {
-      sFileContent = "\n" + AkelPad.ReadFile(sFileName);
-    }
-    catch (oError)
-    {
-      AkelPad.MessageBox(0, sFileName + '\n\nError: ' + oError.description, sScriptName, 0);
-    }
-  }
-  return sFileContent;
-}
-
-/**
  * Show the popup.
  *
  * @param sContent of the popup
@@ -4161,7 +4286,8 @@ function WriteIni()
     'bLastNotContain=' + bLastNotContain + ';\r\n' +
     'bAfterReplace='   + bAfterReplace + ';\r\n' +
     'aVCSIgnoreFileConfs=[' + aVCSIgnoreFileConfs.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
-    'aVCSExcludedDirs=[' + aVCSExcludedDirs.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
+    'aVCSExcludedPaths=[' + aVCSExcludedPaths.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
+    'aVCSUnexcludedPaths=[' + aVCSUnexcludedPaths.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
     'aDirs=['          + aDirs.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
     'aNames=['         + aNames.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
     'aContents=['      + aContents.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n' +
