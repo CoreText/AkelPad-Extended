@@ -2077,7 +2077,7 @@ function GetLangString(nStringID)
     if (nStringID === STRID_ESCAPESEQ)
       return "&Esc-sequences";
     if (nStringID === STRID_FUNCTION)
-      return "Replace &with function";
+      return "Replace with functio&n";
     if (nStringID === STRID_DIRECTION)
       return "Direction";
     if (nStringID === STRID_FORWARD)
