@@ -52,8 +52,16 @@
 // Ctrl+U           - Undo replace
 // Ctrl+Shift+U     - Redo replace
 //
+// Ctrl+P           - Undo caret position
+// Ctrl+Shift+P     - Redo caret position
+//
 // Ctrl+M           - Toggle Mark HighLight
 //////////////////////////////////////////////////////////////////////////
+
+/**
+ * Script dependencies:
+ * - LogHighlight.js
+ */
 
 //Arguments
 var bShowCountOfChanges=AkelPad.GetArgValue("ShowCountOfChanges", true);
@@ -592,9 +600,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("user32::GetWindowText" + _TCHAR, hWndWith, lpBuffer, 256);
         sReplaceWithIt=AkelPad.MemRead(lpBuffer, _TSTR);
         if (bHighlight)
-          highlight(sReplaceWithIt, "#EE2B34", "#000000", -6660999);
+          highlight(sReplaceWithIt, "#FF0080", "#000000", -6660999);
         else
-          highlight(sReplaceWithIt, "#EE2B34", "#000000", -6660999, 3);
+          highlight(sReplaceWithIt, "#FF0080", "#000000", -6660999, 3);
 
         if (Ctrl() && Shift())
         {
@@ -623,6 +631,17 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         }
       }
     }
+    else if (wParam === 0x50 /*P key VK_KEY_P*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if (Ctrl() && (!Shift()))
+          AkelPad.Command(4199);
+        else if (Ctrl() && Shift())
+          AkelPad.Command(4200);
+      }
+    }
     else if (wParam === 0x55 /*U key VK_KEY_U*/)
     {
       if (!hWndOutput)
@@ -642,18 +661,18 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         if (Ctrl() && (!Shift()))
         {
           bHighlight = ! bHighlight;
-          if (bHighlight) 
+          if (bHighlight)
           {
             highlight("", "#A6D8B3", "#000000", -666999);
             popupShow("The text is highlighted!", 1);
           }
-          else 
+          else
           {
             highlight("", "#A6D8B3", "#000000", -666999, 3);
             popupShow("The highlight is turned off!", 1);
           }
         }
-        
+
       }
     }
   }
@@ -1079,7 +1098,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     }
 
     highlight("", "#A6D8B3", "#000000", -666999, 3);
-    highlight("", "#EE2B34", "#000000", -6660999, 3);
+    highlight("", "#FF0080", "#000000", -6660999, 3);
 
     //Destroy dialog
     oSys.Call("user32::DestroyWindow", hWnd);
