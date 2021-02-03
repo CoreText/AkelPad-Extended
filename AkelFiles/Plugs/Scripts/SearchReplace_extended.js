@@ -49,8 +49,8 @@
 // Ctrl+Shift+R     - Replace previous occurrence
 // Ctrl+Shift+A     - Replace all occurrences
 //
-// Ctrl+Z           - Undo replace
-// Ctrl+Shift+Z     - Redo replace
+// Ctrl+U           - Undo replace
+// Ctrl+Shift+U     - Redo replace
 //
 // Ctrl+M           - Toggle Mark HighLight
 //////////////////////////////////////////////////////////////////////////
@@ -592,9 +592,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("user32::GetWindowText" + _TCHAR, hWndWith, lpBuffer, 256);
         sReplaceWithIt=AkelPad.MemRead(lpBuffer, _TSTR);
         if (bHighlight)
-          highlight(sReplaceWithIt, "#C61019", "#000000", -6660999);
+          highlight(sReplaceWithIt, "#EE2B34", "#000000", -6660999);
         else
-          highlight(sReplaceWithIt, "#C61019", "#000000", -6660999, 3);
+          highlight(sReplaceWithIt, "#EE2B34", "#000000", -6660999, 3);
 
         if (Ctrl() && Shift())
         {
@@ -623,7 +623,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         }
       }
     }
-    else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
+    else if (wParam === 0x55 /*U key VK_KEY_U*/)
     {
       if (!hWndOutput)
       {
@@ -1079,7 +1079,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     }
 
     highlight("", "#A6D8B3", "#000000", -666999, 3);
-    highlight("", "#C61019", "#000000", -6660999, 3);
+    highlight("", "#EE2B34", "#000000", -6660999, 3);
 
     //Destroy dialog
     oSys.Call("user32::DestroyWindow", hWnd);
