@@ -44,8 +44,8 @@
 
 // Ctrl+Enter       - Go to next occurrence
 // Ctrl+Shift+Enter - Go to previous occurrence
-// Alt+Enter        - Go to next occur Match Word
-// Shift+Alt+Enter  - Go to previous occurrence Match Word
+// Alt+Enter        - Maximaze/Minimize
+// Shift+Alt+Enter  - DblClick toggles search results to log instead of close
 // Alt+G            - Go to next occur Match Word, in opened documents
 // Sfhit+Alt+G      - Go to previous occur Match Word, in opened documents
 
@@ -80,7 +80,7 @@
 // Shift+Alt+M      - Remove marks from all documents
 
 // Ctrl+Shift+O     - Paths of the opened documents in new tab
-// Ctrl+O,
+// Ctrl+O           - Open in FileAndStream_extended.js
 // Ctrl+E           - Open directory path in editor's Explorer
 // Ctrl+Shift+E     - Open directory path in OS Explorer
 
@@ -97,6 +97,7 @@
  * - CloseTabByExt.js
  * - CreateTab&Arhive.vbs
  * - FileInfo.js
+ * - FileAndStream_extended.js
  * - FindReplaceFiles_extended.js
  * - LogHighLight.js
  * - MarkIt_extended.js
@@ -181,6 +182,7 @@ else
   var bPathShow       = 1;
   var bLogShow        = 0;
   var bBookmarkResults= 0;
+  var bCloseToggler   = 0;
   var bMarkResults    = 0;
   var nPathLen        = 0;
   var bSortDesc       = 0;
@@ -250,21 +252,21 @@ else
   var IDMATCHCASE  = 2014;
   var IDCONTENTRE  = 2015;
   var IDMULTILINE  = 2016;
-  var IDNOTCONTAIN = 2017;
-  var IDINSTREAMS  = 2018;
-  var IDSKIPBINARY = 2019;
-  var IDSKIPLARGER = 2020;
-  var IDMAXSIZE    = 2021;
-  var IDBYTESYMBOL = 2022;
-  var IDFILELV     = 2023;
-  var IDSEARCHB    = 2024;
-  var IDEDITB      = 2025;
-  var IDCOPYB      = 2026;
-  var IDCLEARB     = 2027;
-  var IDSETTINGSB  = 2028;
-  var IDCLOSEB     = 2029;
-  var IDSTATUS     = 2030;
-  var IDMATCHWORD  = 2031;
+  var IDMATCHWORD  = 2017;
+  var IDNOTCONTAIN = 2018;
+  var IDINSTREAMS  = 2019;
+  var IDSKIPBINARY = 2020;
+  var IDSKIPLARGER = 2021;
+  var IDMAXSIZE    = 2022;
+  var IDBYTESYMBOL = 2023;
+  var IDFILELV     = 2024;
+  var IDSEARCHB    = 2025;
+  var IDEDITB      = 2026;
+  var IDCOPYB      = 2027;
+  var IDCLEARB     = 2028;
+  var IDSETTINGSB  = 2029;
+  var IDCLOSEB     = 2030;
+  var IDSTATUS     = 2031;
 
   //0x50000000 - WS_VISIBLE|WS_CHILD
   //0x50000002 - WS_VISIBLE|WS_CHILD|SS_RIGHT
@@ -291,10 +293,10 @@ else
   aWnd[IDCONTENTG  ]=["BUTTON",             0, 0x50000007, sTxtTextInFile];
   aWnd[IDCONTENTCB ]=["COMBOBOX",           0, 0x50210042, ""];
   aWnd[IDHELP2B    ]=["BUTTON",             0, 0x50010000, "?"];
-  aWnd[IDMATCHWORD ]=["BUTTON",             0, 0x50010003, sTxtMatchWord];
   aWnd[IDMATCHCASE ]=["BUTTON",             0, 0x50010003, sTxtMatchCase];
   aWnd[IDCONTENTRE ]=["BUTTON",             0, 0x50010003, sTxtRegExp];
   aWnd[IDMULTILINE ]=["BUTTON",             0, 0x50010003, sTxtMultiline];
+  aWnd[IDMATCHWORD ]=["BUTTON",             0, 0x50010003, sTxtMatchWord];
   aWnd[IDNOTCONTAIN]=["BUTTON",             0, 0x50010003, sTxtNotContain];
   aWnd[IDINSTREAMS ]=["BUTTON",             0, 0x50010003, sTxtInStreams];
   aWnd[IDSKIPBINARY]=["BUTTON",             0, 0x50010003, sTxtSkipBinary];
@@ -376,10 +378,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
     AkelPad.SendMessage(aWnd[IDNAMERE    ][HWND], 0x00F1 /*BM_SETCHECK*/, bNameRE, 0);
     AkelPad.SendMessage(aWnd[IDNOTNAME   ][HWND], 0x00F1 /*BM_SETCHECK*/, bNotName, 0);
-    AkelPad.SendMessage(aWnd[IDMATCHWORD ][HWND], 0x00F1 /*BM_SETCHECK*/, bMatchWord, 0);
     AkelPad.SendMessage(aWnd[IDMATCHCASE ][HWND], 0x00F1 /*BM_SETCHECK*/, bMatchCase, 0);
     AkelPad.SendMessage(aWnd[IDCONTENTRE ][HWND], 0x00F1 /*BM_SETCHECK*/, bContentRE, 0);
     AkelPad.SendMessage(aWnd[IDMULTILINE ][HWND], 0x00F1 /*BM_SETCHECK*/, bMultiline, 0);
+    AkelPad.SendMessage(aWnd[IDMATCHWORD ][HWND], 0x00F1 /*BM_SETCHECK*/, bMatchWord, 0);
     AkelPad.SendMessage(aWnd[IDNOTCONTAIN][HWND], 0x00F1 /*BM_SETCHECK*/, bNotContain, 0);
     AkelPad.SendMessage(aWnd[IDINSTREAMS ][HWND], 0x00F1 /*BM_SETCHECK*/, bInStreams, 0);
     AkelPad.SendMessage(aWnd[IDSKIPBINARY][HWND], 0x00F1 /*BM_SETCHECK*/, bSkipBinary, 0);
@@ -699,7 +701,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     else if (wParam === 0x4F /*O key VK_KEY_O*/)
     {
       if (Ctrl() && (! Shift()))
-        AkelPad.Call("Explorer::Main", 1, sDir);
+        AkelPad.Call("Scripts::Main", 1, "FileAndStream_extended.js", '-sDir="'+ sDir.replace(/\\$/, "") +'"');
       else if (Ctrl() && Shift())
         AkelPad.Call("Scripts::Main", 1, "CreateTab&Arhive.vbs", '"1"');
     }
@@ -759,7 +761,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4199);
       else if (wParam === 0x0D /*VK_RETURN*/)
-        TextSearchOptions('word');
+        oSys.Call("User32::ShowWindow", hWndDlg, oSys.Call("User32::IsZoomed", hWndDlg) ? 9 /*SW_RESTORE*/ : 3 /*SW_MAXIMIZE*/);
       else if (wParam === 0x26 /*UP ARROW key VK_UP*/)
       {
         oSys.Call("User32::SetFocus", aWnd[IDFILELV][HWND]);
@@ -791,7 +793,17 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4200);
       else if (wParam === 0x0D /*VK_RETURN*/)
-        TextSearchOptions('word up');
+      {
+        bLogShow = ! bLogShow;
+        popupShow(
+          (bLogShow
+            ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file."
+            : ((bCloseToggler)
+              ? "Double click will close the result file."
+              : "Double click has default behaviour.")),
+          1, sScriptName
+        );
+      }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         TextSearchOptions('word up');
       else if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
@@ -1160,43 +1172,43 @@ function ResizeWindow(hWnd)
               16,
               0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
   }
-  for (i = IDNOTCONTAIN; i <= IDSKIPBINARY; ++i)
+  for (i = IDMATCHWORD; i <= IDINSTREAMS; ++i)
   {
     oSys.Call("User32::SetWindowPos",
               aWnd[i][HWND], 0,
               175,
-              192 + (i - IDNOTCONTAIN) * 20,
+              192 + (i - IDMATCHWORD) * 20,
               150,
               16,
               0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
   }
   oSys.Call("User32::SetWindowPos",
+            aWnd[IDSKIPBINARY][HWND], 0,
+            338,
+            188,
+            85,
+            26,
+            0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
+  oSys.Call("User32::SetWindowPos",
             aWnd[IDSKIPLARGER][HWND], 0,
-            335,
-            192,
+            338,
+            213,
             85,
             26,
             0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
   oSys.Call("User32::SetWindowPos",
             aWnd[IDMAXSIZE][HWND], 0,
-            335,
-            223,
-            72,
+            338,
+            228,
+            75,
             20,
-            0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
-  oSys.Call("User32::SetWindowPos",
-            aWnd[IDBYTESYMBOL][HWND], 0,
-            410,
-            225,
-            10,
-            13,
             0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
   oSys.Call("User32::SetWindowPos",
             aWnd[IDFILELV][HWND], 0,
             5,
             265,
             nW - 10,
-            nH - 265 - 3 - 21 - 26,
+            nH - 265 - 5 - 21 - 26,
             0x14 /*SWP_NOACTIVATE|SWP_NOZORDER*/);
   for (i = IDSEARCHB; i <= IDCLOSEB; ++i)
   {
@@ -1396,7 +1408,7 @@ function SetHeaderLV()
   var nFmt     = 0x4000 /*HDF_STRING*/ | (bSortDesc ? 0x0200 /*HDF_SORTDOWN*/ : 0x0400 /*HDF_SORTUP*/);
   var hHeader  = AkelPad.SendMessage(aWnd[IDFILELV][HWND], 0x101F /*LVM_GETHEADER*/, 0, 0);
 
-  AkelPad.MemCopy(lpBuffer, sTxtFiles, DT_UNICODE);
+  AkelPad.MemCopy(lpBuffer, sTxtFiles.toUpperCase() +":", DT_UNICODE);
 
   AkelPad.MemCopy(lpHDITEM, 0x06, DT_DWORD); //mask=HDI_FORMAT|HDI_TEXT
   AkelPad.MemCopy(lpHDITEM + 8, lpBuffer, DT_QWORD); //pszText
@@ -1498,7 +1510,7 @@ function SetTextSB(nItem)
                 lpBuffer,
                 64);
       oSys.Call("Kernel32::GetTimeFormatW",
-                0x400, //LOCALE_USER_DEFAULT
+                0x1F /* 0x400 */, //LOCALE_USER_DEFAULT
                 0x8,   //TIME_FORCE24HOURFORMAT
                 lpSysTime,
                 0,
@@ -1709,10 +1721,11 @@ function SearchFiles()
   var bNTFS;
   var aStreams;
   var i, n;
+  var strContent = "";
 
   sDir     = GetWindowText(aWnd[IDDIRCB][HWND]).replace(/(^ +)|( +$)/g, "");
   sName    = GetWindowText(aWnd[IDNAMECB][HWND]).replace(/(^[ ;]+)|([ ;]+$)/g, "");
-  sContent = GetWindowText(aWnd[IDCONTENTCB][HWND]);
+  strContent = sContent = GetWindowText(aWnd[IDCONTENTCB][HWND]);
 
   SetWindowText(aWnd[IDDIRCB][HWND], sDir);
   SetWindowText(aWnd[IDNAMECB][HWND], sName);
@@ -1744,11 +1757,12 @@ function SearchFiles()
   {
     try
     {
-      rContent = new RegExp(sContent, (bMatchCase ? "" : "i") + (bMultiline ? "m" : ""));
+      strContent = (bMatchWord)? "(?=\\b|\\W)"+ sContent +"(?=\\W|\\b)" : sContent;
+      rContent = new RegExp(strContent, (bMatchCase ? "" : "i") + (bMultiline ? "m" : ""));
     }
     catch (oError)
     {
-      WarningBox(sContent + "\n\n" + sTxtErrorRE);
+      WarningBox(strContent + "\n\n" + sTxtErrorRE + "\n\n" + oError.name + "\n\n" + oError.description);
       oSys.Call("User32::PostMessageW", aWnd[IDCONTENTCB][HWND], 0x0007 /*WM_SETFOCUS*/, 0, 0);
       return;
     }
@@ -2313,7 +2327,7 @@ function FindstrLog(pLogOutput)
 
   //AkelPad.MessageBox(0, sCOMMAND, sScriptName, 0);
   AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc, sREPATTERN, sRETAGS, -2, -2, logOutput);
-  AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
+  AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
 
   return true;
 }
@@ -2344,7 +2358,7 @@ function FindToLog(pLogOutput)
     "/FILE=\\2 /GOTOLINE=\\4:0" , -2, -2, logOutput
   );
 
-  AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
+  AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
 
   return true;
 }
@@ -2457,7 +2471,7 @@ function qSearching(selText, flag)
       return false;
     }
 
-    AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ textSelected +'" -bNotRegExp='+ ((bRegEx)?"0":"1")) );
+    AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ textSelected +'" -bNotRegExp='+ ((bRegEx)?"0":"1")) );
     return true;
   }
   else
@@ -2503,7 +2517,7 @@ function TextSearchOptions(sParams, prompts)
   if (bMultiline || ~pTextSearch.indexOf('regex_multi'))
     calcBin |= 0x00040000 /*FRF_REGEXPNONEWLINEDOT*/;
 
-  if (~pTextSearch.indexOf('word'))
+  if (bMatchWord || ~pTextSearch.indexOf('word'))
     calcBin |= 0x00000002 /*FRF_WHOLEWORD*/;
 
   if (~pTextSearch.indexOf('escape'))
@@ -2766,6 +2780,31 @@ function WarningBox(sText)
   AkelPad.MessageBox(hWndDlg, sText, sTxtScriptName, 0x00000030 /*MB_ICONWARNING*/);
 }
 
+/**
+ * Show the popup.
+ *
+ * @param sContent of the popup
+ * @param nSec seconds
+ * @param sTitle of the popup
+ * @return bool|obj WScript.Shell
+ */
+function popupShow(sContent, nSec, sTitle)
+{
+  var nSeconds = nSec || 4,
+      strContent = sContent || WScript.ScriptFullName,
+      strTitle = sTitle || WScript.ScriptName;
+
+  if (sContent && strTitle)
+    return (new ActiveXObject("WScript.Shell").Popup(
+      strContent,
+      nSeconds, // Autoclose after ~2 seconds
+      strTitle,
+      64 /*MB_ICONINFORMATION*/
+    ));
+
+  return false;
+}
+
 function ReadIni()
 {
   var sIniFile = WScript.ScriptFullName.substring(0, WScript.ScriptFullName.lastIndexOf(".")) + ".ini";
@@ -2806,8 +2845,8 @@ function ReadIni()
     sTxtMultiline   = "M&ultiline";
     sTxtNotContain  = "&Not contain text";
     sTxtInStreams   = "Include NTFS streams";
-    sTxtSkipBinary  = "S&kip binary files";
-    sTxtSkipLarger  = "Don't search\nin larger than [&B]:";
+    sTxtSkipBinary  = "S&kip binary";
+    sTxtSkipLarger  = "Maximum &bytes";
     sTxtFiles       = "Files";
     sTxtSearch      = "&SEARCH";
     sTxtEdit        = "&Edit";
