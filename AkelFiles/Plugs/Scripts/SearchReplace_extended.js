@@ -1,6 +1,6 @@
 // http://akelpad.sourceforge.net/en/plugins.php#Scripts
-// Version: 2.0
-// Author: Shengalts Aleksander aka Instructor
+// Version: 3.0
+// Author: Shengalts Aleksander aka Instructor / texter
 //
 //
 // Description(1033): Search and replace using regular expressions.
@@ -39,6 +39,21 @@
 // или
 //   Что: \d+
 //   Чем: var n = parseInt($0); return n >= 20 ? 20 : ++n;
+//
+////////////////////////////////////////////////////////////////////////// HotKeys:
+// Ctrl+Enter       - Search down
+// Ctrl+Shift+Enter - Search up
+// Shift+Enter      - Find all occurrences in the current document
+//
+// Ctrl+R           - Replace next occurrence
+// Ctrl+Shift+R     - Replace previous occurrence
+// Ctrl+Shift+A     - Replace all occurrences
+//
+// Ctrl+Z           - Undo replace
+// Ctrl+Shift+Z     - Redo replace
+//
+// Ctrl+M           - Toggle Mark HighLight
+//////////////////////////////////////////////////////////////////////////
 
 //Arguments
 var bShowCountOfChanges=AkelPad.GetArgValue("ShowCountOfChanges", true);
@@ -191,6 +206,7 @@ var bSensitive=false;
 var bMultiline=false;
 var bEscSequences=false;
 var bReplaceFunction=false;
+var bHighlight=false;
 var nSelStart;
 var nSelEnd;
 var nDirection=DN_DOWN;
@@ -302,6 +318,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     if (oSet.Begin("", 0x1 /*POB_READ*/))
     {
       //Read settings
+      bHighlight=oSet.Read("Highlight", 1 /*PO_DWORD*/);
       bWord=oSet.Read("Word", 1 /*PO_DWORD*/);
       bSensitive=oSet.Read("Sensitive", 1 /*PO_DWORD*/);
       bRegExp=oSet.Read("RegExp", 1 /*PO_DWORD*/);
@@ -481,6 +498,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         oSys.Call("user32::SetWindowText" + _TCHAR, hWndWhat, selTxt);
         AkelPad.SendMessage(hWndWhat, 0x142 /*CB_SETEDITSEL*/, 0, MAKELONG(0, -1));
+        if (bHighlight)
+          highlight(selTxt, "#A6D8B3", "#000000", -666999);
+        else
+          highlight(selTxt, "#A6D8B3", "#000000", -666999, 3);
+
         return true;
       }
       else if (nSelStart != nSelEnd && nSelEnd - nSelStart < PUTFIND_MAXSEL && !(nDirection == DN_SELECTION) && !AkelPad.SendMessage(hWndEditCur, 3127 /*AEM_GETCOLUMNSEL*/, 0, 0))
@@ -527,6 +549,111 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
           oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+      }
+    }
+    else if (wParam === 0x0D /*VK_RETURN*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        oSys.Call("user32::GetWindowText" + _TCHAR, hWndWhat, lpBuffer, 256);
+        pFindIt=AkelPad.MemRead(lpBuffer, _TSTR);
+        if (bHighlight)
+          highlight((pFindIt? pFindIt: selTxt), "#A6D8B3", "#000000", -666999);
+        else
+          highlight((pFindIt? pFindIt: selTxt), "#A6D8B3", "#000000", -666999, 3);
+
+        if (Ctrl() && Shift())
+        {
+          nDirection=DN_UP;
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+        }
+        else if (Ctrl() && (!Shift()))
+        {
+          nDirection=DN_DOWN;
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+        }
+        else if ((!Ctrl()) && Shift())
+        {
+          nDirection=DN_BEGINNING;
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+        }
+      }
+    }
+    else if (wParam === 0x52 /*R key VK_KEY_R*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+
+        oSys.Call("user32::GetWindowText" + _TCHAR, hWndWith, lpBuffer, 256);
+        sReplaceWithIt=AkelPad.MemRead(lpBuffer, _TSTR);
+        if (bHighlight)
+          highlight(sReplaceWithIt, "#C61019", "#000000", -6660999);
+        else
+          highlight(sReplaceWithIt, "#C61019", "#000000", -6660999, 3);
+
+        if (Ctrl() && Shift())
+        {
+          nDirection=DN_UP;
+          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACE_BUTTON, 0);
+        }
+        else if (Ctrl() && (!Shift()))
+        {
+          nDirection=DN_DOWN;
+          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACE_BUTTON, 0);
+        }
+      }
+    }
+    else if (wParam === 0x41 /*A key VK_KEY_A*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if (Ctrl() && Shift())
+        {
+          nDirection=DN_BEGINNING;
+          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceAllButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACEALL_BUTTON, 0);
+        }
+      }
+    }
+    else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if (Ctrl() && (!Shift()))
+          AkelPad.Command(4151);
+        else if (Ctrl() && Shift())
+          AkelPad.Command(4152);
+      }
+    }
+    else if (wParam === 0x4D /*M key VK_KEY_M*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if (Ctrl() && (!Shift()))
+        {
+          bHighlight = ! bHighlight;
+          if (bHighlight) 
+          {
+            highlight("", "#A6D8B3", "#000000", -666999);
+            popupShow("The text is highlighted!", 1);
+          }
+          else 
+          {
+            highlight("", "#A6D8B3", "#000000", -666999, 3);
+            popupShow("The highlight is turned off!", 1);
+          }
+        }
+        
       }
     }
   }
@@ -914,6 +1041,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       //Save settings
       if (nDirection != DN_DOWN) nDirection&=~DN_DOWN;
+      oSet.Write("Highlight", 1 /*PO_DWORD*/, bHighlight);
       oSet.Write("Word", 1 /*PO_DWORD*/, bWord);
       oSet.Write("Sensitive", 1 /*PO_DWORD*/, bSensitive);
       oSet.Write("RegExp", 1 /*PO_DWORD*/, bRegExp);
@@ -949,6 +1077,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       AkelPad.MemFree(lpRdsm);
       lpRdsm=0;
     }
+
+    highlight("", "#A6D8B3", "#000000", -666999, 3);
+    highlight("", "#C61019", "#000000", -6660999, 3);
 
     //Destroy dialog
     oSys.Call("user32::DestroyWindow", hWnd);
@@ -1039,10 +1170,8 @@ function SearchReplace()
   try
   {
     if (bWord)
-    {
-      //AkelPad.MessageBox(0, "Text", WScript.ScriptName, 0 /*MB_OK*/);
       pFindIt = "(?=\\b|\\W)"+ pFindIt +"(?=\\W|\\b)";
-    }
+
     oPattern=new RegExp(((bRegExp || bWord)?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton === BT_FINDALL || nButton === BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
   }
   catch (oError)
@@ -1741,6 +1870,94 @@ function max(a, b)
 function min(a, b)
 {
   return a <= b?a:b;
+}
+
+function Ctrl()
+{
+  return oSys.Call("User32::GetKeyState", 0x11 /*VK_CONTROL*/) & 0x8000;
+}
+
+function Shift()
+{
+  return oSys.Call("User32::GetKeyState", 0x10 /*VK_SHIFT*/) & 0x8000;
+}
+
+function Alt()
+{
+  return oSys.Call("user32::GetKeyState", 0x12 /*VK_MENU*/) & 0x8000;
+}
+
+/**
+ * HighLight text from the What input.
+ *
+ * nAction
+ * 2 - highlight
+ * 3 - unhighlight
+ *
+ * nFlags
+ 1   case sensitive (default).
+ 2   regular expressions in "TEXT" parameter.
+ 4   whole word.
+ *
+ * @param string sText
+ * @param string sFoundResultsColorBG
+ * @param string sFoundResultsColorFG
+ * @param string nMarkerId
+ * @param number nAction
+ * @param number nFlags
+ * @return bool if highlighted
+ */
+function highlight(sText, sFoundResultsColorBG, sFoundResultsColorFG, nMarkerId, nAction, nFlags)
+{
+  var strWhat = sText || pFindIt,
+      action = nAction || 2,
+      args = nFlags || 0;
+
+  var bMatchWord = bWord,
+      bCase = bSensitive,
+      bRegEx = bRegEx,
+      bRegExMulti = bMultiline;
+
+  if (bCase)
+    args += 1;
+  if (bRegEx)
+    args += 2;
+  else if (bMatchWord)
+    args += 4;
+
+  AkelPad.Call("Coder::HighLight", 3, nMarkerId, sFoundResultsColorFG, sFoundResultsColorBG);
+
+  if (action === 2)
+    AkelPad.Call("Coder::HighLight", action, sFoundResultsColorFG, sFoundResultsColorBG, args, 0, nMarkerId, strWhat);
+  else if (action === 3)
+    AkelPad.Call("Coder::HighLight", action, nMarkerId, sFoundResultsColorFG, sFoundResultsColorBG);
+
+  return true;
+}
+
+/**
+ * Show the popup.
+ *
+ * @param sContent of the popup
+ * @param nSec seconds
+ * @param sTitle of the popup
+ * @return bool|obj WScript.Shell
+ */
+function popupShow(sContent, nSec, sTitle)
+{
+  var nSeconds = nSec || 4,
+      strContent = sContent || WScript.ScriptFullName,
+      strTitle = sTitle || WScript.ScriptName;
+
+  if (sContent && strTitle)
+    return (new ActiveXObject("WScript.Shell").Popup(
+      strContent,
+      nSeconds, // Autoclose after ~2 seconds
+      strTitle,
+      64 /*MB_ICONINFORMATION*/
+    ));
+
+  return false;
 }
 
 function GetLangString(nStringID)
