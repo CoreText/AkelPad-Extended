@@ -91,7 +91,7 @@
 // Shift+Alt+M      - Remove marks from all documents
 
 // Ctrl+Shift+O     - Paths of the opened documents in new tab
-// Ctrl+O,
+// Ctrl+O           - Open current path in file manager
 // Ctrl+E           - Open directory path in editor's Explorer
 // Ctrl+Shift+E     - Open directory path in OS Explorer
 
@@ -108,6 +108,7 @@
  * - CloseTabByExt.js
  * - CreateTab&Arhive.vbs
  * - FileInfo.js
+ * - FileAndStream_extended.js
  * - FindFiles_extended.js
  * - FindReplaceFiles_extended.js
  * - LogHighLight.js
@@ -780,7 +781,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     else if (wParam === 0x4F /*O key VK_KEY_O*/)
     {
       if (Ctrl() && (! Shift()))
-        AkelPad.Call("Explorer::Main", 1, sDir);
+        AkelPad.Call("Scripts::Main", 1, "FileAndStream_extended.js", '-sDir="'+ sDir.replace(/\\$/, "") +'"');
       else if (Ctrl() && Shift())
         AkelPad.Call("Scripts::Main", 1, "CreateTab&Arhive.vbs", '"1"');
     }
