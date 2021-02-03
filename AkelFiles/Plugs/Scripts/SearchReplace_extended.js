@@ -1425,12 +1425,12 @@ function SearchReplace()
           if (nDirection & DN_ALLFILES)
           {
             AkelPad.Call("Log::Output", 1, "", "", "^ \\((\\d+) (\\d+),(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3");
-            AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="' + pFindIt + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
+            AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + pFindIt + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
           }
           else
           {
             AkelPad.Call("Log::Output", 1, "", "", "^\\((\\d+),(\\d+)\\)", "/GOTOLINE=\\1:\\2");
-            AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="' + pFindIt + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
+            AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + pFindIt + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
           }
           hWndOutput=GetOutputWindow();
         }

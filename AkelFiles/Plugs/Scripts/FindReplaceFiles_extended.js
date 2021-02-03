@@ -174,7 +174,7 @@ var hBrushT    = oSys.Call("Gdi32::CreateSolidBrush", nBkColorT);
 var nHistTime  = 0;
 var nHistMax   = 50;
 var nLevelMax  = 27;
-var nBufSize   = 2048 /* 1024 */;
+var nBufSize   = 8192 /* 1024 */;
 var lpBuffer   = AkelPad.MemAlloc(nBufSize);
 var lpLVITEM   = AkelPad.MemAlloc(_X64 ? 72 : 60); //sizeof(LVITEM)
 var hParent;
@@ -3688,7 +3688,7 @@ function FindstrLog(pLogOutput)
 
   AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc, sREPATTERN, sRETAGS, -2, -2, logOutput, ".ss1");
   if (logOutput < 8388608)
-    AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
+    AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
 
   return true;
 }
@@ -3720,7 +3720,7 @@ function FindToLog(pLogOutput)
   );
 
   if (logOutput < 8388608)
-    AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
+    AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
 
   return true;
 }
@@ -3833,7 +3833,7 @@ function qSearching(selText, flag)
       return false;
     }
 
-    AkelPad.Call("Scripts::Main", 2, "LogHighLight.js", ('-sSelText="'+ textSelected +'" -bNotRegExp='+ ((bRegEx)?"0":"1")) );
+    AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ textSelected +'" -bNotRegExp='+ ((bRegEx)?"0":"1")) );
     return true;
   }
   else
