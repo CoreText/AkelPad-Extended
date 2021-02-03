@@ -422,10 +422,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     SetWindowText(aWnd[IDDIRCB][HWND], dataDir);
 
     sWhat = AkelPad.GetArgValue("sWhat", AkelPad.GetSelText());
+    sName = AkelPad.GetArgValue("sName", "*");
+    sName = (! sName || sName === "." || sName === "..")? "*" : sName;
     dataTxt = sWhat || sLastContent;
     if (dataTxt)
     {
-      SetWindowText(aWnd[IDNAMECB][HWND], '*');
+      SetWindowText(aWnd[IDNAMECB][HWND], sName);
       SetWindowText(aWnd[IDCONTENTCB][HWND], dataTxt);
       oSys.Call("User32::SetFocus", aWnd[IDCONTENTCB][HWND]);
     }
@@ -1778,6 +1780,13 @@ function SearchFiles()
 
   if (sName && (! bNameRE))
   {
+    if (! ~sName.indexOf("*"))
+    {
+      // TODO: sort results by extensions
+      var sNameExt = AkelPad.GetFilePath(AkelPad.GetEditFile(0), 4);
+      sName += "*"+ sNameExt +";"+ sName +".*;"+ sName +"*";
+    }
+
     sPattern = sName.replace(/"(([^;"]*;+[^;"]*)+)"/g, function(){return arguments[1].replace(/;/g, "\0");});
     sPattern = sPattern.replace(/[\\\/.^$+|()\[\]{}]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".").replace(/ *; */g, "|").replace(/\0/g, ";");
     rName    = new RegExp("^(" + sPattern + ")$", "i");
@@ -1889,21 +1898,75 @@ function SearchFiles()
   oSys.Call("User32::PostMessageW", hWndDlg, 0x8001 /*WM_APP+1*/, aWnd[IDFILELV][HWND], 0);
 }
 
+/**
+ * Read VCS File to exclude directories from the search result.
+ *
+ * @return array of directories that should be ignored
+ */
+function GetVCSIgnoreFileToSkip()
+{
+  var strDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1);
+  var sVCSFile = strDir + "\\.gitignore";
+  var oError = {},
+      sFileContent = "";
+      aExcludedDirs = aExcludedDirsRaw = ['.git', '.vscode', '.idea', '.history', 'node_modules', 'vendor'];
+
+  if (IsFileExists(sVCSFile))
+  {
+    try
+    {
+      sFileContent = AkelPad.ReadFile(sVCSFile);
+    }
+    catch (oError)
+    {
+      AkelPad.MessageBox(0, 'Error: ' + oError.description, sScriptName, 0);
+    }
+  }
+
+  sVCSFile = strDir + "\\.svnignore";
+
+  if (IsFileExists(sVCSFile))
+  {
+    try
+    {
+      sFileContent += "\n"+ AkelPad.ReadFile(sVCSFile);
+    }
+    catch (oError)
+    {
+      AkelPad.MessageBox(0, 'Error: '+ oError.description, sScriptName, 0);
+    }
+  }
+
+  aExcludedDirsRaw = sFileContent.split("\n");
+
+  for (var i = 0, nLen = aExcludedDirsRaw.length; i < nLen; i++)
+  {
+    var sExcDir = aExcludedDirsRaw[i];
+    if (sExcDir.substr(0, 1) === "/")
+      aExcludedDirs.push(sExcDir.slice(1).replace(/\//g, "\\"));
+  }
+
+  return aExcludedDirs;
+}
+
+/**
+ * @return sorted array of files
+ */
 function SortFiles()
 {
   var nSort = bSortDesc ? -1 : 1;
   var nCompare;
 
-  aFiles.sort(
-    function(sName1, sName2)
-    {
-      nCompare = nSort * oSys.Call("Kernel32::lstrcmpiW", sName1.substr(0, sName1.lastIndexOf("\\")), sName2.substr(0, sName2.lastIndexOf("\\")));
+  function sorting(sName1, sName2)
+  {
+    nCompare = nSort * oSys.Call("Kernel32::lstrcmpiW", sName1.substr(0, sName1.lastIndexOf("\\")), sName2.substr(0, sName2.lastIndexOf("\\")));
+    if (nCompare === 0)
+      return nSort * oSys.Call("Kernel32::lstrcmpiW", sName1, sName2);
+    else
+      return nCompare;
+  }
 
-      if (nCompare === 0)
-        return nSort * oSys.Call("Kernel32::lstrcmpiW", sName1, sName2);
-      else
-        return nCompare;
-    });
+  return aFiles.sort(sorting);
 }
 
 function OpenFiles()
