@@ -59,103 +59,103 @@
 var hWndEdit = AkelPad.GetEditWnd();
 if (hWndEdit)
 {
-	// default arguments
-	var qStart = "<";
-	var qEnd = ">";
-	var bCloseTag = 0;
+  // default arguments
+  var qStart = "<";
+  var qEnd = ">";
+  var bCloseTag = 0;
 
-	if (WScript.Arguments.length >= 1)
-	{
-		qStart = WScript.Arguments(0) || qStart;
-		if (WScript.Arguments.length >= 2)
-		{
-			qEnd = WScript.Arguments(1) || qEnd;
-			if (WScript.Arguments.length >= 3)
-			{
-				bCloseTag = WScript.Arguments(2) || bCloseTag;
-			}
-		}
-	}
+  if (WScript.Arguments.length >= 1)
+  {
+    qStart = WScript.Arguments(0) || qStart;
+    if (WScript.Arguments.length >= 2)
+    {
+      qEnd = WScript.Arguments(1) || qEnd;
+      if (WScript.Arguments.length >= 3)
+      {
+        bCloseTag = WScript.Arguments(2) || bCloseTag;
+      }
+    }
+  }
 
-	var aHtmlSelfClosedTags = ["!doctype", "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
-	var rPattern = ((+bCloseTag)
-		? "[^<(){}\\[\\]\\\\\\/]"                                           // the pattern that was used before in v1.4
-		: "[^<"+ ("\\"+qEnd) +"(){}\\[\\]\$\&\|\;\+\^\%\#\@\!\?\`\\\\\\/]"  // restrict all unwanted symbols in attributes level
-	);
+  var aHtmlSelfClosedTags = ["!doctype", "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"];
+  var rPattern = ((+bCloseTag)
+    ? "[^<(){}\\[\\]\\\\\\/]"                                           // the pattern that was used before in v1.4
+    : "[^<"+ ("\\"+qEnd) +"(){}\\[\\]\$\&\|\;\+\^\%\#\@\!\?\`\\\\\\/]"  // restrict all unwanted symbols in attributes level
+  );
 
-	try
-	{
-		rPattern = new RegExp(rPattern, "i");
-	}
-	catch (oError)
-	{
-		AkelPad.MessageBox(0, "Error: \n\n"+ Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
-	}
+  try
+  {
+    rPattern = new RegExp(rPattern, "i");
+  }
+  catch (oError)
+  {
+    AkelPad.MessageBox(0, "Error: \n\n"+ Error.message + "\n\n" + oError.description, WScript.ScriptName, 48);
+  }
 
-	var lEnd = qEnd.length;
-	var nCaret = AkelPad.GetSelStart();
-	var worker = nCaret - lEnd;
-	var sText = text = "";
-	var tag = new Array();
-	var ntag;
-	var bSkipSymbol = false;
+  var lEnd = qEnd.length;
+  var nCaret = AkelPad.GetSelStart();
+  var worker = nCaret - lEnd;
+  var sText = text = "";
+  var tag = new Array();
+  var ntag;
+  var bSkipSymbol = false;
 
-	while (worker >= 0)                                          // берём по одному символу от каретки до открывающего символа
-	{
-		ntag = worker + lEnd;                                      // текущая позиция
-		sText = text = AkelPad.GetTextRange(worker, ntag);
+  while (worker >= 0)                                          // берём по одному символу от каретки до открывающего символа
+  {
+    ntag = worker + lEnd;                                      // текущая позиция
+    sText = text = AkelPad.GetTextRange(worker, ntag);
 
-		if (sText === '"' || sText === "'" && (! bCloseTag))       // skip the level in HTML/XML attributes that is between the double quotes
-			bSkipSymbol = ! bSkipSymbol;                             // in order to remove slashes from the unwanted range,
-		if (bSkipSymbol)                                           // so the script could apply autoclose only for the pair tags
-			sText = "*";                                             //
-		else                                                       // you'll be able to autoclose this code:
-			sText = text;                                            //   <a href="javascript:my_function();window.print();"
+    if (sText === '"' || sText === "'" && (! bCloseTag))       // skip the level in HTML/XML attributes that is between the double quotes
+      bSkipSymbol = ! bSkipSymbol;                             // in order to remove slashes from the unwanted range,
+    if (bSkipSymbol)                                           // so the script could apply autoclose only for the pair tags
+      sText = "*";                                             //
+    else                                                       // you'll be able to autoclose this code:
+      sText = text;                                            //   <a href="javascript:my_function();window.print();"
 
-		if (sText && rPattern.test(sText))                         // собираем тэг
-		{
-			if (text !== " " && text !== qEnd)
-				tag.push(text);
-			else
-				tag = new Array();
-		}
-		else if (text === qStart)                                  // получаем тэг и добавляем
-		{
-			tag = tag.reverse().join("");
+    if (sText && rPattern.test(sText))                         // собираем тэг
+    {
+      if (text !== " " && text !== qEnd)
+        tag.push(text);
+      else
+        tag = new Array();
+    }
+    else if (text === qStart)                                  // получаем тэг и добавляем
+    {
+      tag = tag.reverse().join("");
 
-			if (! tag)
-				break;
-			if (/^\W/.test(tag))
-				break;
-			if (InArray(aHtmlSelfClosedTags, tag))
-				break;
+      if (! tag)
+        break;
+      if (/^\W/.test(tag))
+        break;
+      if (InArray(aHtmlSelfClosedTags, tag))
+        break;
 
-			text = qStart + "/" + tag;
-			ntag += tag.length;                                      // текущая позиция + длина тэга
+      text = qStart + "/" + tag;
+      ntag += tag.length;                                      // текущая позиция + длина тэга
 
-			if (
-				AkelPad.GetTextRange(ntag, ntag + lEnd) !== qEnd &&    // закрывающий символ тэга перед значением
-				AkelPad.GetTextRange(nCaret - lEnd, nCaret) !== qEnd)  // закрывающий символ тэга, когда нет текста
-			{
-				text = (bCloseTag)? text : qEnd + text;
-				nCaret += (bCloseTag)? lEnd - qEnd.length : lEnd;
-			}
+      if (
+        AkelPad.GetTextRange(ntag, ntag + lEnd) !== qEnd &&    // закрывающий символ тэга перед значением
+        AkelPad.GetTextRange(nCaret - lEnd, nCaret) !== qEnd)  // закрывающий символ тэга, когда нет текста
+      {
+        text = (bCloseTag)? text : qEnd + text;
+        nCaret += (bCloseTag)? lEnd - qEnd.length : lEnd;
+      }
 
-			if (tag.substr(tag.length - lEnd) !== qEnd)
-				text += qEnd;                                          // закрывающий символ закрывающего тэга
+      if (tag.substr(tag.length - lEnd) !== qEnd)
+        text += qEnd;                                          // закрывающий символ закрывающего тэга
 
-			AkelPad.ReplaceSel(text);
-			AkelPad.SetSel(nCaret, nCaret);
+      AkelPad.ReplaceSel(text);
+      AkelPad.SetSel(nCaret, nCaret);
 
-			WScript.Quit();
-		}
-		else
-			break;
+      WScript.Quit();
+    }
+    else
+      break;
 
-		worker--;
-	}
+    worker--;
+  }
 
-	AkelPad.ReplaceSel(qEnd);
+  AkelPad.ReplaceSel(qEnd);
 }
 
 /**
@@ -167,8 +167,8 @@ if (hWndEdit)
  */
 function InArray(arr, obj)
 {
-	for (var i = 0; i < arr.length; i++)
-		if (arr[i].toUpperCase() === obj.toUpperCase())
-			return true;
-	return false;
+  for (var i = 0; i < arr.length; i++)
+    if (arr[i].toUpperCase() === obj.toUpperCase())
+      return true;
+  return false;
 }
