@@ -657,7 +657,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (Ctrl() && (! Shift()))
         AkelPad.Command(4318);
       else if (Ctrl() && Shift())
-        AkelPad.Call("Scripts::Main", 1, "TabCloseExts.vbs")
+      {
+        AkelPad.Command(4333);
+        AkelPad.Call("Scripts::Main", 2, "TabCloseExts.vbs");
+        oSys.Call("User32::SetFocus", aWnd[IDCONTENTCB][HWND]);
+      }
     }
     else if (wParam === 0x48 /*H key VK_KEY_H*/)
     {
@@ -717,7 +721,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (Ctrl() && (! Shift()))
         AkelPad.Call("Scripts::Main", 1, "TabSwitch.js", '-Next=false -OnlyNames=true -FontSize=11 -LineGap=4');
       else if (Ctrl() && Shift())
-        AkelPad.Call("Scripts::Main", 1, "TabSwitch.js", '-Next=-1 -CtrlTab=false -MinTabs=1 -WindowLeft=-1 -WindowTop=-1 -OnlyNames=true -FontSize=12');
+      {
+        AkelPad.Command(4333);
+        AkelPad.Call("Scripts::Main", 2, "TabSwitch.js", '-Next=-1 -CtrlTab=false -MinTabs=1 -WindowLeft=-1 -WindowTop=-1 -OnlyNames=true -FontSize=12');
+        oSys.Call("User32::SetFocus", aWnd[IDCONTENTCB][HWND]);
+      }
     }
     else if ((wParam === 186/*VK_OEM_1*/)) {
       if (Ctrl() && (! Shift()))
@@ -742,8 +750,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
       else if (wParam === 0x42 /*B key VK_KEY_B*/)
         BookmarkLines('', true);
-      else if (wParam === 0x57 /*W key VK_KEY_W*/)
-        AkelPad.Call("Scripts::Main", 1, "CloseTabByExt.js");
       else if (wParam === 0x4C /*L key VK_KEY_L*/)
         FindstrLog();
       else if (wParam === 0x47 /*G key VK_KEY_G*/)
@@ -777,7 +783,8 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
         AkelPad.Command(4316);
     }
-    else if ((! Ctrl()) && Shift() && Alt()) {
+    else if ((! Ctrl()) && Shift() && Alt())
+    {
       if (wParam === 0x4C /*L key VK_KEY_L*/)
         FindstrLog(24);
       else if (wParam === 0x4E /*N key VK_KEY_N*/)
@@ -810,6 +817,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         TextSearchOptions('word');
       else if ((wParam === 186 /*VK_OEM_1*/))
         AkelPad.Command(4333);
+      else if (wParam === 0x57 /*W key VK_KEY_W*/)
+      {
+        AkelPad.Command(4333);
+        AkelPad.Call("Scripts::Main", 2, "CloseTabByExt.js");
+        oSys.Call("User32::SetFocus", aWnd[IDCONTENTCB][HWND]);
+      }
     }
   }
 
@@ -1919,7 +1932,7 @@ function SearchFiles()
  */
 function GetVCSIgnoreFileToSkip()
 {
-  var strDir = sDir || GetWindowText(aDlg[IDDIRCB].HWND) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1);
+  var strDir = sDir || GetWindowText(aWnd[IDDIRCB][HWND]) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1);
   var sVCSFile = strDir + "\\.gitignore";
   var oError = {},
       sFileContent = "";
