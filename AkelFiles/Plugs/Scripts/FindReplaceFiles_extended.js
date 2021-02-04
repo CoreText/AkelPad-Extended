@@ -458,8 +458,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     SetHeaderLV();
     PostMessage(hWnd, 0x8000 /*WM_APP*/, 0, 0);
 
-    //hFocus = aDlg[(bInResults && aFiles.length) ? IDCONTENTCB : IDDIRCB].HWND;
-    //hFocus = aDlg[IDCONTENTCB].HWND;
+    hFocus = aDlg[IDCONTENTCB].HWND;
   }
 
   else if (uMsg === 0x8000 /*WM_APP*/)
@@ -649,7 +648,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     }
     else if (wParam === 0x1B /*VK_ESCAPE*/)
     {
-      if (/* ! bSeparateWnd */ IsCloseCB())
+      if (IsCloseCB())
         PostMessage(hWnd, 16 /*WM_CLOSE*/, 0, 0);
     }
     else if (wParam === 0x26 /*UP ARROW key VK_UP*/)
@@ -730,7 +729,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         AkelPad.Command(4333);
         AkelPad.Call("Scripts::Main", 2, "TabCloseExts.vbs");
         AkelPad.Call("Scripts::Main", 2, WScript.ScriptName);
-        //oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
       }
     }
     else if (wParam === 0x54 /*T key VK_KEY_T*/)
@@ -744,12 +742,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
       else if (Ctrl() && Shift())
       {
-        //if (! bSeparateWnd)
-        //PostMessage(hWnd, 16 /*WM_CLOSE*/, 0, 0);
-
-        //AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' ");
-        AkelPad.Call("Scripts::Main", 2, WScript.ScriptName, "-sWhat='"+ sContent +"'");
-        //oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+        AkelPad.Call("Scripts::Main", 2, WScript.ScriptName, "-sDir='"+ sDir +"' -sWhat='"+ sContent +"'");
         SetWindowText(aDlg[IDCONTENTCB].HWND, AkelPad.GetSelText() || sContent);
       }
     }
@@ -846,8 +839,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4199);
-      // else if (wParam == 0x0D /*VK_RETURN*/)
-        // TextSearchOptions('word');
       else if (wParam === 0x26 /*UP ARROW key VK_UP*/)
       {
         oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
@@ -868,7 +859,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         if (! bSeparateWnd)
           PostMessage(hWnd, 16 /*WM_CLOSE*/, 0, 0);
-        //AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' -bWord='"+ bMatchWord +"' -bCase='"+ bMatchCase +"' -bRegEx='"+ bContentRE +"' ");
         AkelPad.Call("Scripts::Main", 1, "FindFiles_extended.js", "-sDir='"+ sDir +"' -sWhat='"+ sContent +"' -sWith='"+ sReplace +"' ");
       }
       if (wParam === 0x4C /*L key VK_KEY_L*/)
