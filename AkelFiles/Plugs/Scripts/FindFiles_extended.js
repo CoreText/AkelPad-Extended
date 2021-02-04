@@ -1926,57 +1926,6 @@ function SearchFiles()
 }
 
 /**
- * Read VCS File to exclude directories from the search result.
- *
- * @return array of directories that should be ignored
- */
-function GetVCSIgnoreFileToSkip()
-{
-  var strDir = sDir || GetWindowText(aWnd[IDDIRCB][HWND]) || AkelPad.GetFilePath(AkelPad.GetEditFile(0), 1);
-  var sVCSFile = strDir + "\\.gitignore";
-  var oError = {},
-      sFileContent = "";
-      aExcludedDirs = aExcludedDirsRaw = ['.git', '.vscode', '.idea', '.history', 'node_modules', 'vendor'];
-
-  if (IsFileExists(sVCSFile))
-  {
-    try
-    {
-      sFileContent = AkelPad.ReadFile(sVCSFile);
-    }
-    catch (oError)
-    {
-      AkelPad.MessageBox(0, 'Error: ' + oError.description, sScriptName, 0);
-    }
-  }
-
-  sVCSFile = strDir + "\\.svnignore";
-
-  if (IsFileExists(sVCSFile))
-  {
-    try
-    {
-      sFileContent += "\n"+ AkelPad.ReadFile(sVCSFile);
-    }
-    catch (oError)
-    {
-      AkelPad.MessageBox(0, 'Error: '+ oError.description, sScriptName, 0);
-    }
-  }
-
-  aExcludedDirsRaw = sFileContent.split("\n");
-
-  for (var i = 0, nLen = aExcludedDirsRaw.length; i < nLen; i++)
-  {
-    var sExcDir = aExcludedDirsRaw[i];
-    if (sExcDir.substr(0, 1) === "/")
-      aExcludedDirs.push(sExcDir.slice(1).replace(/\//g, "\\"));
-  }
-
-  return aExcludedDirs;
-}
-
-/**
  * @return sorted array of files
  */
 function SortFiles()
