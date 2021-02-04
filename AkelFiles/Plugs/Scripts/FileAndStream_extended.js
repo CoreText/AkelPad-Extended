@@ -24,14 +24,24 @@
 // Call("Scripts::Main", 1, "FileAndStream_extended.js" `-sDir="%d"`)
 //
 // Hotkeys:
-// Ctrl+N         - create new file
-// Ctrl+Shift+N   - create new folder
+// Ctrl+N           - create new file
+// Ctrl+Shift+N     - create new folder
 //
-// Alt+D, Ctrl+P  - Edit the path
+// Alt+D, Ctrl+P    - Edit the path
 //
-// Ctrl+Shift+F   - Open FindReplaceFiles_extended.js in current path
-// Shift+Alt+F    - Open selected file/folder in finder
+// Ctrl+Shift+F     - Open FindReplaceFiles_extended.js in current path
+// Shift+Alt+F      - Open selected file/folder in finder
 //
+// Alt+C            - Copy full path of file/dir
+// Ctrl+Shift+Alt+X - open cmd in current dir
+// Shift+Alt+Enter  - toggle the window resize
+//
+// Ctrl+Space       - Edit file (editor 1)
+// Ctrl+Shift+Space - Edit file (editor 2)
+// Shift+Space      - View file (viewer 1)
+// Ctrl+Shift+Alt+Space - View file (viewer 2)
+// Ctrl+O           - view current dirrectory in AkelPad's Explorer
+// Alt+O            - view current dirrectory in Explorer
 
 /**
  * Script dependencies:
@@ -714,10 +724,14 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         else if ((AkelPad.MemRead(_PtrAdd(lParam, _X64 ? 24 : 12), DT_WORD) === 0x4D /*M key*/) &&
                  (! Ctrl()) && Shift() && Alt())
           MoveDialog("M");
+        else if (AkelPad.MemRead(_PtrAdd(lParam, _X64 ? 24 : 12), DT_WORD) === 0x4F /*O key*/)
+        {
+          if (Ctrl() && (! Shift()) && (! Alt()))
+            AkelPad.Call("Explorer::Main", 1, aCurDir[nCurPan][aCurDrive[nCurPan]].Path);
+          else if ((! Ctrl()) && (! Shift()) && Alt())
+            AkelPad.Exec('explorer "'+ aCurDir[nCurPan][aCurDrive[nCurPan]].Path +'"');
+        }
         else if ((AkelPad.MemRead(_PtrAdd(lParam, _X64 ? 24 : 12), DT_WORD) === 0x51 /*Q key*/) &&
-                 Ctrl() && (! Shift()) && (! Alt()))
-          ShowQuickView();
-        else if ((AkelPad.MemRead(_PtrAdd(lParam, _X64 ? 24 : 12), DT_WORD) === 0x20 /*SPACEBAR key VK_SPACE*/) &&
                  Ctrl() && (! Shift()) && (! Alt()))
           ShowQuickView();
         else if ((AkelPad.MemRead(_PtrAdd(lParam, _X64 ? 24 : 12), DT_WORD) === 0x53 /*S key*/) &&
