@@ -39,7 +39,7 @@
 //
 // Call("Scripts::Main", 1, "BracketsWrapInsert.js")
 //
-/////////////////////////////////////// the possible hotkey is Ctrl+Shift+Space, and use Ctrl+Down for CtrlDown.js
+/////////////////////////////////////// the possible hotkey is Ctrl+Shift+Space
 var hWndEdit;
 
 if (AkelPad.GetMainWnd() && AkelPad.IsAkelEdit())
