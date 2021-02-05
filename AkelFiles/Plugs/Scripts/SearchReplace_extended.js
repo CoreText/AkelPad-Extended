@@ -44,10 +44,10 @@
 // Ctrl+Enter       - Search down
 // Ctrl+Shift+Enter - Search up
 // Shift+Enter      - Find all occurrences in the current document
+// Ctrl+Shift+A     - Find all occurrences
 //
 // Ctrl+R           - Replace next occurrence
-// Ctrl+Shift+R     - Replace previous occurrence
-// Ctrl+Shift+A     - Replace all occurrences
+// Ctrl+Shift+R     - Replace All in the document
 //
 // Ctrl+U           - Undo replace
 // Ctrl+Shift+U     - Redo replace
@@ -606,9 +606,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         if (Ctrl() && Shift())
         {
-          nDirection=DN_UP;
-          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceButton))
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACE_BUTTON, 0);
+          nDirection=DN_BEGINNING;
+          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceAllButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACEALL_BUTTON, 0);
         }
         else if (Ctrl() && (!Shift()))
         {
@@ -626,8 +626,8 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         if (Ctrl() && Shift())
         {
           nDirection=DN_BEGINNING;
-          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceAllButton))
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACEALL_BUTTON, 0);
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
         }
       }
     }
