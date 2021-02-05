@@ -160,7 +160,7 @@ if (pSpaces)
 {
   if ((lpLinesArray = pText.split("\n")) && lpLinesArray.length > 1)
   {
-    var nLen = (lpLinesArray.length > 8)? 8 : lpLinesArray.length;                // 8 iterations should be enought to identify the indent
+    var nLen = (lpLinesArray.length > 8)? 8 : lpLinesArray.length;                // 8 iterations should be enough to identify the indent
     for (var nDelta = 0, oLineSpacesCount, aLines = []; nDelta < nLen; nDelta++)
     {
       if (/^\s+/.test(lpLinesArray[nDelta]))
