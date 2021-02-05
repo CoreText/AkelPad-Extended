@@ -175,24 +175,31 @@ if (pSpaces)
     var nAvarageIndent = aLines[0];
     var sClipText = AkelPad.GetClipboardText();
     var bReindent = false;
+    var nCurrSpaces = sClipText.match(/^(\s*)/)[0].length;
 
-    //if ((nSelStart > (nMinLineStart + nAvarageIndent)) && sClipText.match(/^(\s*)/)[0].length)
+    //if ((nSelStart > (nMinLineStart + nAvarageIndent)) && nCurrSpaces)
     //{
     //  AkelPad.MessageBox(0, "Cond:\n" + nSelStart +"\n\n"+ nMinLineStart +"\n"+ nAvarageIndent, WScript.ScriptName, 0 /*MB_OK*/);
-    //  nFirstSpacesLen = sClipText.match(/^(\s*)/)[0].length + (nMinLineStart - nSelStart);
+    //  nFirstSpacesLen = nCurrSpaces + (nMinLineStart - nSelStart);
     //  bReindent = true;
     //}
     //else
-      nFirstSpacesLen = sClipText.match(/^(\s*)/)[0].length;
+      nFirstSpacesLen = nCurrSpaces;
 
     for (nIndex = 1; nIndex < lpLinesArray.length; ++nIndex)
     {
       if (lpLinesArray[nIndex] || nIndex === lpLinesArray.length - 1 || (lpLinesArray.length === 3 && pText.length === 2))
       {
         if (nSpacesLen <= nAvarageIndent)
-          lpLinesArray[nIndex] = pSpaces + lpLinesArray[nIndex].replace(new RegExp("^[ \t]{0,"+ ((bReindent)? nFirstSpacesLen : ((nFirstSpacesLen)? (nAvarageIndent - nFirstSpacesLen) : nAvarageIndent)) +"}", "g"), "");
+        {
+          //AkelPad.MessageBox(0, "True: "+bReindent, WScript.ScriptName, 0 /*MB_OK*/);
+          lpLinesArray[nIndex] = pSpaces.replace(new RegExp("^[ \t]{0,"+ ((bReindent)? 0 : nAvarageIndent))) + lpLinesArray[nIndex].replace(new RegExp("^[ \t]{0,"+ ((nFirstSpacesLen)? (nAvarageIndent - nFirstSpacesLen) : nAvarageIndent) +"}", "g"), "");
+        }
         else
-          lpLinesArray[nIndex] = pSpaces.replace(new RegExp("^[ \t]{0,"+ ((bReindent)? nFirstSpacesLen : ((nFirstSpacesLen)? nAvarageIndent - nFirstSpacesLen : nAvarageIndent)) +"}", "g"), "") + lpLinesArray[nIndex];
+        {
+          //AkelPad.MessageBox(0, "Else: "+bReindent, WScript.ScriptName, 0 /*MB_OK*/);
+          lpLinesArray[nIndex] = pSpaces.replace(new RegExp("^[ \t]{0,"+ ((bReindent)? nFirstSpacesLen : ((nFirstSpacesLen)? (nAvarageIndent - nFirstSpacesLen) : nAvarageIndent)) +"}", "g"), "") + lpLinesArray[nIndex];
+        }
       }
     }
     pText = lpLinesArray.join("\n");
