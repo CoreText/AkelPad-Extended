@@ -1634,7 +1634,12 @@ function SearchReplace()
   }
 
   if (nButton === BT_REPLACEALL || wCommand === IDC_REPLACEALL_BUTTON)
-    StatusBarUpdate(" REPLACE COUNT: "+ nChanges +" "+ ((nChangedFiles > 1)? "IN FILES: "+ nChangedFiles +" " : ""));
+  {
+    if (nDirection & DN_ALLFILES)
+      StatusBarUpdate((" | "+ GetLangString(STRID_COUNTFILES) + nChangedFiles + " " + GetLangString(STRID_COUNTCHANGES) + nChanges).toUpperCase());
+    else
+      StatusBarUpdate((" | "+ GetLangString(STRID_COUNTCHANGES) + nChanges).toUpperCase());
+  }
 
   return nResult;
 }
