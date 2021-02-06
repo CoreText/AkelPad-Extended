@@ -41,9 +41,12 @@
 //   Чем: var n = parseInt($0); return n >= 20 ? 20 : ++n;
 //
 ////////////////////////////////////////////////////////////////////////// HotKeys:
+// Enter,
 // Ctrl+Enter       - Search down
-// Ctrl+Shift+Enter - Search up
-// Shift+Enter      - Find all occurrences in the current document
+//
+// Ctrl+Shift+Enter,
+// Shift+Enter      - Search up
+//
 // Ctrl+Shift+A     - Find all occurrences
 //
 // Ctrl+R           - Replace next occurrence
@@ -566,28 +569,44 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         bCloseDialog=false;
         oSys.Call("user32::GetWindowText" + _TCHAR, hWndWhat, lpBuffer, 256);
         pFindIt=AkelPad.MemRead(lpBuffer, _TSTR);
+
+        nID = GetDlgCtrlID(oSys.Call("User32::GetFocus"));
+
         if (bHighlight)
           highlight((pFindIt? pFindIt: selTxt), "#A6D8B3", "#000000", -666999);
         else
           highlight((pFindIt? pFindIt: selTxt), "#A6D8B3", "#000000", -666999, 3);
 
-        if (Ctrl() && Shift())
+        if ((!Ctrl()) && (!Shift()) && (!Alt()))
         {
-          nDirection=DN_UP;
-          if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+          if (nID === IDC_FIND)
+          {
+            AkelPad.MessageBox(0, IDC_FIND, WScript.ScriptName, 0 /*MB_OK*/);
+            nDirection = DN_DOWN;
+            if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+              oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+          }
         }
-        else if (Ctrl() && (!Shift()))
+        else if ((!Ctrl()) && Shift() && (!Alt()))
+        {
+          if (nID === IDC_FIND)
+          {
+            nDirection = DN_UP;
+            if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+              oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+          }
+        }
+        else if (Ctrl() && (!Shift()) && (!Alt()))
         {
           nDirection=DN_DOWN;
           if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
             oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
         }
-        else if ((!Ctrl()) && Shift())
+        else if (Ctrl() && Shift() && (!Alt()))
         {
-          nDirection=DN_BEGINNING;
-          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+          nDirection=DN_UP;
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
         }
       }
     }
@@ -1125,6 +1144,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
   }
 
   return 0;
+}
+
+function GetDlgCtrlID(hWnd)
+{
+  return oSys.Call("User32::GetDlgCtrlID", hWnd);
 }
 
 function RdsArrayToStruct(drs)
