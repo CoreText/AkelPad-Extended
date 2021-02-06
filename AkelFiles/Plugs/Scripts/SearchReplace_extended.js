@@ -231,6 +231,7 @@ var bLogPluginExists;
 var bMessageBox=false;
 var bCloseDialog=false;
 var i;
+var nReplaceCount = 0;
 
 if (hWndEdit)
 {
@@ -1631,6 +1632,10 @@ function SearchReplace()
     }
     break;
   }
+
+  if (nButton === BT_REPLACEALL || wCommand === IDC_REPLACEALL_BUTTON)
+    StatusBarUpdate(" REPLACE COUNT: "+ nChanges +" "+ ((nChangedFiles > 1)? "IN FILES: "+ nChangedFiles +" " : ""));
+
   return nResult;
 }
 
@@ -2000,6 +2005,43 @@ function popupShow(sContent, nSec, sTitle)
     ));
 
   return false;
+}
+
+/**
+ * Update info in status bar
+ *
+ * @param sInfo
+ */
+function StatusBarUpdate(sInfo)
+{
+  var hWndStatus;
+  var nStatusParts;
+  var lpStatusTextBuffer;
+  var pStatusText;
+
+  if (hWndStatus=oSys.Call("user32::GetDlgItem", hMainWnd, 10002 /*ID_STATUS*/))
+  {
+    if (oSys.Call("user32::IsWindowVisible", hWndStatus))
+    {
+      if ((nStatusParts=AkelPad.SendMessage(hWndStatus, 1030 /*SB_GETPARTS*/, 0, 0)) > 5)
+      {
+        if (lpStatusTextBuffer=AkelPad.MemAlloc(1024 * _TSIZE))
+        {
+          //Get user status string
+          AkelPad.SendMessage(hWndStatus, _TSTR?1037 /*SB_GETTEXTW*/:1026 /*SB_GETTEXTA*/, nStatusParts - 1, lpStatusTextBuffer);
+          pStatusText = AkelPad.MemRead(lpStatusTextBuffer, _TSTR);
+
+          //Modify string
+          pStatusText += sInfo;
+
+          //Set user status string
+          AkelPad.MemCopy(lpStatusTextBuffer, pStatusText, _TSTR);
+          AkelPad.SendMessage(hWndStatus, _TSTR?1035 /*SB_SETTEXTW*/:1025 /*SB_SETTEXTA*/, nStatusParts - 1, lpStatusTextBuffer);
+          AkelPad.MemFree(lpStatusTextBuffer);
+        }
+      }
+    }
+  }
 }
 
 function GetLangString(nStringID)
