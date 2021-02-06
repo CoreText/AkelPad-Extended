@@ -581,7 +581,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         {
           if (nID === IDC_FIND)
           {
-            AkelPad.MessageBox(0, IDC_FIND, WScript.ScriptName, 0 /*MB_OK*/);
             nDirection = DN_DOWN;
             if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
               oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
