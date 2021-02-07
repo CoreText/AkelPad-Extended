@@ -197,7 +197,7 @@ var bSeparateWnd    = 0;
 var bLogShow        = 0;
 var bBookmarkResults= 0;
 var bCloseToggler   = 0;
-var bMarkResults    = 1;
+var bMarkResults    = 0;
 var bKeepHist       = 1;
 var bKeepFiles      = 1;
 var nPathLen        = 0;
@@ -3762,7 +3762,7 @@ function FindstrLog(pLogOutput)
   var sCOMMAND = "cmd.exe /K cd /d \"" + strDir + "\" & echo. & echo ---------- SEARCHED \""+ strContent +"\" IN DIRECTORY \""+ strDir +"\" "+ ((logOutput===16)?"":" & time /T & date /T ") +" & findstr /S /N "+ ((bContentRE)?"/R":"/L") + ((bSkipBinary)?" /P ":"")+ ((! bMatchCase)?" /I ":"") +" /C:\""+ strContent +"\" \* & exit";
 
   AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc, sREPATTERN, sRETAGS, -2, -2, logOutput, ".ss1");
-  if (logOutput < 8388608 && bMarkResults)
+  if ((logOutput < 8388608) && bMarkResults)
     AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
 
   return true;
@@ -3794,7 +3794,7 @@ function FindToLog(pLogOutput)
     "/FILE=\\2 /GOTOLINE=\\4:0" , -2, -2, logOutput, ".ss1"
   );
 
-  if (logOutput < 8388608 && bMarkResults)
+  if ((logOutput < 8388608) && bMarkResults)
     AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
 
   return true;
