@@ -55,7 +55,7 @@ QuotesRE:
 1   "\s*?\(\d+,\d+\)"   "\0=(0,${COMM},0)"
 1   "\A\d+:"   "\0=(0,${DEL1},0)"
 ; QSearch
-1   "^Searching for .*?$"   "\0=(0,${DEL1},0)"
+1   '^Search(ing|ed)? .*?:?$'   "\0=(0,${DEL1},0)"
 1   "^\s*?\(\d*\s?\d+\:?\d+\)(?:\s*)?"   "\0=(0,${COMM},0)"
 1   "Total\s.*?$" "\0=(0,${TAG},0)"
 ; findstr \O

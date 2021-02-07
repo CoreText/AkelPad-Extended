@@ -232,6 +232,10 @@ var bMessageBox=false;
 var bCloseDialog=false;
 var i;
 var nReplaceCount = 0;
+var sFindBGColor = "#A6D8B3";
+var sFindFGColor = "#000000";
+var sReplaceBGColor = "#FF0080";
+var sReplaceFGColor = "#000000";
 
 if (hWndEdit)
 {
@@ -511,9 +515,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("user32::SetWindowText" + _TCHAR, hWndWhat, selTxt);
         AkelPad.SendMessage(hWndWhat, 0x142 /*CB_SETEDITSEL*/, 0, MAKELONG(0, -1));
         if (bHighlight)
-          highlight(selTxt, "#A6D8B3", "#000000", -666999);
+          highlight(selTxt, sFindBGColor, sFindFGColor, -666999);
         else
-          highlight(selTxt, "#A6D8B3", "#000000", -666999, 3);
+          highlight(selTxt, sFindBGColor, sFindFGColor, -666999, 3);
 
         return true;
       }
@@ -574,9 +578,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         nID = GetDlgCtrlID(oSys.Call("User32::GetFocus"));
 
         if (bHighlight)
-          highlight((pFindIt? pFindIt: selTxt), "#A6D8B3", "#000000", -666999);
+          highlight((pFindIt? pFindIt: selTxt), sFindBGColor, sFindFGColor, -666999);
         else
-          highlight((pFindIt? pFindIt: selTxt), "#A6D8B3", "#000000", -666999, 3);
+          highlight((pFindIt? pFindIt: selTxt), sFindBGColor, sFindFGColor, -666999, 3);
+
+        ResetInputsDirection();
 
         if ((!Ctrl()) && (!Shift()) && (!Alt()))
         {
@@ -584,7 +590,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           {
             nDirection = DN_DOWN;
             if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+            {
               oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+              AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+            }
           }
         }
         else if ((!Ctrl()) && Shift() && (!Alt()))
@@ -593,20 +602,29 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           {
             nDirection = DN_UP;
             if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+            {
               oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+              AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+            }
           }
         }
         else if (Ctrl() && (!Shift()) && (!Alt()))
         {
           nDirection=DN_DOWN;
           if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+          {
             oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+            AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+          }
         }
         else if (Ctrl() && Shift() && (!Alt()))
         {
           nDirection=DN_UP;
           if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+          {
             oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+            AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+          }
         }
       }
     }
@@ -618,22 +636,31 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         oSys.Call("user32::GetWindowText" + _TCHAR, hWndWith, lpBuffer, 256);
         sReplaceWithIt=AkelPad.MemRead(lpBuffer, _TSTR);
+
         if (bHighlight)
-          highlight(sReplaceWithIt, "#FF0080", "#000000", -6660999);
+          highlight(sReplaceWithIt, sReplaceBGColor, sReplaceFGColor, -6660999);
         else
-          highlight(sReplaceWithIt, "#FF0080", "#000000", -6660999, 3);
+          highlight(sReplaceWithIt, sReplaceBGColor, sReplaceFGColor, -6660999, 3);
+
+        ResetInputsDirection();
 
         if (Ctrl() && Shift())
         {
           nDirection=DN_BEGINNING;
           if (oSys.Call("user32::IsWindowEnabled", hWndReplaceAllButton))
+          {
             oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACEALL_BUTTON, 0);
+            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+          }
         }
         else if (Ctrl() && (!Shift()))
         {
           nDirection=DN_DOWN;
           if (oSys.Call("user32::IsWindowEnabled", hWndReplaceButton))
+          {
             oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACE_BUTTON, 0);
+            AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+          }
         }
       }
     }
@@ -644,9 +671,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         bCloseDialog=false;
         if (Ctrl() && Shift())
         {
+          ResetInputsDirection();
           nDirection=DN_BEGINNING;
           if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+          {
             oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+          }
         }
       }
     }
@@ -682,12 +713,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           bHighlight = ! bHighlight;
           if (bHighlight)
           {
-            highlight("", "#A6D8B3", "#000000", -666999);
+            highlight("", sFindBGColor, sFindFGColor, -666999);
             popupShow("The text is highlighted!", 1);
           }
           else
           {
-            highlight("", "#A6D8B3", "#000000", -666999, 3);
+            highlight("", sFindBGColor, sFindFGColor, -666999, 3);
             popupShow("The highlight is turned off!", 1);
           }
         }
@@ -711,9 +742,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         var nCurIndex=-1;
 
         if (nSetTemplate)
-        {
           nCmd=nSetTemplate;
-        }
         else
         {
           //What
@@ -1116,8 +1145,8 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       lpRdsm=0;
     }
 
-    highlight("", "#A6D8B3", "#000000", -666999, 3);
-    highlight("", "#FF0080", "#000000", -6660999, 3);
+    highlight("", sFindBGColor, sFindFGColor, -666999, 3);
+    highlight("", sReplaceBGColor, sReplaceFGColor, -6660999, 3);
 
     //Destroy dialog
     oSys.Call("user32::DestroyWindow", hWnd);
@@ -1142,8 +1171,16 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     if (AkelPad.SendMessage(hMainWnd, 1281 /*AKD_RESIZEDIALOG*/, 0, lpRdsm))
       RectToArray(lpRdsCurrent, rcRdsCurrent);
   }
-
   return 0;
+}
+
+function ResetInputsDirection()
+{
+  AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 0 /*BST_CHECKED*/, 0);
+  AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 0 /*BST_CHECKED*/, 0);
+  AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 0 /*BST_CHECKED*/, 0);
+  AkelPad.SendMessage(hWndSelection, 241 /*BM_SETCHECK*/, 0 /*BST_CHECKED*/, 0);
+  AkelPad.SendMessage(hWndAllFiles, 241 /*BM_SETCHECK*/, 0 /*BST_CHECKED*/, 0);
 }
 
 function GetDlgCtrlID(hWnd)
@@ -1209,9 +1246,11 @@ function SearchReplace()
   var nError;
   var nResult=-1;
   var i;
+  var sOriginalFindText;
 
   try
   {
+    sOriginalFindText = pFindIt;
     if (bWord)
       pFindIt = "(?=\\b|\\W)"+ pFindIt +"(?=\\W|\\b)";
 
@@ -1453,7 +1492,7 @@ function SearchReplace()
           }
           else
           {
-            AkelPad.Call("Log::Output", 1, "", "", "^\\((\\d+),(\\d+)\\)", "/GOTOLINE=\\1:\\2");
+            AkelPad.Call("Log::Output", 1, "", "", "^(Searched .+ in file (.*)?$)?(\\((\\d+),(\\d+)\\))?", "/FILE=\\2 /GOTOLINE=\\4:\\5");
             AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + pFindIt + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
           }
           hWndOutput=GetOutputWindow();
@@ -1530,11 +1569,11 @@ function SearchReplace()
             if (!hWndPluginEdit && (nDirection & DN_ALLFILES))
             {
               if (lpMatches.length)
-                pLine="" + lpMatches.length + " - [" + AkelPad.GetEditFile(0) + "]:\n";
+                pLine='Searched "'+ sOriginalFindText +'" - ('+ lpMatches.length +') in file ' + AkelPad.GetEditFile(0) +'\n';
               else
                 pLine="";
             }
-            else pLine="" + lpMatches.length + ":\n";
+            else pLine='Searched "'+ sOriginalFindText +'" - ('+ lpMatches.length +') in file '+ AkelPad.GetEditFile(0) +'\n';
             nTextLen+=pLine.length;
 
             //Get text
