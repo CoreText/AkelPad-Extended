@@ -3709,7 +3709,10 @@ function Settings()
   {
     bMarkResults = ! bMarkResults;
     if (bMarkResults)
+    {
       highlight(sContent);
+      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ sContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
+    }
     else
       highlight(sContent, 3);
   }
@@ -3905,7 +3908,7 @@ function qSearching(selText, flag)
       return false;
     }
 
-    if (bMarkResults) 
+    if (bMarkResults)
       AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ textSelected +'" -bNotRegExp='+ ((bRegEx)?"0":"1")) );
     return true;
   }
