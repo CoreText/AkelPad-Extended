@@ -48,9 +48,9 @@
 // F4               - Go to next occurrence in the Log, if not found tries to find selected
 // Shift+F4         - Go to previous occurrence in the Log
 
-// Shift+Enter      - Open focused file for editing and select the found text (or close file if is currently edited)
 // Ctrl+Enter       - Opened file search next occurrence
 // Ctrl+Shift+Enter - Opened file search previous occurrence
+// Shift+Enter      - Open focused file for editing and select the found text (or close file if is currently edited)
 // Alt+Enter        - Resize (maximize/restore) the dialog window
 // Shift+Alt+Right  - Go to next occurrence Match Word
 // Shift+Alt+Left   - Go to previous occurrence Match Word
@@ -592,10 +592,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       strContent = GetWindowText(aDlg[IDCONTENTCB].HWND) || sLastContent;
       if (bMarkResults)
-      {
-        highlight('', 3);
         highlight(strContent);
-      }
       else
         highlight(strContent, 3);
 
@@ -606,28 +603,28 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
         else if (nID === IDFILELV)
         {
+          if (bMarkResults)
+            highlight();
+
+          if (bBookmarkResults)
+            BookmarkLines('', true);
           if (bLogShow)
           {
             if (OpenOrCloseFile())
-              if (qSearching(searchSelect()))
+              if (qSearchLog())
                 oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
           }
           else if (! bLogShow)
           {
-            OpenOrCloseFile();
+            OpenOrCloseFile(true);
           }
           else
           {
             if (bCloseToggler)
-              OpenOrCloseFile();
+              OpenOrCloseFile(true);
             else
             {
               OpenFileAndFindBeginOrFindNext();
-              if (bMarkResults)
-                highlight();
-
-              if (bBookmarkResults)
-                BookmarkLines('', true);
             }
           }
         }
@@ -711,7 +708,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       if ((! Ctrl()) && (! Shift()))
       {
-        if (bLogShow && AkelPad.IsPluginRunning("Log::Output"))
+        if (AkelPad.IsPluginRunning("Log::Output"))
         {
           AkelPad.Call("Log::Output::NextMatch");
           if (bMarkResults)
@@ -728,7 +725,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
       else if ((! Ctrl()) && Shift())
       {
-        if (bLogShow && AkelPad.IsPluginRunning("Log::Output"))
+        if (AkelPad.IsPluginRunning("Log::Output"))
         {
           AkelPad.Call("Log::Output::PrevMatch");
           if (bMarkResults)
@@ -1012,24 +1009,48 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
       else if (wParam === 0x57 /*W key VK_KEY_W*/)
       {
-        //AkelPad.Command(4333);
+        AkelPad.Command(4333);
         AkelPad.Call("Scripts::Main", 2, "CloseTabByExt.js");
         //AkelPad.Call("Scripts::Main", 2, WScript.ScriptName);
-        //oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
       }
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4200);
       else if (wParam === 0x0D /*VK_RETURN*/)
       {
         bLogShow = ! bLogShow;
-        popupShow(
-          (bLogShow
-            ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file."
-            : ((bCloseToggler)
-              ? "Double click will close the result file."
-              : "Double click has default behaviour.")),
-          1, sScriptName
-        );
+        //popupShow(
+        //  (bLogShow
+        //    ? "Double click will show the results in the Log.\n\nUse Ctrl+W to close the file."
+        //    : ((bCloseToggler)
+        //      ? "Double click will close the result file."
+        //      : "Double click has default behaviour.")),
+        //  1, sScriptName
+        //);
+        if (bLogShow)
+        {
+          sContent = GetWindowText(aDlg[IDCONTENTCB].HWND) || sContent || sLastContent;
+          if (AkelPad.IsPluginRunning("Log::Output"))
+          {
+            AkelPad.Call("Log::Output::PrevMatch");
+            if (bMarkResults)
+              highlight();
+            oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
+          }
+          else
+          {
+            if (bMarkResults)
+              highlight();
+            qSearchLog();
+            oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
+          }
+        }
+        else
+        {
+          if (AkelPad.IsPluginRunning("Log::Output"))
+            AkelPad.Call("Log::Output", 6);
+          oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
+        }
       }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
         TextSearchOptions('word up');
@@ -3511,7 +3532,13 @@ function OpenOrCloseFile(bSelect, bCloseOr)
           aResultsOpenedFiles.push(aFiles[nItem]);
 
           if (bSelect)
-            searchSelect()
+            searchSelect();
+          
+          if (bMarkResults)
+            highlight();
+
+          if (bBookmarkResults)
+            BookmarkLines('', true);
 
           return true;
         }
@@ -4001,7 +4028,7 @@ function qSearchLog(searchFlag)
     }
   }
 
-  if (found && qSearching(AkelPad.GetSelText(), flag))
+  if ((found >= 0) && qSearching(AkelPad.GetSelText(), flag))
   {
     AkelPad.Command(4199); // caret in editor history back
     oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
@@ -4184,7 +4211,7 @@ function highlight(sText, nAction, nFlags)
   else if (bMatchWord)
     args += 4;
 
-  AkelPad.Call("Coder::HighLight", 3, -666999, sFoundResultsColorFG, sFoundResultsColorBG);
+  AkelPad.Call("Coder::HighLight", 3, -666999, sFoundResultsColorFG, sFoundResultsColorBG); // clear highlight
 
   if (action === 2)
     AkelPad.Call("Coder::HighLight", action, sFoundResultsColorFG, sFoundResultsColorBG, args, 0, -666999, strWhat);
