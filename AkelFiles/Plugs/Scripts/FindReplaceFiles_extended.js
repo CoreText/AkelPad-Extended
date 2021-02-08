@@ -40,7 +40,7 @@
 // Ctrl+C           - Copy selected items from file list
 // Del              - Remove selected items from file list (don't delete the files)
 // Alt+Del          - remove item from history list ("Directory", "File:Stream names", "Text in file\stream", "Replace with", "History")
-                       
+
 // F1               - Help for regular expressions or wildcards
 // F2               - Open all selected files for editing
 // F3               - Go to next occurrence
@@ -79,12 +79,12 @@
 // Ctrl+I           - File statistics
 // Ctrl+Shift+I     - File statistics in new tab
 
-// Ctrl+Shift+F     - Open FindReplaceFiles_extended.js
+// Ctrl+Shift+F     - Selected text paste to search input
 // Shift+Alt+F      - Open FindFiles_extended.js
 // Ctrl+Shift+A     - Open SearchReplace_extended.js
 // Ctrl+H           - Open TextReplacer.js
 
-// Ctrl+M           - Mark results in document
+// Ctrl+M           - Mark the text in the document
 // Ctrl+Shift+M     - Clear all marks from document
 // Alt+M            - Mark results in all opened tabs
 // Shift+Alt+M      - Remove marks from all documents
@@ -112,7 +112,6 @@
  * - FileInfo.js
  * - FileAndStream_extended.js
  * - FindFiles_extended.js
- * - FindReplaceFiles_extended.js
  * - LogHighLight.js
  * - MarkIt_extended.js
  * - TabCloseExts.vbs
@@ -1060,7 +1059,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         AkelPad.Command(4333);
         AkelPad.Call("LineBoard::Main::BookmarkList");
-        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+        oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
       }
     }
   }
@@ -3533,7 +3532,7 @@ function OpenOrCloseFile(bSelect, bCloseOr)
 
           if (bSelect)
             searchSelect();
-          
+
           if (bMarkResults)
             highlight();
 
