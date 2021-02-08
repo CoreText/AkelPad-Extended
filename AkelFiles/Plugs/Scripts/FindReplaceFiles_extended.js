@@ -63,7 +63,7 @@
 // Ctrl+Shift+B     - Go to previous bookmark
 // Alt+B            - Bookmark the result
 // Shift+Alt+B      - Remove bookmarks
-// Shift+Alt+;      - Show the list of bookmarks
+// Shift+Alt+L      - Show the list of bookmarks
 
 // Ctrl+L           - Show results in the log (FINDSTR)
 // Ctrl+Shift+L     - Show results in the log (FINDSTR) keeping previous results
@@ -934,6 +934,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         BookmarkLines('', true);
       else if (wParam === 0x47 /*G key VK_KEY_G*/)
         TextSearchOptions('word tabs');
+      else if (wParam === 0x4C /*L key VK_KEY_L*/)
+      {
+        AkelPad.Command(4333);
+        AkelPad.Call("LineBoard::Main::BookmarkList");
+        oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
+      }
       else if (wParam === 0x4D /*M key VK_KEY_M*/)
       {
         strContent = GetWindowText(aDlg[IDCONTENTCB].HWND) || sContent || sLastContent;
@@ -1055,12 +1061,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         TextSearchOptions('word up');
       else if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
         TextSearchOptions('word');
-      else if ((wParam === 186 /*VK_OEM_1*/))
-      {
-        AkelPad.Command(4333);
-        AkelPad.Call("LineBoard::Main::BookmarkList");
-        oSys.Call("User32::SetFocus", aDlg[IDFILELV].HWND);
-      }
+      else if ((wParam === 186 /*VK_OEM_1*/)){}
     }
   }
 
