@@ -59,7 +59,6 @@
 // Ctrl+Shift+W     - Close tabs of opened results
 // Shift+Alt+W      - Close tabs by extension
 
-// Shift+Alt+B      - Unmark the result
 // Ctrl+B           - Go to next bookmark
 // Ctrl+Shift+B     - Go to previous bookmark
 // Alt+B            - Bookmark the result
