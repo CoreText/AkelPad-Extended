@@ -12,7 +12,7 @@
 // -Template="Name"           -Template used on dialog open (default is "").
 //
 // Usage:
-// Call("Scripts::Main", 1, "SearchReplace.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
+// Call("Scripts::Main", 1, "SearchReplace_extended.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
 //
 // Example for "Replace with function" option:
 //   What: \d+
@@ -30,8 +30,14 @@
 // -DefButtonID=1016          -Идентификатор кнопки по умолчанию. См. описание IDC_* ниже (по умолчанию 1016).
 // -Template="Имя"            -Шаблон, использующийся при открытии диалога (по умолчанию "").
 //
+// -LogArgs=18                -См в документации Log::Output flags
+// -MatchCase=0               -См в документации Log::Output flags
+// -MatchWord=0               -См в документации Log::Output flags
+// -RegExp=0                  -См в документации Log::Output flags
+// -RegExpMulti=0             -См в документации Log::Output flags
+//
 // Применение:
-// Call("Scripts::Main", 1, "SearchReplace.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
+// Call("Scripts::Main", 1, "SearchReplace_extended.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
 //
 // Пример опции "Заменять на функцию":
 //   Что: \d+
@@ -59,18 +65,59 @@
 // Ctrl+Shift+P     - Redo caret position
 //
 // Ctrl+M           - Toggle Mark HighLight
+//
+// Ctrl+N           - New template name
+//
+// Ctrl+Tab,
+// Ctrl+Shift+Tab   - Non-blocking navigation when dialog is active
 //////////////////////////////////////////////////////////////////////////
+//
+// @TODO:
+// -DialogHiddenActions=
+//  [0] -by default shows dialog
+//  1   -implement search functionality without the dialog using arguments
+//  2   -implement replace functionality without the dialog using arguments
+// -LogArgs=  -implement arguments for the log to shouw up
+//
 
 /**
  * Script dependencies:
  * - LogHighlight.js
+ * - TabSwitch.js
  */
+
+//Buttons
+var BT_FIND       =1;
+var BT_FINDALL    =2;
+var BT_REPLACE    =3;
+var BT_REPLACEALL =4;
+
+//Direction
+var DN_DOWN      =0x00000001;
+var DN_UP        =0x00000002;
+var DN_BEGINNING =0x00000004;
+var DN_SELECTION =0x00000008;
+var DN_ALLFILES  =0x00000010;
 
 //Arguments
 var bShowCountOfChanges=AkelPad.GetArgValue("ShowCountOfChanges", true);
 var nSearchStrings=AkelPad.GetArgValue("SearchStrings", 10);
 var nDefButtonID=AkelPad.GetArgValue("DefButtonID", 1016 /*IDC_FIND_BUTTON*/);
 var pTemplate=AkelPad.GetArgValue("Template", "");
+var pFindIt=AkelPad.GetArgValue("Find", "");
+var pReplaceWith=AkelPad.GetArgValue("Replace", "");
+var bWord=AkelPad.GetArgValue("Word", 0);
+var bSensitive=AkelPad.GetArgValue("Sensitive", 0);
+var bRegExp=AkelPad.GetArgValue("RegExp", 0);
+var bMultiline=AkelPad.GetArgValue("Multiline", 0);
+var bEscSequences=AkelPad.GetArgValue("EscSequences", 0);
+var bReplaceFunction=AkelPad.GetArgValue("ReplaceFunction", 0);
+var bHighlight=AkelPad.GetArgValue("Highlight", 0);
+var nDirection=GetDirection(AkelPad.GetArgValue("Direction", DN_DOWN));
+var nLogArgs=AkelPad.GetArgValue("LogArgs", 18 /* Hide input line. No scroll to the end. */);
+var lpFindStrings=[];
+var lpReplaceStrings=[];
+var lpTemplates=[];
 
 //Control IDs
 var IDC_FIND              =1001;
@@ -95,19 +142,6 @@ var IDC_REPLACE_BUTTON    =1019;
 var IDC_REPLACEALL_BUTTON =1020;
 var IDC_CANCEL            =1021;
 var IDC_STATIC            =-1;
-
-//Buttons
-var BT_FIND       =1;
-var BT_FINDALL    =2;
-var BT_REPLACE    =3;
-var BT_REPLACEALL =4;
-
-//Direction
-var DN_DOWN      =0x00000001;
-var DN_UP        =0x00000002;
-var DN_BEGINNING =0x00000004;
-var DN_SELECTION =0x00000008;
-var DN_ALLFILES  =0x00000010;
 
 //String IDs
 var STRID_LOWJSCRIPT   =0;
@@ -205,22 +239,22 @@ var lpRdsCurrent=0;
 var hGuiFont;
 var lpBuffer;
 var lpSearchBuffer;
-var pFindIt="";
-var pReplaceWith="";
 var pReplaceWithEsc;
-var lpFindStrings=[];
-var lpReplaceStrings=[];
-var lpTemplates=[];
-var bRegExp=true;
-var bWord=false;
-var bSensitive=false;
-var bMultiline=false;
-var bEscSequences=false;
-var bReplaceFunction=false;
-var bHighlight=false;
+// var pFindIt="";
+// var pReplaceWith="";
+// var lpFindStrings=[];
+// var lpReplaceStrings=[];
+// var lpTemplates=[];
+// var bRegExp=true;
+// var bWord=false;
+// var bSensitive=false;
+// var bMultiline=false;
+// var bEscSequences=false;
+// var bReplaceFunction=false;
+// var bHighlight=false;
+// var nDirection=DN_DOWN;
 var nSelStart;
 var nSelEnd;
-var nDirection=DN_DOWN;
 var nFindItLength;
 var nReplaceWithLength;
 var nSearchResult;
@@ -236,6 +270,7 @@ var sFindBGColor = "#A6D8B3";
 var sFindFGColor = "#000000";
 var sReplaceBGColor = "#FF0080";
 var sReplaceFGColor = "#000000";
+
 
 if (hWndEdit)
 {
@@ -292,6 +327,13 @@ if (hWndEdit)
 
 function DialogCallback(hWnd, uMsg, wParam, lParam)
 {
+  var hMenu=0;
+  var nCmd=0;
+  var lpCurTemplate=[0, 0, 0, 0];
+  var pNewTemplateName;
+  var bEnable;
+  var nCurIndex=-1;
+
   if (uMsg === 0x110 /*WM_INITDIALOG*/)
   {
     hWndDialog=hWnd;
@@ -633,7 +675,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (!hWndOutput)
       {
         bCloseDialog=false;
-
         oSys.Call("user32::GetWindowText" + _TCHAR, hWndWith, lpBuffer, 256);
         sReplaceWithIt=AkelPad.MemRead(lpBuffer, _TSTR);
 
@@ -644,7 +685,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         ResetInputsDirection();
 
-        if (Ctrl() && Shift())
+        if (Ctrl() && Shift() && (!Alt()))
         {
           nDirection=DN_BEGINNING;
           if (oSys.Call("user32::IsWindowEnabled", hWndReplaceAllButton))
@@ -653,7 +694,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
             AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
           }
         }
-        else if (Ctrl() && (!Shift()))
+        else if (Ctrl() && (!Shift()) && (!Alt()))
         {
           nDirection=DN_DOWN;
           if (oSys.Call("user32::IsWindowEnabled", hWndReplaceButton))
@@ -669,7 +710,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (!hWndOutput)
       {
         bCloseDialog=false;
-        if (Ctrl() && Shift())
+        if (Ctrl() && Shift() && (!Alt()))
         {
           ResetInputsDirection();
           nDirection=DN_BEGINNING;
@@ -686,9 +727,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (!hWndOutput)
       {
         bCloseDialog=false;
-        if (Ctrl() && (!Shift()))
+        if (Ctrl() && (!Shift()) && (!Alt()))
           AkelPad.Command(4199);
-        else if (Ctrl() && Shift())
+        else if (Ctrl() && Shift() && (!Alt()))
           AkelPad.Command(4200);
       }
     }
@@ -697,9 +738,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (!hWndOutput)
       {
         bCloseDialog=false;
-        if (Ctrl() && (!Shift()))
+        if (Ctrl() && (!Shift()) && (!Alt()))
           AkelPad.Command(4151);
-        else if (Ctrl() && Shift())
+        else if (Ctrl() && Shift() && (!Alt()))
           AkelPad.Command(4152);
       }
     }
@@ -708,13 +749,13 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (!hWndOutput)
       {
         bCloseDialog=false;
-        if (Ctrl() && (!Shift()))
+        if (Ctrl() && (!Shift()) && (!Alt()))
         {
           bHighlight = ! bHighlight;
           if (bHighlight)
           {
             highlight("", sFindBGColor, sFindFGColor, -666999);
-            popupShow("The text is highlighted!", 1);
+            popupShow("The highlight is turned on!", 1);
           }
           else
           {
@@ -722,7 +763,66 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
             popupShow("The highlight is turned off!", 1);
           }
         }
-
+      }
+    }
+    if (wParam === 0x4E /*M key VK_KEY_N*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if (Ctrl() && (!Shift()) && (!Alt()))
+        {
+          oSys.Call("user32::GetWindowText" + _TCHAR, hWndWhat, lpBuffer, 256);
+          lpCurTemplate[1]=AkelPad.MemRead(lpBuffer, _TSTR);
+          oSys.Call("user32::GetWindowText" + _TCHAR, hWndWith, lpBuffer, 256);
+          lpCurTemplate[2]=AkelPad.MemRead(lpBuffer, _TSTR);
+          lpCurTemplate[3]="";
+          if (bRegExp)
+            lpCurTemplate[3]+="r"
+          if (bWord)
+            lpCurTemplate[3]+="w"
+          if (bSensitive)
+            lpCurTemplate[3]+="i"
+          if (bMultiline)
+            lpCurTemplate[3]+="m"
+          if (bEscSequences)
+            lpCurTemplate[3]+="e"
+          if (bReplaceFunction)
+            lpCurTemplate[3]+="f"
+          if (pNewTemplateName=AkelPad.InputBox(hWndDialog, GetLangString(STRID_ADD), GetLangString(STRID_NAME), lpCurTemplate[1]))
+          {
+            lpCurTemplate[0]=pNewTemplateName;
+            lpTemplates[lpTemplates.length]=lpCurTemplate;
+          }
+        }
+      }
+    }
+    else if (wParam === 0x09 /*TAB key VK_TAB*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if (Ctrl() && (!Shift()) && (!Alt()))
+        {
+          AkelPad.Command(4333);
+          AkelPad.Call("Scripts::Main", 2, "TabSwitch.js", '-Next=false -OnlyNames=true -FontSize=11 -LineGap=4');
+          oSys.Call("user32::SetFocus", hWndWhat);
+        }
+        else if (Ctrl() && Shift() && (!Alt()))
+        {
+          AkelPad.Command(4333);
+          AkelPad.Call("Scripts::Main", 2, "TabSwitch.js", '-Next=-1 -CtrlTab=false -MinTabs=1 -WindowLeft=-1 -WindowTop=-1 -OnlyNames=true -FontSize=12');
+          oSys.Call("user32::SetFocus", hWndWhat);
+        }
+      }
+    }
+    else if ((wParam === 186/*VK_OEM_1*/))
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if (Ctrl() && (!Shift()) && (!Alt()))
+          AkelPad.Command(4333);
       }
     }
   }
@@ -730,17 +830,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
   {
     wCommand=LOWORD(wParam);
 
-    if (wCommand == IDC_TEMPLATE)
+    if (wCommand === IDC_TEMPLATE)
     {
+
       if (lpTemplates.length)
       {
-        var hMenu=0;
-        var nCmd=0;
-        var lpCurTemplate=[0, 0, 0, 0];
-        var pNewTemplateName;
-        var bEnable;
-        var nCurIndex=-1;
-
         if (nSetTemplate)
           nCmd=nSetTemplate;
         else
@@ -1108,7 +1202,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       //Save settings
       if (nDirection != DN_DOWN) nDirection&=~DN_DOWN;
-      oSet.Write("Highlight", 1 /*PO_DWORD*/, bHighlight);
       oSet.Write("Word", 1 /*PO_DWORD*/, bWord);
       oSet.Write("Sensitive", 1 /*PO_DWORD*/, bSensitive);
       oSet.Write("RegExp", 1 /*PO_DWORD*/, bRegExp);
@@ -1116,6 +1209,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       oSet.Write("EscSequences", 1 /*PO_DWORD*/, bEscSequences);
       oSet.Write("ReplaceFunction", 1 /*PO_DWORD*/, bReplaceFunction);
       oSet.Write("Direction", 1 /*PO_DWORD*/, nDirection);
+      oSet.Write("Highlight", 1 /*PO_DWORD*/, bHighlight);
       oSet.Write("DialogWidth", 1 /*PO_DWORD*/, rcRdsCurrent.right);
       oSet.Write("DialogHeight", 1 /*PO_DWORD*/, rcRdsCurrent.bottom);
 
@@ -2090,6 +2184,49 @@ function StatusBarUpdate(sInfo)
   }
 }
 
+/**
+ * Get Direction from given string
+
+ DN_DOWN      = 0x00000001;
+ DN_UP        = 0x00000002;
+ DN_BEGINNING = 0x00000004;
+ DN_SELECTION = 0x00000008;
+ DN_ALLFILES  = 0x00000010;
+
+ *
+ * @param mixed pParam = 'word up begin selected tabs'
+ * @return number nResult of direction
+ */
+function GetDirection(pParam)
+{
+  if (typeof pParam === "number")
+    return pParam;
+
+  if (typeof pParam === "string" && pParam === "")
+    return null;
+
+  var sDirection = pParam,
+      nResult = null;
+
+  if (~sDirection.indexOf("up"))
+    nResult |= 0x00000002 /*DN_UP*/;
+  else
+    nResult |= 0x00000001 /*DN_DOWN*/;
+
+  if (~sDirection.indexOf('begin'))
+    nResult |= 0x00000004 /*DN_BEGINNING*/;
+
+  if (~sDirection.indexOf('selected'))
+    nResult |= 0x00000008 /*DN_SELECTION*/;
+
+  if (~sDirection.indexOf('tabs'))
+    nResult |= 0x00000010 /*DN_ALLFILES*/;
+
+  AkelPad.MessageBox(0, nResult, WScript.ScriptName, 0);
+
+  return nResult;
+}
+
 function GetLangString(nStringID)
 {
   var nLangID=AkelPad.GetLangId(1 /*LANGID_PRIMARY*/);
@@ -2170,7 +2307,7 @@ function GetLangString(nStringID)
     if (nStringID === STRID_WITH)
       return "With&;";
     if (nStringID === STRID_ADD)
-      return "Add..&.";
+      return "Add...";
     if (nStringID === STRID_RENAME)
       return "Rename..&.";
     if (nStringID === STRID_DELETE)
