@@ -1,8 +1,8 @@
 // http://akelpad.sourceforge.net/en/plugins.php#Scripts
-// Version: 3.0
+// Version: 4.0
 // Author: Shengalts Aleksander aka Instructor / texter
 //
-//
+////////////////////////////////////////////////////////////////////////////
 // Description(1033): Search and replace using regular expressions.
 //
 // Arguments:
@@ -10,6 +10,23 @@
 // -SearchStrings=10          -Maximum count of search strings (default is 10).
 // -DefButtonID=1016          -Default button ID. See IDC_* defines below (default is 1016).
 // -Template="Name"           -Template used on dialog open (default is "").
+//
+// -nDialogHiddenActions=0    -Run script without the dialog (0 by deafault - shows, 1 - hide dialog)
+// -sDirection="DOWN"         -BEGIN, SELECTED, DOWN, UP, TABS
+// -LogArgs=18                -See Log::Output FLAGS in the AkelPad docs. Recomended to use 18, 26
+//                             8388608 log results in new tab.
+// -Highlight=0               -Highlight the searched word (Ctrl+M) and Log output using LogHighlight.js
+// -sLogThemeExt=".ss1"       -coder extension theme that generates LogHighlight.js
+//
+// -Find=""                   -string argument of what to find
+// -Replace=""                -replace with
+// -MatchCase=0
+// -Word=0
+// -RegExp=0
+// -RegExpMulti=0
+// -EscSequences=0
+// -Sensitive=0
+// -ReplaceFunction=0
 //
 // Usage:
 // Call("Scripts::Main", 1, "SearchReplace_extended.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
@@ -30,11 +47,23 @@
 // -DefButtonID=1016          -Идентификатор кнопки по умолчанию. См. описание IDC_* ниже (по умолчанию 1016).
 // -Template="Имя"            -Шаблон, использующийся при открытии диалога (по умолчанию "").
 //
-// -LogArgs=18                -См в документации Log::Output flags
-// -MatchCase=0               -См в документации Log::Output flags
-// -MatchWord=0               -См в документации Log::Output flags
-// -RegExp=0                  -См в документации Log::Output flags
-// -RegExpMulti=0             -См в документации Log::Output flags
+// -nDialogHiddenActions=0    -Вызов скрипта без диалога (0 - по умолчанию показывает, 1 - без диалога)
+// -sDirection="DOWN"         -BEGIN, SELECTED, DOWN, UP, TABS
+// -LogArgs=18                -См в документации Log::Output FLAGS. Предпочтительно использовать 18, 26 Append
+//                             8388608 результаты в новой вкладке.
+// -Highlight=0               -Подсвечивать искомые слова (Ctrl+M) а так же подсвечивать в результатах Log::Output.
+//                             Используется LogHighlight.js, который генерирует coder синтаксис "ss1.coder"
+// -sLogThemeExt=".ss1"       -Расширение coder синтаксис от LogHighlight.js
+//
+// -Find=""                   -Аргумент того, что нужно искать
+// -Replace=""                -Чем заменять
+// -MatchCase=0
+// -Word=0
+// -RegExp=0
+// -RegExpMulti=0
+// -EscSequences=0
+// -Sensitive=0
+// -ReplaceFunction=0
 //
 // Применение:
 // Call("Scripts::Main", 1, "SearchReplace_extended.js", `-DefButtonID=1019 /*IDC_REPLACEALL_BUTTON*/`)
@@ -46,12 +75,16 @@
 //   Что: \d+
 //   Чем: var n = parseInt($0); return n >= 20 ? 20 : ++n;
 //
-////////////////////////////////////////////////////////////////////////// HotKeys:
+//
+// HotKeys:
+// F3               - Go to next occurrence, Shift+F3 - previous
+// F4               - Show history list
+//
 // Enter,
-// Ctrl+Enter       - Search down
+// Ctrl+Enter       - Search down (Ctrl will use log to navigate)
 //
 // Ctrl+Shift+Enter,
-// Shift+Enter      - Search up
+// Shift+Enter      - Search up (Ctrl will use log to navigate)
 //
 // Ctrl+Shift+A     - Find all occurrences
 //
@@ -59,7 +92,7 @@
 // Ctrl+Shift+R     - Replace All in the document
 //
 // Ctrl+U           - Undo replace
-// Ctrl+Shift+U     - Redo replace
+// Ctrl+Shift+U     - Redo
 //
 // Ctrl+P           - Undo caret position
 // Ctrl+Shift+P     - Redo caret position
@@ -68,23 +101,59 @@
 //
 // Ctrl+N           - New template name
 //
+// Ctrl+Shift+N     - Log results in new tab
+//
 // Ctrl+Tab,
-// Ctrl+Shift+Tab   - Non-blocking navigation when dialog is active
-//////////////////////////////////////////////////////////////////////////
-//
-// @TODO:
-// -DialogHiddenActions=
-//  [0] -by default shows dialog
-//  1   -implement search functionality without the dialog using arguments
-//  2   -implement replace functionality without the dialog using arguments
-// -LogArgs=  -implement arguments for the log to shouw up
-//
+// Ctrl+Shift+Tab   - Non-blocking MRT navigation when dialog is active
 
 /**
  * Script dependencies:
+ * - CommonFunctions.js
  * - LogHighlight.js
  * - TabSwitch.js
  */
+
+var oError;
+
+//Arguments
+try
+{
+  var bEscSequences=AkelPad.GetArgValue("EscSequences", 0);
+  var bHighlight=AkelPad.GetArgValue("Highlight", 0);
+  var bMultiline=AkelPad.GetArgValue("Multiline", 0);
+  var bRegExp=AkelPad.GetArgValue("RegExp", 0);
+  var bReplaceFunction=AkelPad.GetArgValue("ReplaceFunction", 0);
+  var bSensitive=AkelPad.GetArgValue("Sensitive", 0);
+  var bShowCountOfChanges=AkelPad.GetArgValue("ShowCountOfChanges", true);
+  var bWord=AkelPad.GetArgValue("Word", 0);
+  var nButton=AkelPad.GetArgValue("nButton", 1);
+  var nDefButtonID=AkelPad.GetArgValue("DefButtonID", 1016 /*IDC_FIND_BUTTON*/);
+  var nDialogHiddenActions=AkelPad.GetArgValue("nDialogHiddenActions", 0);
+  var sDirection=AkelPad.GetArgValue("sDirection", "down");
+  var nDirection=GetDirection(sDirection);
+
+  /**
+   * 2+16=18
+   *   2  =Hide input line
+   *   16 =No scroll to the end
+   *
+   * Use 26 to Append.
+   * +8388608 to show the log output in new tab.
+   */
+  var nLogArgs=+AkelPad.GetArgValue("LogArgs", 18);
+  var nSearchStrings=AkelPad.GetArgValue("SearchStrings", 10);
+  var pFindIt=AkelPad.GetArgValue("Find", "");
+  var pReplaceWith=AkelPad.GetArgValue("Replace", "");
+  var pTemplate=AkelPad.GetArgValue("Template", "");
+  var sLogThemeExt=AkelPad.GetArgValue("LogThemeExt", ".ss1");
+
+  //AkelPad.MessageBox(0, pFindIt +"\n\n"+ pReplaceWith +"\n\n"+ bWord +"\n\n"+ nDirection, WScript.ScriptName, 0 /*MB_OK*/);
+}
+catch (oError)
+{
+  AkelPad.MessageBox(0, "Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\n"+ nDirection, pScriptName, 16 /*MB_ICONERROR*/);
+  WScript.Quit();
+}
 
 //Buttons
 var BT_FIND       =1;
@@ -98,26 +167,6 @@ var DN_UP        =0x00000002;
 var DN_BEGINNING =0x00000004;
 var DN_SELECTION =0x00000008;
 var DN_ALLFILES  =0x00000010;
-
-//Arguments
-var bShowCountOfChanges=AkelPad.GetArgValue("ShowCountOfChanges", true);
-var nSearchStrings=AkelPad.GetArgValue("SearchStrings", 10);
-var nDefButtonID=AkelPad.GetArgValue("DefButtonID", 1016 /*IDC_FIND_BUTTON*/);
-var pTemplate=AkelPad.GetArgValue("Template", "");
-var pFindIt=AkelPad.GetArgValue("Find", "");
-var pReplaceWith=AkelPad.GetArgValue("Replace", "");
-var bWord=AkelPad.GetArgValue("Word", 0);
-var bSensitive=AkelPad.GetArgValue("Sensitive", 0);
-var bRegExp=AkelPad.GetArgValue("RegExp", 0);
-var bMultiline=AkelPad.GetArgValue("Multiline", 0);
-var bEscSequences=AkelPad.GetArgValue("EscSequences", 0);
-var bReplaceFunction=AkelPad.GetArgValue("ReplaceFunction", 0);
-var bHighlight=AkelPad.GetArgValue("Highlight", 0);
-var nDirection=GetDirection(AkelPad.GetArgValue("Direction", DN_DOWN));
-var nLogArgs=AkelPad.GetArgValue("LogArgs", 18 /* Hide input line. No scroll to the end. */);
-var lpFindStrings=[];
-var lpReplaceStrings=[];
-var lpTemplates=[];
 
 //Control IDs
 var IDC_FIND              =1001;
@@ -199,80 +248,72 @@ var pScriptName=WScript.ScriptName;
 var hInstanceDLL=AkelPad.GetInstanceDll();
 var nAkelEdit=AkelPad.IsAkelEdit();
 var pClassName="AkelPad::Scripts::" + pScriptName + "::" + oSys.Call("kernel32::GetCurrentProcessId");
-var hWndProgress=0;
-var hWndOutput=0;
-var hWndDialog;
-var hWndPluginEdit=0;
-var hWndWhatLabel;
-var hWndWhat;
-var hWndWithLabel;
-var hWndWith;
-var hWndTemplate;
-var hWndRegExp;
-var hWndCase;
-var hWndWord;
-var hWndGlobal;
-var hWndMultiline;
-var hWndEscSequences;
-var hWndReplaceFunction;
-var hWndGroup1;
-var hWndGroup2;
-var hWndDown;
-var hWndUp;
-var hWndBeginning;
-var hWndSelection;
-var hWndAllFiles;
-var hWndFindButton;
-var hWndFindAllButton;
-var hWndReplaceButton;
-var hWndReplaceAllButton;
-var hWndCancel;
-var hWndFocus;
-var rcControl=[];
-var rcRdsMinMax=[];
-var rcRdsCurrent=[];
-var rds=[];
-var lpRds=0;
-var lpRdsm=0;
-var lpRdsMinMax=0;
-var lpRdsCurrent=0;
-var hGuiFont;
-var lpBuffer;
-var lpSearchBuffer;
-var pReplaceWithEsc;
-// var pFindIt="";
-// var pReplaceWith="";
-// var lpFindStrings=[];
-// var lpReplaceStrings=[];
-// var lpTemplates=[];
-// var bRegExp=true;
-// var bWord=false;
-// var bSensitive=false;
-// var bMultiline=false;
-// var bEscSequences=false;
-// var bReplaceFunction=false;
-// var bHighlight=false;
-// var nDirection=DN_DOWN;
-var nSelStart;
-var nSelEnd;
-var nFindItLength;
-var nReplaceWithLength;
-var nSearchResult;
-var nButton=0;
-var nSetTemplate=0;
-var wCommand;
+var bClearLog=false;
+var bCloseDialog=false;
+var bHighlighted=false;
 var bLogPluginExists;
 var bMessageBox=false;
-var bCloseDialog=false;
+var hGuiFont;
+var hWndAllFiles;
+var hWndBeginning;
+var hWndCancel;
+var hWndCase;
+var hWndDialog;
+var hWndDown;
+var hWndEscSequences;
+var hWndFindAllButton;
+var hWndFindButton;
+var hWndFocus;
+var hWndGlobal;
+var hWndGroup1;
+var hWndGroup2;
+var hWndMultiline;
+var hWndOutput=0;
+var hWndPluginEdit=0;
+var hWndProgress=0;
+var hWndRegExp;
+var hWndReplaceAllButton;
+var hWndReplaceButton;
+var hWndReplaceFunction;
+var hWndSelection;
+var hWndTemplate;
+var hWndUp;
+var hWndWhat;
+var hWndWhatLabel;
+var hWndWith;
+var hWndWithLabel;
+var hWndWord;
 var i;
+var lpBuffer;
+var lpFindStrings=[];
+var lpRds=0;
+var lpRdsCurrent=0;
+var lpRdsm=0;
+var lpRdsMinMax=0;
+var lpReplaceStrings=[];
+var lpSearchBuffer;
+var lpTemplates=[];
+var nFindItLength;
+var nLogOutputTextLength = 0;
 var nReplaceCount = 0;
+var nReplaceWithLength;
+var nSearchResult;
+var nSelEnd;
+var nSelStart;
+var nSetTemplate=0;
+var pReplaceWithEsc;
+var rcControl=[];
+var rcRdsCurrent=[];
+var rcRdsMinMax=[];
+var rds=[];
 var sFindBGColor = "#A6D8B3";
 var sFindFGColor = "#000000";
+var sOriginalFindText = "";
 var sReplaceBGColor = "#FF0080";
 var sReplaceFGColor = "#000000";
+var wCommand;
 
-
-if (hWndEdit)
+if (hWndEdit && !nDialogHiddenActions)
 {
   if (AkelPad.WindowRegisterClass(pClassName))
   {
@@ -324,6 +365,20 @@ if (hWndEdit)
     oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, AKDLG_PUTFIND, false, 0);
   }
 }
+else if (hWndEdit && nDialogHiddenActions === 1)
+{
+  try
+  {
+    nSearchResult = SearchReplace();
+    if (bHighlight)
+      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + sOriginalFindText + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
+  }
+  catch(oError)
+  {
+    AkelPad.MessageBox(0, "Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\n"+ nSearchResult +"\n\n"+ pFindIt +"\n\n"+ pReplaceWith +"\n\n"+ bWord +"\n\n"+ nDirection, pScriptName, 16 /*MB_ICONERROR*/);
+  }
+}
+
 
 function DialogCallback(hWnd, uMsg, wParam, lParam)
 {
@@ -333,6 +388,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
   var pNewTemplateName;
   var bEnable;
   var nCurIndex=-1;
+  var sResultLines="";
 
   if (uMsg === 0x110 /*WM_INITDIALOG*/)
   {
@@ -373,7 +429,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
                  [GetLangString(STRID_TEMPLATE2), "(^[ \\t]+)|([ \\t]+$)", "", "rm"],
                  [GetLangString(STRID_TEMPLATE3), "[^\\n]", " ", "r"]];
 
-    if (oSet.Begin("", 0x1 /*POB_READ*/))
+    if (oSet.Begin("", 0x1 /*POB_READ*/) && !nDialogHiddenActions)
     {
       //Read settings
       bHighlight=oSet.Read("Highlight", 1 /*PO_DWORD*/);
@@ -391,10 +447,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       for (i=0; i < nSearchStrings; ++i)
       {
         lpFindStrings[i]=oSet.Read("Find" + i, 3 /*PO_STRING*/);
-        if (typeof lpFindStrings[i] == "undefined")
+        if (typeof lpFindStrings[i] === "undefined")
           break;
       }
-      if (typeof lpFindStrings[0] != "undefined")
+      if (typeof lpFindStrings[0] !== "undefined")
         pFindIt=lpFindStrings[0];
 
       //Replace
@@ -556,6 +612,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         oSys.Call("user32::SetWindowText" + _TCHAR, hWndWhat, selTxt);
         AkelPad.SendMessage(hWndWhat, 0x142 /*CB_SETEDITSEL*/, 0, MAKELONG(0, -1));
+
         if (bHighlight)
           highlight(selTxt, sFindBGColor, sFindFGColor, -666999);
         else
@@ -563,13 +620,46 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         return true;
       }
-      else if (nSelStart != nSelEnd && nSelEnd - nSelStart < PUTFIND_MAXSEL && !(nDirection == DN_SELECTION) && !AkelPad.SendMessage(hWndEditCur, 3127 /*AEM_GETCOLUMNSEL*/, 0, 0))
+      else if (nSelStart !== nSelEnd && nSelEnd - nSelStart < PUTFIND_MAXSEL && !(nDirection === DN_SELECTION) && !AkelPad.SendMessage(hWndEditCur, 3127 /*AEM_GETCOLUMNSEL*/, 0, 0))
       {
         oSys.Call("user32::SetWindowText" + _TCHAR, hWndWhat, AkelPad.GetSelText());
         AkelPad.SendMessage(hWndWhat, 0x142 /*CB_SETEDITSEL*/, 0, MAKELONG(0, -1));
         return true;
       }
     }
+
+    //Arguments
+    try
+    {
+      bEscSequences=AkelPad.GetArgValue("EscSequences", bEscSequences);
+      bHighlight=AkelPad.GetArgValue("Highlight", bHighlight);
+      bMultiline=AkelPad.GetArgValue("Multiline", bMultiline);
+      bRegExp=AkelPad.GetArgValue("RegExp", bRegExp);
+      bReplaceFunction=AkelPad.GetArgValue("ReplaceFunction", bReplaceFunction);
+      bSensitive=AkelPad.GetArgValue("Sensitive", bSensitive);
+      bShowCountOfChanges=AkelPad.GetArgValue("ShowCountOfChanges", bShowCountOfChanges);
+      bWord=AkelPad.GetArgValue("Word", bWord);
+      nDefButtonID=AkelPad.GetArgValue("DefButtonID", nDefButtonID);
+      nLogArgs=+AkelPad.GetArgValue("LogArgs", nLogArgs);
+      nSearchStrings=AkelPad.GetArgValue("SearchStrings", nSearchStrings);
+      pFindIt=AkelPad.GetArgValue("Find", (sOriginalFindText || pFindIt));
+      pReplaceWith=AkelPad.GetArgValue("Replace", pReplaceWith);
+      pTemplate=AkelPad.GetArgValue("Template", pTemplate);
+      sLogThemeExt=AkelPad.GetArgValue("LogThemeExt", sLogThemeExt);
+
+      oSys.Call("user32::SetWindowText" + _TCHAR, hWndWhat, pFindIt);
+      oSys.Call("user32::SetWindowText" + _TCHAR, hWndWith, pReplaceWith);
+      AkelPad.SendMessage(hWndWhat, 0x142 /*CB_SETEDITSEL*/, 0, MAKELONG(0, -1));
+
+      return true;
+    }
+    catch (oError)
+    {
+      AkelPad.MessageBox(0, "Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\n"+ pFindIt +"\n\n"+ pReplaceWith +"\n\n"+ bWord +"\n\n"+ nDirection, pScriptName, 16 /*MB_ICONERROR*/);
+      WScript.Quit();
+      return 0;
+    }
+
     //If called from WM_INITDIALOG
     if (wParam)
       AkelPad.SendMessage(hWndWhat, 0x14E /*CB_SETCURSEL*/, 0, 0);
@@ -599,7 +689,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       if (!hWndOutput)
       {
-        bCloseDialog=true;
+        bCloseDialog=false;
         if (oSys.Call("user32::GetKeyState", 0x10 /*VK_SHIFT*/) & 0x8000)
           nDirection=DN_UP;
         else
@@ -648,25 +738,47 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
               oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
               AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
             }
-          }
+          } else oSys.Call("User32::SetFocus", hWndWhat);
         }
         else if (Ctrl() && (!Shift()) && (!Alt()))
         {
-          nDirection=DN_DOWN;
-          if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+          if (nID === IDC_FIND)
           {
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
-            AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
-          }
+            if (AkelPad.IsPluginRunning("Log::Output"))
+            {
+              AkelPad.Call("Log::Output::NextMatch");
+              oSys.Call("User32::SetFocus", hWndWhat);
+            }
+            else
+            {
+              nDirection=DN_DOWN;
+              if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+              {
+                oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+                AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+              }
+            }
+          } else oSys.Call("User32::SetFocus", hWndWhat);
         }
         else if (Ctrl() && Shift() && (!Alt()))
         {
-          nDirection=DN_UP;
-          if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+          if (nID === IDC_FIND)
           {
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
-            AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
-          }
+            if (AkelPad.IsPluginRunning("Log::Output"))
+            {
+              AkelPad.Call("Log::Output::PrevMatch");
+              oSys.Call("User32::SetFocus", hWndWhat);
+            }
+            else
+            {
+              nDirection=DN_UP;
+              if (oSys.Call("user32::IsWindowEnabled", hWndFindButton))
+              {
+                oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FIND_BUTTON, 0);
+                AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+              }
+            }
+          } else oSys.Call("User32::SetFocus", hWndWhat);
         }
       }
     }
@@ -755,12 +867,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           if (bHighlight)
           {
             highlight("", sFindBGColor, sFindFGColor, -666999);
-            popupShow("The highlight is turned on!", 1);
+            popupShow("The Highlight is turned ON!", 1);
           }
           else
           {
             highlight("", sFindBGColor, sFindFGColor, -666999, 3);
-            popupShow("The highlight is turned off!", 1);
+            popupShow("The Highlight is turned OFF!", 1);
           }
         }
       }
@@ -769,9 +881,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     {
       if (!hWndOutput)
       {
-        bCloseDialog=false;
         if (Ctrl() && (!Shift()) && (!Alt()))
         {
+          bCloseDialog=false;
           oSys.Call("user32::GetWindowText" + _TCHAR, hWndWhat, lpBuffer, 256);
           lpCurTemplate[1]=AkelPad.MemRead(lpBuffer, _TSTR);
           oSys.Call("user32::GetWindowText" + _TCHAR, hWndWith, lpBuffer, 256);
@@ -793,6 +905,19 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           {
             lpCurTemplate[0]=pNewTemplateName;
             lpTemplates[lpTemplates.length]=lpCurTemplate;
+          }
+        }
+        if (Ctrl() && Shift() && (!Alt()))
+        {
+          bCloseDialog=false;
+
+          if (nLogArgs < 8388608)
+            nLogArgs+=8388608;
+
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+          {
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
           }
         }
       }
@@ -873,7 +998,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
               {
                 nCurIndex=i;
               }
-              oSys.Call("user32::AppendMenu" + _TCHAR, hMenu, nCurIndex == i?0x8 /*MF_STRING|MF_CHECKED*/:0x0 /*MF_STRING*/, i + 1, lpTemplates[i][0]);
+              oSys.Call("user32::AppendMenu" + _TCHAR, hMenu, nCurIndex === i?0x8 /*MF_STRING|MF_CHECKED*/:0x0 /*MF_STRING*/, i + 1, lpTemplates[i][0]);
             }
             oSys.Call("user32::AppendMenu" + _TCHAR, hMenu, 0x800 /*MF_SEPARATOR*/, 0, 0);
             if (nCurIndex >= 0)
@@ -1046,7 +1171,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         {
           for (i=0; i < nSearchStrings && typeof lpFindStrings[i] !== "undefined"; ++i)
           {
-            if (lpFindStrings[i] == pFindIt)
+            if (lpFindStrings[i] === pFindIt)
             {
               AkelPad.SendMessage(hWndWhat, 0x144 /*CB_DELETESTRING*/, i, 0);
               DeleteFromArray(lpFindStrings, i, 1);
@@ -1075,7 +1200,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         {
           for (i=0; i < nSearchStrings && typeof lpReplaceStrings[i] !== "undefined"; ++i)
           {
-            if (lpReplaceStrings[i] == pReplaceWith)
+            if (lpReplaceStrings[i] === pReplaceWith)
             {
               AkelPad.SendMessage(hWndWith, 0x144 /*CB_DELETESTRING*/, i, 0);
               DeleteFromArray(lpReplaceStrings, i, 1);
@@ -1144,6 +1269,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         oSys.Call("user32::EnableWindow", hWndReplaceAllButton, false);
 
       nSearchResult=SearchReplace();
+      bClearLog=false;
 
       if (nButton === BT_REPLACEALL)
         oSys.Call("user32::EnableWindow", hWndReplaceAllButton, true);
@@ -1175,6 +1301,15 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           nDirection|=DN_DOWN;
         }
       }
+
+      if (nLogArgs >= 8388608)
+      {
+        nLogArgs-=8388608;
+        if (LogOutputActions(nLogArgs, sLogThemeExt) && AkelPad.IsPluginRunning("Log::Output"))
+          AkelPad.Call("Log::Output", 6)
+          
+      }
+
       if (bCloseDialog)
       {
         bCloseDialog=false;
@@ -1198,7 +1333,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
     }
 
-    if (oSet.Begin("", 0x2 /*POB_SAVE*/))
+    if (oSet.Begin("", 0x2 /*POB_SAVE*/) && !nDialogHiddenActions)
     {
       //Save settings
       if (nDirection != DN_DOWN) nDirection&=~DN_DOWN;
@@ -1214,11 +1349,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       oSet.Write("DialogHeight", 1 /*PO_DWORD*/, rcRdsCurrent.bottom);
 
       //Save find history
-      for (i=0; i < nSearchStrings && typeof lpFindStrings[i] != "undefined"; ++i)
+      for (i=0; i < nSearchStrings && typeof lpFindStrings[i] !== "undefined"; ++i)
         oSet.Write("Find" + i, 3 /*PO_STRING*/, lpFindStrings[i]);
 
       //Save replace history
-      for (i=0; i < nSearchStrings && typeof lpReplaceStrings[i] != "undefined"; ++i)
+      for (i=0; i < nSearchStrings && typeof lpReplaceStrings[i] !== "undefined"; ++i)
         oSet.Write("Replace" + i, 3 /*PO_STRING*/, lpReplaceStrings[i]);
 
       //Save templates
@@ -1265,6 +1400,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     if (AkelPad.SendMessage(hMainWnd, 1281 /*AKD_RESIZEDIALOG*/, 0, lpRdsm))
       RectToArray(lpRdsCurrent, rcRdsCurrent);
   }
+
   return 0;
 }
 
@@ -1340,7 +1476,6 @@ function SearchReplace()
   var nError;
   var nResult=-1;
   var i;
-  var sOriginalFindText;
 
   try
   {
@@ -1348,7 +1483,7 @@ function SearchReplace()
     if (bWord)
       pFindIt = "(?=\\b|\\W)"+ pFindIt +"(?=\\W|\\b)";
 
-    oPattern=new RegExp(((bRegExp || bWord)?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton === BT_FINDALL || nButton === BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
+    oPattern=new RegExp(((bRegExp || bWord)?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton===BT_FINDALL || nButton===BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
   }
   catch (oError)
   {
@@ -1362,9 +1497,9 @@ function SearchReplace()
     nInitialSelEnd=AkelPad.GetSelEnd();
 
     //Check current selection for replace
-    if (nButton == BT_REPLACE)
+    if (nButton === BT_REPLACE)
     {
-      if (nInitialSelStart != nInitialSelEnd)
+      if (nInitialSelStart !== nInitialSelEnd)
       {
         pSelText=AkelPad.GetSelText(2 /*\n*/);
         if (!nAkelEdit)
@@ -1376,7 +1511,7 @@ function SearchReplace()
           if (!nAkelEdit)
             pEndText=pEndText.replace(/\r/g, "\n");
 
-          if (oPattern.test(pEndText) && RegExp.lastMatch == pSelText)
+          if (oPattern.test(pEndText) && RegExp.lastMatch === pSelText)
           {
             pResult=pEndText.replace(oPattern, pReplaceWithEsc);
             pResult=pResult.substr(0, pResult.length - (pEndText.length - pSelText.length));
@@ -1580,17 +1715,9 @@ function SearchReplace()
         if (!hWndOutput)
         {
           if (nDirection & DN_ALLFILES)
-          {
-            AkelPad.Call("Log::Output", 1, "", "", "^ \\((\\d+) (\\d+),(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3");
-            if (bHighlight)
-              AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + pFindIt + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
-          }
+            AkelPad.Call("Log::Output", 1, "", "",  "^ \\((\\d+) (\\d+),(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3", -2, -2, nLogArgs);
           else
-          {
-            AkelPad.Call("Log::Output", 1, "", "", "^(Searched .+ in file (.*)?$)?(\\((\\d+),(\\d+)\\))?", "/FILE=\\2 /GOTOLINE=\\4:\\5");
-            if (bHighlight)
-              AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + pFindIt + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
-          }
+            AkelPad.Call("Log::Output", 1, "", "", "^(Searched .+ in file (.*)?$)?(\\((\\d+),(\\d+)\\))?", "/FILE=\\2 /GOTOLINE=\\4:\\5", -2, -2, nLogArgs);
           hWndOutput=GetOutputWindow();
         }
 
@@ -1651,7 +1778,7 @@ function SearchReplace()
               pLine="";
             nTextLen+=pLine.length + min(lpMatches[i].nLineEndIndex - lpMatches[i].nLineBeginIndex, FINDALL_MAXLINE) + 1;
 
-            if (i % 50 == 0)
+            if (i % 50 === 0)
             {
               if (hWndProgress)
                 AkelPad.SendMessage(hWndProgress, 1026 /*PBM_SETPOS*/, lpMatches[i].nLine, 0);
@@ -1702,6 +1829,7 @@ function SearchReplace()
                 AkelPad.MemCopy(_PtrAdd(lpMemText, nTextCount * 2 /*sizeof(wchar_t)*/), pLine, 1 /*DT_UNICODE*/);
                 nTextCount+=pLine.length;
               }
+
               if (hWndOutput)
               {
                 AkelPad.MemCopy(_PtrAdd(lpMemText, nTextCount * 2 /*sizeof(wchar_t)*/), "", 1 /*DT_UNICODE*/);
@@ -1710,19 +1838,19 @@ function SearchReplace()
                 //Set output window text
                 if (hWndOutput && pLine)
                 {
-                  if (!bClearEdit)
+                  if (nDirection & DN_ALLFILES)
                   {
-                    oSys.Call("user32::SetWindowText" + _TCHAR, hWndOutput, "");
-                    bClearEdit=true;
+                    AkelPad.Call("Log::Output", 4 + _TSTR, "\n", -1, ((!bClearLog && !(nLogArgs > 18))? 0 : 1) /*APPEND*/, 0, sLogThemeExt);
+                    bClearLog=true;
                   }
-                  if (nFoundFiles++)
-                    AkelPad.Call("Log::Output", 4 + _TSTR, "\n", 1, 1 /*APPEND*/);
-                  AkelPad.Call("Log::Output", 4 + _TSTR, pLine, pLine.length, 1 /*APPEND*/);
+
+                  AkelPad.Call("Log::Output", 4 + _TSTR, pLine, (pLine.length), (((nDirection & DN_ALLFILES) || (nLogArgs > 18))? 1 : 0) /*APPEND*/, 0, sLogThemeExt);
                 }
               }
               AkelPad.MemFree(lpMemText);
             }
           }
+
           //Hide progress bar and unlock main window
           if (hWndProgress)
             oSys.Call("user32::ShowWindow", hWndProgress, 0 /*SW_HIDE*/);
@@ -1738,7 +1866,9 @@ function SearchReplace()
           oSys.Call("user32::EnableWindow", hWndReplaceAllButton, true);
           oSys.Call("user32::EnableWindow", hWndFindAllButton, true);
           oSys.Call("user32::SetWindowText" + _TCHAR, hWndCancel, GetLangString(STRID_CANCEL));
+
           oSys.Call("user32::SetFocus", hWndFindAllButton);
+
           if (!hWndOutput) break;
 
           if (nDirection & DN_ALLFILES)
@@ -1748,22 +1878,21 @@ function SearchReplace()
             //Next MDI frame
             lpFrameCur=AkelPad.Command(4316 /*IDM_WINDOW_FRAMENEXT*/);
             hWndEditCur=AkelPad.GetEditWnd();
-            if (lpFrameCur != lpFrameInit)
+            if (lpFrameCur !== lpFrameInit)
               continue;
           }
-          if (!bClearEdit)
-          {
-            oSys.Call("user32::SetWindowText" + _TCHAR, hWndOutput, "");
-            bClearEdit=true;
-          }
+
           hWndOutput=0;
         }
         AkelPad.MemFree(lpIndex);
+
+        if (bHighlight)
+          AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + (sOriginalFindText || pFindIt) + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
       }
     }
     catch (oError)
     {
-      MessageBox(hWndDialog, oError.description, pScriptName, 16 /*MB_ICONERROR*/);
+      MessageBox(hWndDialog, "Error:\n\n"+ oError.name +"\n\n"+ oError.description, pScriptName, 16 /*MB_ICONERROR*/);
     }
     break;
   }
@@ -1923,7 +2052,7 @@ function CenterWindow(hWndParent, hWnd)
 
 function IsFileExist(pFile)
 {
-  if (oSys.Call("kernel32::GetFileAttributes" + _TCHAR, pFile) == -1)
+  if (oSys.Call("kernel32::GetFileAttributes" + _TCHAR, pFile) === -1)
     return false;
   return true;
 }
@@ -2021,7 +2150,7 @@ function ScrollCaret(hWnd)
 function TranslateEscapeString(pString)
 {
   pString=pString.replace(/\\\\/g, "\0");
-  if (pString.search(/\\[^rnt]/g) != -1)
+  if (pString.search(/\\[^rnt]/g) !== -1)
     return "";
   pString=pString.replace(/\\r\\n|\\r|\\n/g, "\n");
   pString=pString.replace(/\\t/g, "\t");
@@ -2169,10 +2298,10 @@ function StatusBarUpdate(sInfo)
         {
           //Get user status string
           AkelPad.SendMessage(hWndStatus, _TSTR?1037 /*SB_GETTEXTW*/:1026 /*SB_GETTEXTA*/, nStatusParts - 1, lpStatusTextBuffer);
-          pStatusText = AkelPad.MemRead(lpStatusTextBuffer, _TSTR);
+          pStatusText=AkelPad.MemRead(lpStatusTextBuffer, _TSTR);
 
           //Modify string
-          pStatusText += sInfo;
+          pStatusText+=sInfo;
 
           //Set user status string
           AkelPad.MemCopy(lpStatusTextBuffer, pStatusText, _TSTR);
@@ -2205,26 +2334,84 @@ function GetDirection(pParam)
   if (typeof pParam === "string" && pParam === "")
     return null;
 
-  var sDirection = pParam,
+  var sDirection = pParam.toUpperCase(),
       nResult = null;
 
-  if (~sDirection.indexOf("up"))
-    nResult |= 0x00000002 /*DN_UP*/;
-  else
-    nResult |= 0x00000001 /*DN_DOWN*/;
-
-  if (~sDirection.indexOf('begin'))
-    nResult |= 0x00000004 /*DN_BEGINNING*/;
-
-  if (~sDirection.indexOf('selected'))
-    nResult |= 0x00000008 /*DN_SELECTION*/;
-
-  if (~sDirection.indexOf('tabs'))
-    nResult |= 0x00000010 /*DN_ALLFILES*/;
-
-  AkelPad.MessageBox(0, nResult, WScript.ScriptName, 0);
+  if (~sDirection.indexOf('BEGIN'))
+    nResult = 0x00000004 /*DN_BEGINNING*/;
+  else if (~sDirection.indexOf("DOWN"))
+    nResult = 0x00000001 /*DN_DOWN*/;
+  else if (~sDirection.indexOf("UP"))
+    nResult = 0x00000002 /*DN_UP*/;
+  else if (~sDirection.indexOf('SELECTED'))
+    nResult = 0x00000008 /*DN_SELECTION*/;
+  else if (~sDirection.indexOf('TABS'))
+    nResult = 0x00000010 /*DN_ALLFILES*/;
 
   return nResult;
+}
+
+/**
+ * Gets output of the log and paste it in the new tab.
+ *
+ * //bad case:
+ * //oSys.Call("user32::GetWindowText" + _TCHAR, hWndOutput, lpBuffer, 256);
+ * //sText = AkelPad.MemRead(lpBuffer, _TSTR);
+ *
+ * @param number nLogArgs
+ * @param string sLogThemeExt
+ * @return bool if success
+ */
+function LogOutputActions(nLogArgs, sLogThemeExt)
+{
+  var oError, hWndOutput, nTextLen, lpText, sText
+
+  if (! nLogArgs)
+    return false;
+
+  try
+  {
+    hWndOutput=GetOutputWindow();
+
+    if (nTextLen=AkelPad.SendMessage(hWndOutput, 14 /*WM_GETTEXTLENGTH*/, 0, 0))
+    {
+//       if (26 <= nLogArgs < 8388608)
+//       {
+//         if (AkelPad.IsPluginRunning("Log::Output"))
+//         {
+//           oSys.Call("user32::SetFocus", hWndOutput);
+//           AkelPad.SetSel(nTextLen, nTextLen);
+//         }
+//       }
+
+//       if (nLogArgs >= 8388608)
+//       {
+//         nLogArgs-=8388608;
+        if (lpText=AkelPad.MemAlloc((nTextLen + 1) * 2))
+        {
+          AkelPad.SendMessage(hWndOutput, 13 /*WM_GETTEXT*/, nTextLen + 1, lpText);
+          sText = AkelPad.MemRead(lpText, 1 /*DT_UNICODE*/);
+          AkelPad.MemFree(lpText);
+
+          if (AkelPad.Include("CommonFunctions.js"))
+            createFile(getFileFormat(0), (sLogThemeExt || ".txt"));
+          else
+            AkelPad.SendMessage(AkelPad.GetMainWnd(), 273 /*WM_COMMAND*/, 4101 /*wParam=MAKEWAPARAM(0,IDM_FILE_NEW)*/, 1 /*lParam=TRUE*/);
+
+          AkelPad.ReplaceSel(sText);
+          AkelPad.SetSel(0, 0);
+        }
+//       }
+    }
+  }
+  catch (oError)
+  {
+    AkelPad.MessageBox(0, "Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\n", pScriptName, 16 /*MB_ICONERROR*/);
+    WScript.Quit();
+    return false;
+  }
+  hWndOutput=0;
+  return true;
 }
 
 function GetLangString(nStringID)
@@ -2319,7 +2506,7 @@ function GetLangString(nStringID)
     if (nStringID === STRID_MATCHCASE)
       return "&Case sensitive";
     if (nStringID === STRID_REGEXP)
-      return "Regular expres&sions";
+      return "Regular e&xpressions";
     if (nStringID === STRID_MULTILINE)
       return "&Multiline";
     if (nStringID === STRID_ESCAPESEQ)
@@ -2337,7 +2524,7 @@ function GetLangString(nStringID)
     if (nStringID === STRID_INSEL)
       return "&In selection";
     if (nStringID === STRID_ALLFILES)
-      return "All files &'";
+      return "All file&s";
     if (nStringID === STRID_FINDNEXT)
       return "&Find next";
     if (nStringID === STRID_FINDALL)
@@ -2347,7 +2534,7 @@ function GetLangString(nStringID)
     if (nStringID === STRID_REPLACEALL)
       return "Replace &all";
     if (nStringID === STRID_CANCEL)
-      return "Cancel [&X]";
+      return "Cancel";
     if (nStringID === STRID_STOP)
       return "Sto&p";
     if (nStringID === STRID_SYNTAXERROR)
