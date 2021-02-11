@@ -1302,12 +1302,14 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         }
       }
 
-      if (nLogArgs >= 8388608)
+      if (nLogArgs >= 8388608)  // log results in new tab (ctrl + shift + n)
       {
         nLogArgs-=8388608;
         if (LogOutputActions(nLogArgs, sLogThemeExt) && AkelPad.IsPluginRunning("Log::Output"))
-          AkelPad.Call("Log::Output", 6)
-          
+        {
+          AkelPad.Call("Log::Output", 6);
+          oSys.Call("user32::SetFocus", hWndDialog);
+        }
       }
 
       if (bCloseDialog)
@@ -2372,42 +2374,27 @@ function LogOutputActions(nLogArgs, sLogThemeExt)
   try
   {
     hWndOutput=GetOutputWindow();
-
     if (nTextLen=AkelPad.SendMessage(hWndOutput, 14 /*WM_GETTEXTLENGTH*/, 0, 0))
     {
-//       if (26 <= nLogArgs < 8388608)
-//       {
-//         if (AkelPad.IsPluginRunning("Log::Output"))
-//         {
-//           oSys.Call("user32::SetFocus", hWndOutput);
-//           AkelPad.SetSel(nTextLen, nTextLen);
-//         }
-//       }
+      if (lpText=AkelPad.MemAlloc((nTextLen + 1) * 2))
+      {
+        AkelPad.SendMessage(hWndOutput, 13 /*WM_GETTEXT*/, nTextLen + 1, lpText);
+        sText = AkelPad.MemRead(lpText, 1 /*DT_UNICODE*/);
+        AkelPad.MemFree(lpText);
 
-//       if (nLogArgs >= 8388608)
-//       {
-//         nLogArgs-=8388608;
-        if (lpText=AkelPad.MemAlloc((nTextLen + 1) * 2))
-        {
-          AkelPad.SendMessage(hWndOutput, 13 /*WM_GETTEXT*/, nTextLen + 1, lpText);
-          sText = AkelPad.MemRead(lpText, 1 /*DT_UNICODE*/);
-          AkelPad.MemFree(lpText);
+        if (AkelPad.Include("CommonFunctions.js"))
+          createFile(getFileFormat(0), (sLogThemeExt || ".txt"));
+        else
+          AkelPad.SendMessage(AkelPad.GetMainWnd(), 273 /*WM_COMMAND*/, 4101 /*wParam=MAKEWAPARAM(0,IDM_FILE_NEW)*/, 1 /*lParam=TRUE*/);
 
-          if (AkelPad.Include("CommonFunctions.js"))
-            createFile(getFileFormat(0), (sLogThemeExt || ".txt"));
-          else
-            AkelPad.SendMessage(AkelPad.GetMainWnd(), 273 /*WM_COMMAND*/, 4101 /*wParam=MAKEWAPARAM(0,IDM_FILE_NEW)*/, 1 /*lParam=TRUE*/);
-
-          AkelPad.ReplaceSel(sText);
-          AkelPad.SetSel(0, 0);
-        }
-//       }
+        AkelPad.ReplaceSel(sText);
+        AkelPad.SetSel(0, 0);
+      }
     }
   }
   catch (oError)
   {
     AkelPad.MessageBox(0, "Error:\n\n"+ oError.name +"\n\n"+ oError.description +"\n\n", pScriptName, 16 /*MB_ICONERROR*/);
-    WScript.Quit();
     return false;
   }
   hWndOutput=0;
