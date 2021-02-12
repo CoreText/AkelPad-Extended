@@ -86,6 +86,9 @@
 // Ctrl+Shift+Enter,
 // Shift+Enter      - Search up (Ctrl will use log to navigate)
 //
+// Alt+Enter        - Search in the document
+// Shift+Alt+Enter  - Search in the opened documents
+//
 // Ctrl+Shift+A     - Find all occurrences
 //
 // Ctrl+R           - Replace next occurrence
@@ -114,6 +117,7 @@
  */
 
 var oError;
+var nDialogHiddenActions=AkelPad.GetArgValue("nDialogHiddenActions", 0);
 
 //Arguments
 try
@@ -128,8 +132,8 @@ try
   var bWord=AkelPad.GetArgValue("Word", 0);
   var nButton=AkelPad.GetArgValue("nButton", 1);
   var nDefButtonID=AkelPad.GetArgValue("DefButtonID", 1016 /*IDC_FIND_BUTTON*/);
-  var nDialogHiddenActions=AkelPad.GetArgValue("nDialogHiddenActions", 0);
-  var sDirection=AkelPad.GetArgValue("sDirection", "down");
+  //var nDialogHiddenActions=0;
+  var sDirection=AkelPad.GetArgValue("sDirection", "DOWN");
   var nDirection=GetDirection(sDirection);
 
   /**
@@ -144,6 +148,7 @@ try
   var nSearchStrings=AkelPad.GetArgValue("SearchStrings", 10);
   var pFindIt=AkelPad.GetArgValue("Find", "");
   var pReplaceWith=AkelPad.GetArgValue("Replace", "");
+  var sReplaceWithIt=pReplaceWith;
   var pTemplate=AkelPad.GetArgValue("Template", "");
   var sLogThemeExt=AkelPad.GetArgValue("LogThemeExt", ".ss1");
 
@@ -351,7 +356,8 @@ if (hWndEdit && !nDialogHiddenActions)
         AkelPad.ScriptNoMutex();
 
         //Message loop
-        AkelPad.WindowGetMessage(0x4 /*WGM_KEYDOWNUP*/);
+        //AkelPad.WindowGetMessage(0x4 /*WGM_KEYDOWNUP*/);
+        AkelPad.WindowGetMessage();
       }
       AkelPad.MemFree(lpBuffer);
     }
@@ -370,8 +376,8 @@ else if (hWndEdit && nDialogHiddenActions === 1)
   try
   {
     nSearchResult = SearchReplace();
-    if (bHighlight)
-      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + sOriginalFindText + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
+    if (bHighlight && nButton === 2)
+      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + (sOriginalFindText || pFindIt) + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
   }
   catch(oError)
   {
@@ -389,6 +395,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
   var bEnable;
   var nCurIndex=-1;
   var sResultLines="";
+
 
   if (uMsg === 0x110 /*WM_INITDIALOG*/)
   {
@@ -951,6 +958,36 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
     }
   }
+  else if (uMsg === 260 /*WM_SYSKEYDOWN*/)
+  {
+    if (wParam === 0x0D /*VK_RETURN*/)
+    {
+      if (!hWndOutput)
+      {
+        bCloseDialog=false;
+        if ((!Ctrl()) && (!Shift()) && Alt())
+        {
+          ResetInputsDirection();
+          nDirection=DN_BEGINNING;
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+          {
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+          }
+        }
+        if ((!Ctrl()) && Shift() && Alt())
+        {
+          ResetInputsDirection();
+          nDirection=DN_ALLFILES;
+          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+          {
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+          }
+        }
+      }
+    }
+  }
   else if (uMsg === 273 /*WM_COMMAND*/)
   {
     wCommand=LOWORD(wParam);
@@ -1479,6 +1516,9 @@ function SearchReplace()
   var nResult=-1;
   var i;
 
+  if (!hWndDialog)
+    hWndDialog=AkelPad.GetMainWnd();
+
   try
   {
     sOriginalFindText = pFindIt;
@@ -1492,6 +1532,9 @@ function SearchReplace()
     MessageBox(hWndDialog, oError.description, pScriptName, 16 /*MB_ICONERROR*/);
     return nResult;
   }
+
+  if (nDialogHiddenActions)
+    pReplaceWithEsc=pReplaceWith;
 
   for (;;)
   {
@@ -1507,6 +1550,7 @@ function SearchReplace()
         if (!nAkelEdit)
           pSelText=pSelText.replace(/\r/g, "\n");
 
+        //AkelPad.MessageBox(0, pSelText + "\n\nAkelEdit:\n"+ nAkelEdit +"\n\pFindIt:\n"+ pFindIt +"\n\pTest FindIt:\n"+ /\(\?[=!].*\)/.test(pFindIt), WScript.ScriptName, 0 /*MB_OK*/);
         if (/\(\?[=!].*\)/.test(pFindIt)) // Lookahead assertions: x(?=y) or x(?!y)
         {
           var pEndText=AkelPad.GetTextRange(nInitialSelStart, -1, 2 /*\n*/);
@@ -1527,6 +1571,7 @@ function SearchReplace()
         {
           if (lpArray=pSelText.match(oPattern))
           {
+            //AkelPad.MessageBox(0, pSelText + "\n\nAkelEdit:\n"+ nAkelEdit +"\n\pFindIt:\n"+ pFindIt +"\n\ppSelText:\n"+ pSelText +"\n\pReplaceWithEsc:\n"+ pReplaceWithEsc, WScript.ScriptName, 0 /*MB_OK*/);
             if (lpArray.index === 0 && lpArray[0].length === (nInitialSelEnd - nInitialSelStart))
             {
               pResult=pSelText.replace(oPattern, pReplaceWithEsc);
@@ -1749,16 +1794,19 @@ function SearchReplace()
           }
           bMainDisable=oSys.Call("user32::EnableWindow", hMainWnd, false);
 
-          //Change buttons
-          oSys.Call("user32::SetFocus", hWndCancel);
-          oSys.Call("user32::EnableWindow", hWndWhat, false);
-          oSys.Call("user32::EnableWindow", hWndWith, false);
-          oSys.Call("user32::EnableWindow", hWndTemplate, false);
-          oSys.Call("user32::EnableWindow", hWndFindButton, false);
-          oSys.Call("user32::EnableWindow", hWndReplaceButton, false);
-          oSys.Call("user32::EnableWindow", hWndReplaceAllButton, false);
-          oSys.Call("user32::EnableWindow", hWndFindAllButton, false);
-          oSys.Call("user32::SetWindowText" + _TCHAR, hWndCancel, GetLangString(STRID_STOP));
+          if (!nDialogHiddenActions)
+          {
+            //Change buttons
+            oSys.Call("user32::SetFocus", hWndCancel);
+            oSys.Call("user32::EnableWindow", hWndWhat, false);
+            oSys.Call("user32::EnableWindow", hWndWith, false);
+            oSys.Call("user32::EnableWindow", hWndTemplate, false);
+            oSys.Call("user32::EnableWindow", hWndFindButton, false);
+            oSys.Call("user32::EnableWindow", hWndReplaceButton, false);
+            oSys.Call("user32::EnableWindow", hWndReplaceAllButton, false);
+            oSys.Call("user32::EnableWindow", hWndFindAllButton, false);
+            oSys.Call("user32::SetWindowText" + _TCHAR, hWndCancel, GetLangString(STRID_STOP));
+          }
 
           //Count text length
           while (lpArray=oPattern.exec(pSelText))
@@ -1819,7 +1867,9 @@ function SearchReplace()
                 {
                   if (hWndProgress)
                     AkelPad.SendMessage(hWndProgress, 1026 /*PBM_SETPOS*/, lpMatches.length + i, 0);
+
                   PeekMessages(hWndDialog, true);
+
                   //Stop button is pressed
                   if (!hWndOutput) break;
                 }
@@ -1859,17 +1909,19 @@ function SearchReplace()
           if (!bMainDisable)
             oSys.Call("user32::EnableWindow", hMainWnd, true);
 
-          //Change buttons
-          oSys.Call("user32::EnableWindow", hWndWhat, true);
-          oSys.Call("user32::EnableWindow", hWndWith, true);
-          oSys.Call("user32::EnableWindow", hWndTemplate, true);
-          oSys.Call("user32::EnableWindow", hWndFindButton, true);
-          oSys.Call("user32::EnableWindow", hWndReplaceButton, true);
-          oSys.Call("user32::EnableWindow", hWndReplaceAllButton, true);
-          oSys.Call("user32::EnableWindow", hWndFindAllButton, true);
-          oSys.Call("user32::SetWindowText" + _TCHAR, hWndCancel, GetLangString(STRID_CANCEL));
-
-          oSys.Call("user32::SetFocus", hWndFindAllButton);
+          if (!nDialogHiddenActions)
+          {
+            //Change buttons
+            oSys.Call("user32::EnableWindow", hWndWhat, true);
+            oSys.Call("user32::EnableWindow", hWndWith, true);
+            oSys.Call("user32::EnableWindow", hWndTemplate, true);
+            oSys.Call("user32::EnableWindow", hWndFindButton, true);
+            oSys.Call("user32::EnableWindow", hWndReplaceButton, true);
+            oSys.Call("user32::EnableWindow", hWndReplaceAllButton, true);
+            oSys.Call("user32::EnableWindow", hWndFindAllButton, true);
+            oSys.Call("user32::SetWindowText" + _TCHAR, hWndCancel, GetLangString(STRID_CANCEL));
+            oSys.Call("user32::SetFocus", hWndFindAllButton);
+          }
 
           if (!hWndOutput) break;
 
@@ -1888,7 +1940,7 @@ function SearchReplace()
         }
         AkelPad.MemFree(lpIndex);
 
-        if (bHighlight)
+        if (bHighlight && nButton === 2)
           AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + (sOriginalFindText || pFindIt) + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
       }
     }
@@ -1899,7 +1951,7 @@ function SearchReplace()
     break;
   }
 
-  if (nButton === BT_REPLACEALL || wCommand === IDC_REPLACEALL_BUTTON)
+  if ((nButton === BT_REPLACEALL || wCommand === IDC_REPLACEALL_BUTTON))
   {
     if (nDirection & DN_ALLFILES)
       StatusBarUpdate((" | "+ GetLangString(STRID_COUNTFILES) + nChangedFiles + " " + GetLangString(STRID_COUNTCHANGES) + nChanges).toUpperCase());
