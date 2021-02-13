@@ -1762,7 +1762,7 @@ function SearchReplace()
         if (!hWndOutput)
         {
           if (nDirection & DN_ALLFILES)
-            AkelPad.Call("Log::Output", 1, "", "",  "^ \\((\\d+) (\\d+),(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3", -2, -2, nLogArgs);
+            AkelPad.Call("Log::Output", 1, "", "",  "^ \\((\\d+) (\\d+):(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3", -2, -2, nLogArgs);
           else
             AkelPad.Call("Log::Output", 1, "", "", "^(Searched .+ in file (.*)?$)?(\\((\\d+),(\\d+)\\))?", "/FILE=\\2 /GOTOLINE=\\4:\\5", -2, -2, nLogArgs);
           hWndOutput=GetOutputWindow();
@@ -1874,7 +1874,7 @@ function SearchReplace()
                   if (!hWndOutput) break;
                 }
                 if (!hWndPluginEdit)
-                  pLine=(nDirection & DN_ALLFILES?" (" + lpFrameCur + " ":"(") + (lpMatches[i].nLineUnwrap + 1) + "," + (lpMatches[i].nIndex - lpMatches[i].nLineBeginIndex + 1) + ") ";
+                  pLine=(nDirection & DN_ALLFILES?" (" + lpFrameCur + " ":"(") + (lpMatches[i].nLineUnwrap + 1) + ":" + (lpMatches[i].nIndex - lpMatches[i].nLineBeginIndex + 1) + ") ";
                 else
                   pLine="";
                 pLine+=AkelPad.GetTextRange(lpMatches[i].nLineBeginIndex, lpMatches[i].nLineBeginIndex + min(lpMatches[i].nLineEndIndex - lpMatches[i].nLineBeginIndex, FINDALL_MAXLINE)) + "\n";
