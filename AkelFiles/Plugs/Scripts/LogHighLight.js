@@ -3,14 +3,14 @@
 //
 // Description(1033): Highlight the text in the console (Log plugin)
 // Description(1049): Подсветить текст в консоли (Log плагин)
-// 
+//
 // Нужно, чтобы были файлы "%a\AkelFiles\Plugs\Coder\sss1.tmp" и "%a\AkelFiles\Plugs\Coder\ss1.coder"
 // sss1.tmp генерирует подсветку в ss1.coder при каждом вызове скрипта.
 //
 // Usage:
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="Привет" -bNotRegExp=1');             // элементарный вызов
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=1');  // sWhatText - переменная с текстом
-// 
+//
 // Пример захвата чекбокса рег.выр. в скрипте `FindReplaceEx.js`:
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=' + (SendDlgItemMessage(hDlg, IDC_SEARCH_REGEXP, 240 /*BM_GETCHECK*/, 0, 0)?0:1));
 
@@ -61,15 +61,14 @@ if (/[\r\n]/.test(sSelText))                                      // отменяем по
 }
 
 if (bNotRegExp)
-  sSelText = sSelText.replace(/[\\]\\[\\{\\}\\(\\)\\*\\+\\?\\.\\^\\$\\|\\=\\<\\>\\#\\\\]/g, "\\");  // экранировать спецсимволы регулярного выражения
+  sSelText = sSelText.replace(/[\\]\\[\\{\\}\\(\\)\\*\\+\\?\\.\\^\\$\\|\\=\\<\\>\\#\\\\]/g, "\\"); // экранировать спецсимволы регулярного выражения
 
-pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);                               // замена шаблона в рег.выр. секции
-AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);                         // 1200 = 16LE
-AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")                          // вставить текст включая подсветку alias
+pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
+AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
+AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")        // вставить текст включая подсветку alias
 
-AkelPad.SetEditWnd(0);                                                              // возвращает окно редактирования
-
-AkelPad.Call("Coder::Settings", 2);                                                 // перерисовать  подсветку
+AkelPad.SetEditWnd(0);                                            // возвращает окно редактирования
+AkelPad.Call("Coder::Settings", 2);                               // перерисовать  подсветку
 
 
 function GetOutputWindow()
