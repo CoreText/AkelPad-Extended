@@ -4299,7 +4299,7 @@ function searchSelect()
 }
 
 /**
- * SearchReplace_extended dialog hidden actions.
+ * SearchReplace_extended.js dialog hidden actions.
  *
  * @param string sDirection
  *   "DOWN"
@@ -4336,13 +4336,18 @@ function SearchReplace_extended(sDir, nBtn, nLog)
     nLogCurrent = nLogArgs;
   //AkelPad.MessageBox(0, "Highlight:\n\n"+ bMarkResults +"\n\n"+ strContent +"\n\n"+ strReplace +"\n\n", WScript.ScriptName, 0 /*MB_OK*/);
 
-  var strParams = '-nDialogHiddenActions=1 -LogArgs='+ nLogArgs +' -sDirection="'+ sDirection +'" -nButton='+ nButton +' -Find="'+ strContent +'" -Replace="'+ strReplace +'" -Sensitive="'+ bMatchCase +'" -Word="'+ bMatchWord +'" -RegExp="'+ bContentRE +'" -Multiline="'+ bMultiline +'" -Highlight=' + (+ bMarkResults) + ' ';
-
   try
   {
+    var strParams = '-nDialogHiddenActions=1 -EscSequences=1 -LogArgs='+ nLogArgs +' -sDirection="'+ sDirection +'" -nButton='+ nButton +' -Find="'+ strContent +'" -Replace="'+ strReplace +'" -Sensitive="'+ bMatchCase +'" -Word="'+ bMatchWord +'" -RegExp="'+ bContentRE +'" -Multiline="'+ bMultiline +'" -Highlight=0 ';
 
-    //AkelPad.Command(4342); // focus the editor
-    //oSys.Call("User32::SetFocus", HWNDEdit);
+    if (nButton === 2 && bMarkResults)
+    {
+      if (! AkelPad.IsPluginRunning("Log::Output"))
+        AkelPad.Call("Log::Output");
+
+      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + (strContent) + '" -bNotRegExp=' + ((bContentRE)?1:0) ));
+    }
+
     AkelPad.Call("Scripts::Main", 2, "SearchReplace_extended.js", strParams);
   }
   catch (oError)

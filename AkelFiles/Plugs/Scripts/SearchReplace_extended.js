@@ -1512,6 +1512,7 @@ function SearchReplace()
   var nChanges=0;
   var nChangedFiles=0;
   var nFoundFiles=0;
+  var nFoundMatches=0;
   var nError;
   var nResult=-1;
   var i;
@@ -1845,6 +1846,7 @@ function SearchReplace()
                 pLine='Searched "'+ sOriginalFindText +'" - ('+ lpMatches.length +') in file ' + AkelPad.GetEditFile(0) +'\n';
               else
                 pLine="";
+              nFoundMatches+=lpMatches.length;
             }
             else pLine='Searched "'+ sOriginalFindText +'" - ('+ lpMatches.length +') in file '+ AkelPad.GetEditFile(0) +'\n';
             nTextLen+=pLine.length;
@@ -1890,6 +1892,7 @@ function SearchReplace()
                 //Set output window text
                 if (hWndOutput && pLine)
                 {
+                  nFoundFiles++;
                   if (nDirection & DN_ALLFILES)
                   {
                     AkelPad.Call("Log::Output", 4 + _TSTR, "\n", -1, ((!bClearLog && !(nLogArgs > 18))? 0 : 1) /*APPEND*/, 0, sLogThemeExt);
@@ -1951,12 +1954,23 @@ function SearchReplace()
     break;
   }
 
-  if ((nButton === BT_REPLACEALL || wCommand === IDC_REPLACEALL_BUTTON))
+  if (nButton === BT_REPLACEALL || wCommand === IDC_REPLACEALL_BUTTON)
   {
     if (nDirection & DN_ALLFILES)
       StatusBarUpdate((" | "+ GetLangString(STRID_COUNTFILES) + nChangedFiles + " " + GetLangString(STRID_COUNTCHANGES) + nChanges).toUpperCase());
     else
       StatusBarUpdate((" | "+ GetLangString(STRID_COUNTCHANGES) + nChanges).toUpperCase());
+  }
+  else if (nButton === BT_FINDALL || wCommand === IDC_FINDALL_BUTTON)
+  {
+    if (nDirection & DN_ALLFILES)
+    {
+      var sMsg = "Total Found: "+ nFoundMatches + " matches in " + ((nFoundFiles === 1) ? nFoundFiles + " file" : nFoundFiles + " files");
+      StatusBarUpdate((" | "+ sMsg).toUpperCase());
+      AkelPad.Call("Log::Output", 4 + _TSTR, "\nSearch ^ "+ sMsg + "\n", -1, 1/*APPEND*/, 0, sLogThemeExt);
+    }
+    else
+      StatusBarUpdate((" | "+ "TOTAL FOUND: "+ lpMatches.length + " matches").toUpperCase());
   }
 
   return nResult;
@@ -2582,6 +2596,8 @@ function GetLangString(nStringID)
       return "Search finished.";
     if (nStringID === STRID_COUNTFILES)
       return "Changed files: ";
+    //if (nStringID === STRID_COUNTFILESFOUND)
+    //  return "Found in files: ";
     if (nStringID === STRID_COUNTCHANGES)
       return "Count of changes: ";
     if (nStringID === STRID_TEMPLATE1)
