@@ -858,7 +858,11 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     else if (wParam === 0x54 /*T key VK_KEY_T*/)
     {
       if (Ctrl() && (! Shift()))
+      {
         CopyLogContentsToNewTabCB("", ".txt");
+        WScript.Sleep(100);
+        oSys.Call("User32::SetFocus", AkelPad.GetEditWnd());
+      }
       else if (Ctrl() && Shift())
         AkelPad.Command(5002);
     }
@@ -869,7 +873,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (Ctrl() && Shift())
       {
         strContent = AkelPad.GetSelText() || sContent || sLastContent;
-        oSys.Call("User32::SetWindowTextW", aDlg[IDCONTENTCB].HWND, strContent);
+        oSys.Call("User32::SetWindowText" + _TCHAR, aDlg[IDCONTENTCB].HWND, strContent);
       }
     }
     else if (wParam === 0x52 /*R key VK_KEY_R*/)
@@ -1493,7 +1497,7 @@ function GetWindowText(hWnd)
 
 function SetWindowText(hWnd, sText)
 {
-  oSys.Call("User32::SetWindowTextW", hWnd, sText);
+  oSys.Call("User32::SetWindowText" + _TCHAR, hWnd, sText);
 }
 
 function GetTextWidth(sText, hWnd, hFont)
