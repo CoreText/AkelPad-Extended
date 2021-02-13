@@ -40,8 +40,8 @@ QuotesRE:
 1 "\A[A-Z]:\\.+?:" "\0=(0,${DEL1},0)"
 1 "Всего вхождений: \d+\Z" "\0=(0,${DEL2},0)"
 1 "Total found: \d+\Z" "\0=(0,${DEL2},0)"
-;Для SearchReplace.js
-1 "\s\(\d+,\d+\)" "\0=(0,${COMM},0)"
+;Для SearchReplace_extended.js
+1 "\(\d+:\d+\)" "\0=(0,${COMM},0)"
 1 "\A\d+:" "\0=(0,${DEL1},0)"
 ;QSearch
 1 '^Search(ing|ed)? .*?:?$' "\0=(0,${DEL1},0)"

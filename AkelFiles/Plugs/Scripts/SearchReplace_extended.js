@@ -1764,7 +1764,7 @@ function SearchReplace()
           if (nDirection & DN_ALLFILES)
             AkelPad.Call("Log::Output", 1, "", "",  "^ \\((\\d+) (\\d+):(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3", -2, -2, nLogArgs);
           else
-            AkelPad.Call("Log::Output", 1, "", "", "^(Searched .+ in file (.*)?$)?(\\((\\d+),(\\d+)\\))?", "/FILE=\\2 /GOTOLINE=\\4:\\5", -2, -2, nLogArgs);
+            AkelPad.Call("Log::Output", 1, "", "", "^(Searched .+ in file (.*)?$)?(\\((\\d+):(\\d+)\\))?", "/FILE=\\2 /GOTOLINE=\\4:\\5", -2, -2, nLogArgs);
           hWndOutput=GetOutputWindow();
         }
 
