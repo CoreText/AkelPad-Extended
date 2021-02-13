@@ -37,6 +37,7 @@
 
 // Ctrl+A           - Select all items in file list
 // Ctrl+C           - Copy selected items from file list
+// Ctrl+Shift+C     - Copy contents of the log
 // Del              - Remove selected items from file list (don't delete the files)
 // Alt+Del          - remove item from history list ("Directory", "File:Stream names", "Text in file\stream", "Replace with", "History")
 
@@ -57,6 +58,7 @@
 // Ctrl+W           - Close current document
 // Ctrl+Shift+W     - Close tabs of opened results
 // Shift+Alt+W      - Close tabs by extension
+// Ctrl+T           - Create New empty tab
 
 // Ctrl+B           - Go to next bookmark
 // Ctrl+Shift+B     - Go to previous bookmark
@@ -833,6 +835,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           AkelPad.Call("LineBoard::Main::PrevBookmark");
       }
     }
+    else if (wParam === 0x43 /*E key VK_KEY_C*/)
+    {
+      LogOutputActions(".txt", CopyLogContentsToClipboardCB);
+    }
     else if (wParam === 0x45 /*E key VK_KEY_E*/)
     {
       if (Ctrl() && (! Shift()))
@@ -851,7 +857,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     }
     else if (wParam === 0x54 /*T key VK_KEY_T*/)
     {
-      if (Ctrl() && Shift())
+      if (Ctrl() && (! Shift()))
+        CopyLogContentsToNewTabCB("", ".txt");
+      else if (Ctrl() && Shift())
         AkelPad.Command(5002);
     }
     else if (wParam === 0x46 /*F key VK_KEY_F*/)
@@ -889,12 +897,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (Ctrl() && (! Shift()))
         FindstrLog(8388608);
       if (Ctrl() && Shift())
-      {
-        if (AkelPad.IsPluginRunning("Log::Output"))
-          LogOutputActions(".ss1");
-        else
-          popupShow("No information found!", 1);
-      }
+        LogOutputActions(".ss1", CopyLogContentsToNewTabCB);
     }
     else if (wParam === 0x4D /*M key VK_KEY_M*/)
     {
@@ -975,7 +978,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x42 /*B key VK_KEY_B*/)
         BookmarkLines('', true);
       else if (wParam === 0x47 /*G key VK_KEY_G*/)
-        TextSearchOptions("WORD TABS");
+      {
+        TextSearchOptions("WORD CASE TABS");
+        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+      }
       else if (wParam === 0x4C /*L key VK_KEY_L*/)
       {
         AkelPad.Command(4333);
@@ -1028,7 +1034,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       else if (wParam === 0x42 /*B key VK_KEY_B*/)
         BookmarkLines('', false);
       else if (wParam === 0x47 /*G key VK_KEY_G*/)
-        TextSearchOptions("WORD UP TABS");
+      {
+        TextSearchOptions("WORD CASE UP TABS");
+        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+      }
       else if (wParam === 0x48 /*H key VK_KEY_H*/)
       {
         bMarkResults = ! bMarkResults;
@@ -1105,9 +1114,16 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         }
       }
       else if (wParam === 0x25 /*LEFT ARROW key VK_LEFT*/)
-        TextSearchOptions("WORD UP");
+      {
+        TextSearchOptions("WORD UP CASE TABS");
+        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+
+      }
       else if (wParam === 0x27 /*RIGHT ARROW key VK_RIGHT*/)
-        TextSearchOptions("WORD");
+      {
+        TextSearchOptions("WORD CASE TABS");
+        oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
+      }
       else if ((wParam === 186 /*VK_OEM_1*/)){}
     }
   }
@@ -4609,11 +4625,17 @@ function StatusBarUpdate(sInfo)
  * @param string sLogThemeExt
  * @return bool if success
  */
-function LogOutputActions(sLogThemeExt)
+function LogOutputActions(sLogThemeExt, callback)
 {
-  var oError, hWndOutput, nTextLen, lpText, sText;
+  var oError = {}, hWndOutput, nTextLen, lpText, sText;
   try
   {
+    if (! AkelPad.IsPluginRunning("Log::Output"))
+    {
+      popupShow("THE LOG IS NOT OPENED!", 1);
+      return false;
+    }
+
     hWndOutput = GetOutputWindow();
     if (nTextLen = AkelPad.SendMessage(hWndOutput, 14 /*WM_GETTEXTLENGTH*/, 0, 0))
     {
@@ -4623,19 +4645,13 @@ function LogOutputActions(sLogThemeExt)
         sText = AkelPad.MemRead(lpText, 1 /*DT_UNICODE*/ );
         AkelPad.MemFree(lpText);
 
-        if (AkelPad.Include("CommonFunctions.js"))
-          createFile(getFileFormat(0), (sLogThemeExt || ".txt"));
-        else
-          AkelPad.SendMessage(AkelPad.GetMainWnd(), 273 /*WM_COMMAND*/, 4101 /*wParam=MAKEWAPARAM(0,IDM_FILE_NEW)*/, 1 /*lParam=TRUE*/);
-
-        AkelPad.ReplaceSel(sText);
-        AkelPad.SetSel(0, 0);
+        callback(sText, sLogThemeExt);
       }
     }
   }
   catch (oError)
   {
-    AkelPad.MessageBox(0, "Error:\n\n" + oError.name + "\n\n" + oError.description + "\n\n", WScript.ScriptName, 16 /*MB_ICONERROR*/);
+    AkelPad.MessageBox(0, "Error:\n\n" + msg +"\n\n"+ oError.name + "\n\n" + oError.description + "\n\n", WScript.ScriptName, 16 /*MB_ICONERROR*/);
     return false;
   }
   hWndOutput = 0;
@@ -4653,6 +4669,36 @@ function GetOutputWindow()
     AkelPad.MemFree(lpWnd);
   }
   return hWnd;
+}
+
+/**
+ * Copy the text from the log into the new tab, callback fn.
+ *
+ * @param string sText
+ * @param string sLogThemeExt
+ * @return void
+ */
+function CopyLogContentsToNewTabCB(sText, sLogThemeExt)
+{
+  if (AkelPad.Include("CommonFunctions.js"))
+    createFile(getFileFormat(0), (sLogThemeExt || ".txt"));
+  else
+    AkelPad.SendMessage(AkelPad.GetMainWnd(), 273 /*WM_COMMAND*/, 4101 /*wParam=MAKEWAPARAM(0,IDM_FILE_NEW)*/, 1 /*lParam=TRUE*/);
+  AkelPad.ReplaceSel(sText);
+  AkelPad.SetSel(0, 0);
+}
+
+/**
+ * Copy the log contents into the clipboard.
+ *
+ * @param string sText
+ * @param string sLogThemeExt
+ * @return void
+ */
+function CopyLogContentsToClipboardCB(sText, sLogThemeExt)
+{
+  popupShow("The Log contents is copied!", 1);
+  AkelPad.SetClipboardText(sText);
 }
 
 function ReadIni()
