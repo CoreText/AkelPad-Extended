@@ -78,9 +78,10 @@
 
 // Ctrl+L           - Show results in the log (FINDSTR)
 // Ctrl+Shift+L     - Show results in the log (FINDSTR) keeping previous results
-// Ctrl+N           - Show results in the new tab (FINDSTR)
+// Alt+N            - Show results in the new tab (FINDSTR)
 
-// Ctrl+Shift+N     - Copy log results into new tab
+// Ctrl+N           - Copy log results into new tab
+// Ctrl+Shift+N     - Force new instance PMDI where you can open your results (ForceNewInstance_extended.js)
 
 // Ctrl+S           - Results of current document (FIND)
 // Ctrl+Shift+S     - Results of current document (FIND), preserving the log output
@@ -124,6 +125,7 @@
  * - FileInfo.js
  * - FileAndStream_extended.js
  * - FindFiles_extended.js
+ * - ForceNewInstance_extended.js
  * - LogHighLight.js
  * - MarkIt_extended.js
  * - TabCloseExts.vbs
@@ -268,7 +270,7 @@ var aFiles          = [];
 var aFilesSel       = [0];
 var nFilesFoc       = 0;
 var aHist           = [];
-var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#A6D8B3";
+var sFoundResultsColorFG = "#000000", sFoundResultsColorBG = "#00FF00";
 var aVCSIgnoreFileConfs = [".gitignore", ".svnignore"];
 var aVCSExcludedPaths = [".git\\", ".vscode\\", ".idea\\", ".history\\", "node_modules\\", "vendor\\", "Thumbs.db", ".DS_Store*"];
 var aVCSUnexcludedPaths = [".gitattributes"];
@@ -874,6 +876,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       {
         strContent = AkelPad.GetSelText() || sContent || sLastContent;
         oSys.Call("User32::SetWindowText" + _TCHAR, aDlg[IDCONTENTCB].HWND, strContent);
+        SendMessage(aDlg[IDCONTENTCB].HWND, 0x142 /*CB_SETEDITSEL*/, 0, MAKELONG(0, -1));
       }
     }
     else if (wParam === 0x52 /*R key VK_KEY_R*/)
@@ -899,9 +902,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
     else if (wParam === 0x4E /*N key VK_KEY_N*/)
     {
       if (Ctrl() && (! Shift()))
-        FindstrLog(8388608);
-      if (Ctrl() && Shift())
         LogOutputActions(".ss1", CopyLogContentsToNewTabCB);
+      else if (Ctrl() && Shift())
+        AkelPad.Call("Scripts::Main", 1, "ForceNewInstance_extended.js", '-MDI=2 -CmdLine="/Show(3)"');
     }
     else if (wParam === 0x4D /*M key VK_KEY_M*/)
     {
@@ -997,10 +1000,12 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         strContent = GetWindowText(aDlg[IDCONTENTCB].HWND) || sContent || sLastContent;
         AkelPad.Call("Scripts::Main", 1, "MarkIt_extended.js", "-text='"+ strContent +"' -tabs=4");
       }
+      else if (wParam === 0x4E /*N key VK_KEY_N*/)
+        FindstrLog();
       else if (wParam === 0x48 /*H key VK_KEY_H*/)
       {
         strContent = GetWindowText(aDlg[IDCONTENTCB].HWND) || sContent || sLastContent;
-        AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")));
+        MakeHighlight(strContent, (! bContentRE));
       }
       else if (wParam === 0x5A /*Z key VK_KEY_Z*/)
         AkelPad.Command(4199);
@@ -3310,6 +3315,10 @@ function correctFileNameFull(pFile)
   return getParent(pFile) + pSlash + pFileNameOnly;
 }
 
+function MAKELONG(a, b)
+{
+  return (a & 0xffff) | ((b & 0xffff) << 16);
+}
 
 function History()
 {
@@ -3763,7 +3772,6 @@ function CloseOpenedFilesFromResult(aFilesForceClose)
               AkelPad.Command(4318 /*IDM_WINDOW_FRAMECLOSE*/);
             else
               AkelPad.Command(4324 /*IDM_WINDOW_FILECLOSE*/);
-
           }
         }
       }
@@ -4043,7 +4051,7 @@ function FindstrLog(pLogOutput)
 
   AkelPad.Call("Log::Output", 1, sCOMMAND, sDirEsc, sREPATTERN, sRETAGS, -2, -2, logOutput, ".ss1");
   if ((logOutput < 8388608) && bMarkResults)
-    AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1")) );
+    MakeHighlight(strContent, (! bContentRE));
 
   return true;
 }
@@ -4075,7 +4083,7 @@ function FindToLog(pLogOutput)
   );
 
   if ((logOutput < 8388608) && bMarkResults)
-    AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ strContent +'" -bNotRegExp='+ ((bContentRE)?"0":"1") ));
+    MakeHighlight(strContent, (! bContentRE));
 
   return true;
 }
@@ -4189,7 +4197,8 @@ function qSearching(selText, flag)
     }
 
     if (bMarkResults)
-      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ textSelected +'" -bNotRegExp='+ ((bRegEx)?"0":"1")) );
+      //AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="'+ textSelected +'" -bNotRegExp='+ ((bRegEx)?"0":"1")) );
+      MakeHighlight(textSelected, 1);
     return true;
   }
   else
@@ -4338,25 +4347,32 @@ function SearchReplace_extended(sDir, nBtn, nLog)
 
   try
   {
-    var strParams = '-nDialogHiddenActions=1 -EscSequences=1 -LogArgs='+ nLogArgs +' -sDirection="'+ sDirection +'" -nButton='+ nButton +' -Find="'+ strContent +'" -Replace="'+ strReplace +'" -Sensitive="'+ bMatchCase +'" -Word="'+ bMatchWord +'" -RegExp="'+ bContentRE +'" -Multiline="'+ bMultiline +'" -Highlight=0 ';
-
+    var strParams = '-bDialogHiddenActions=1 -LogArgs='+ nLogArgs +' -sDirection="'+ encodeURIComponent(sDirection) +'" -nButton='+ nButton +' -Sensitive='+ bMatchCase +'  -Word='+ bMatchWord +' -RegExp='+ bContentRE +' -Multiline='+ bMultiline +' -Highlight=0 -Find="'+ encodeURIComponent(strContent) +'" -Replace="'+ encodeURIComponent(strReplace) +'"';
     if (nButton === 2 && bMarkResults)
-    {
-      if (! AkelPad.IsPluginRunning("Log::Output"))
-        AkelPad.Call("Log::Output");
-
-      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + (strContent) + '" -bNotRegExp=' + ((bContentRE)?1:0) ));
-    }
-
+      MakeHighlight(strContent, (! bContentRE));
     AkelPad.Call("Scripts::Main", 2, "SearchReplace_extended.js", strParams);
   }
   catch (oError)
   {
-    AkelPad.MessageBox(0, 'SearchReplace_extended()\n\nError:\n'+ oError.name +"\n\n"+ oError.description  +"\n\n"+ strContent +"\n"+ strReplace +"\n\nLog::Output arguments: "+ nLogArgs, sScriptName, 16 /*MB_ICONERROR*/);
+    AkelPad.MessageBox(0, 'SearchReplace_extended()\n\nError:\n'+ oError.name +"\n\n"+ oError.description  +"\n\n"+ strContent +"\n"+ strReplace +"\n\nLog::Output Arguments: "+ nLogArgs, sScriptName, 16 /*MB_ICONERROR*/);
     return false;
   }
 
   return true;
+}
+
+/**
+ * Highlight the results in the Log::Output
+ *
+ * @param string -text to highlight
+ * @param bool|number 0|1 -if regular expression to search
+ * @return void
+ */
+function MakeHighlight(strContent, bNotRegEx)
+{
+  if (! AkelPad.IsPluginRunning("Log::Output"))
+        AkelPad.Call("Log::Output");
+  AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-bNotRegExp=' + ((bNotRegEx)?1:0) + ' -sText="' + encodeURIComponent(strContent) + '"'));
 }
 
 /**
@@ -4642,6 +4658,7 @@ function LogOutputActions(sLogThemeExt, callback)
     if (! AkelPad.IsPluginRunning("Log::Output"))
     {
       popupShow("THE LOG IS NOT OPENED!", 1);
+      AkelPad.Call("Log::Output");
       return false;
     }
 
