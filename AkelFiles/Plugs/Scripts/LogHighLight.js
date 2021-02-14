@@ -2,10 +2,10 @@
 // 14.02.2021
 //
 // Description(1033): Highlight the text in the console (Log plugin)
-// Description(1049): Подсветить текст в консоли (Log плагин)
+// Description(1049): РџРѕРґСЃРІРµС‚РёС‚СЊ С‚РµРєСЃС‚ РІ РєРѕРЅСЃРѕР»Рё (Log РїР»Р°РіРёРЅ)
 //
-// Нужно, чтобы были файлы "%a\AkelFiles\Plugs\Coder\sss1.tmp" и "%a\AkelFiles\Plugs\Coder\ss1.coder"
-// sss1.tmp генерирует подсветку в ss1.coder при каждом вызове скрипта.
+// РќСѓР¶РЅРѕ, С‡С‚РѕР±С‹ Р±С‹Р»Рё С„Р°Р№Р»С‹ "%a\AkelFiles\Plugs\Coder\sss1.tmp" Рё "%a\AkelFiles\Plugs\Coder\ss1.coder"
+// sss1.tmp РіРµРЅРµСЂРёСЂСѓРµС‚ РїРѕРґСЃРІРµС‚РєСѓ РІ ss1.coder РїСЂРё РєР°Р¶РґРѕРј РІС‹Р·РѕРІРµ СЃРєСЂРёРїС‚Р°.
 //
 // Highlights:
 // Green         - the precise match
@@ -14,21 +14,21 @@
 // Purple Indigo - is not the exact word and not the exact character case
 //
 // Usage:
-// AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="Привет" -bNotRegExp=1');             // элементарный вызов
-// AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=1');  // sWhatText - переменная с текстом
+// AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="РџСЂРёРІРµС‚" -bNotRegExp=1');             // СЌР»РµРјРµРЅС‚Р°СЂРЅС‹Р№ РІС‹Р·РѕРІ
+// AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=1');  // sWhatText - РїРµСЂРµРјРµРЅРЅР°СЏ СЃ С‚РµРєСЃС‚РѕРј
 //
-// Пример захвата чекбокса рег.выр. в скрипте `FindReplaceEx.js`:
-// AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=' + (SendDlgItemMessage(hDlg, IDC_SEARCH_REGEXP, 240 /*BM_GETCHECK*/, 0, 0)?0:1));
+// РџСЂРёРјРµСЂ Р·Р°С…РІР°С‚Р° С‡РµРєР±РѕРєСЃР° СЂРµРі.РІС‹СЂ. РІ СЃРєСЂРёРїС‚Рµ `FindReplaceEx.js`:
+// AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + sWhatText + '" -bNotRegExp=' + ((nFRF & FRF_REGEXP)?"1":"0") ));
 //
 // highlight test RegExp (?=["'])(?:"[^"\\]*(?:\\[\s\S][^"\\]*)*"|'[^'\\]*(?:\\[\s\S][^'\\]*)*')
 
-var hWndOutput = GetOutputWindow(); // получить дескриптор окна консоли
+var hWndOutput = GetOutputWindow(); // РїРѕР»СѓС‡РёС‚СЊ РґРµСЃРєСЂРёРїС‚РѕСЂ РѕРєРЅР° РєРѕРЅСЃРѕР»Рё
 var hMainWnd;
 var oError;
 
 if (! hWndOutput)
 {
-  WScript.Echo("Консоль закрыта, нечего подсвечивать");
+  WScript.Echo("РљРѕРЅСЃРѕР»СЊ Р·Р°РєСЂС‹С‚Р°, РЅРµС‡РµРіРѕ РїРѕРґСЃРІРµС‡РёРІР°С‚СЊ");
   WScript.Quit();
 }
 
@@ -36,7 +36,7 @@ var pPath = AkelPad.GetAkelDir();
 var pPathCoder = pPath + "\\AkelFiles\\Plugs\\Coder\\sss1.tmp";
 if (! FileExists(pPathCoder))
 {
-  WScript.Echo('Нужен файл "\\AkelFiles\\Plugs\\Coder\\sss1.tmp"');
+  WScript.Echo('РќСѓР¶РµРЅ С„Р°Р№Р» "\\AkelFiles\\Plugs\\Coder\\sss1.tmp"');
   WScript.Quit();
 }
 
@@ -49,7 +49,7 @@ sSelText = (! sText)? AkelPad.GetSelText() : decodeURIComponent(sText.replace(/^
 if (sSelText === "")
 {
   hMainWnd = AkelPad.GetMainWnd();
-  if (AkelPad.MessageBox(hMainWnd, "Нужно выделить текст!\nИспользовать регулярное выражения из буфера обмена?", WScript.ScriptName, (4 + 256 + 32)) === 6)
+  if (AkelPad.MessageBox(hMainWnd, "РќСѓР¶РЅРѕ РІС‹РґРµР»РёС‚СЊ С‚РµРєСЃС‚!\nРСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЂРµРіСѓР»СЏСЂРЅРѕРµ РІС‹СЂР°Р¶РµРЅРёСЏ РёР· Р±СѓС„РµСЂР° РѕР±РјРµРЅР°?", WScript.ScriptName, (4 + 256 + 32)) === 6)
   {
     sSelText = AkelPad.GetClipboardText();
     bNotRegExp = 0;
@@ -61,21 +61,19 @@ if (sSelText === "")
 try
 {
 	var sSelTextEscaped = sSelText
-	 .replace(/[\\\/.,^\!@#\№$%&*+\-\_\=?|()\[\]{}\<\>\;\:]/g, "\\$&")
+	 .replace(/[\\\/.,^\!@#\в„–$%&*+\-\_\=?|()\[\]{}\<\>\;\:]/g, "\\$&")
 	 .replace(/\`/g, '\\W')                                           // escape ` in ss1.coder regexp string
 	;
 
-  sSelText = sSelText.replace(/^["]/, "").replace(/["]$/, "");      // remove unwanted quotes
-
-	AkelPad.SetEditWnd(hWndOutput);                                   // устанавливает консоль окном редактирования
-	var sLogText = AkelPad.GetTextRange(0, -1);                       // получает текст консоли
+	AkelPad.SetEditWnd(hWndOutput);                                   // СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РєРѕРЅСЃРѕР»СЊ РѕРєРЅРѕРј СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ
+	var sLogText = AkelPad.GetTextRange(0, -1);                       // РїРѕР»СѓС‡Р°РµС‚ С‚РµРєСЃС‚ РєРѕРЅСЃРѕР»Рё
 	var pPathCoder1 = pPath + "\\AkelFiles\\Plugs\\Coder\\ss1.coder";
 	var pTextCoder = AkelPad.ReadFile(pPathCoder, 0xD, 1200, true);   // 1200 = 16LE
 
-	if (/[\r\n]/.test(sSelTextEscaped))                               // отменяем подсветку если выделен многострочный текст, Coder это не переварит
+	if (/[\r\n]/.test(sSelTextEscaped))                               // РѕС‚РјРµРЅСЏРµРј РїРѕРґСЃРІРµС‚РєСѓ РµСЃР»Рё РІС‹РґРµР»РµРЅ РјРЅРѕРіРѕСЃС‚СЂРѕС‡РЅС‹Р№ С‚РµРєСЃС‚, Coder СЌС‚Рѕ РЅРµ РїРµСЂРµРІР°СЂРёС‚
 	{
 	  AkelPad.SetEditWnd(0);
-	  WScript.Echo("Не для многострочного текста");
+	  WScript.Echo("РќРµ РґР»СЏ РјРЅРѕРіРѕСЃС‚СЂРѕС‡РЅРѕРіРѕ С‚РµРєСЃС‚Р°");
 	  WScript.Quit();
 	}
 
@@ -84,8 +82,8 @@ try
 
 	if (validateRegex(sSelText))
 	{
-  	pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
-  	AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
+  	pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);           // Р·Р°РјРµРЅР° С€Р°Р±Р»РѕРЅР° РІ СЂРµРі.РІС‹СЂ. СЃРµРєС†РёРё
+  	AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);     // 1200 = 16LE
 	}
 }
 catch (oError)
@@ -96,9 +94,9 @@ catch (oError)
   WScript.Quit();
 }
 
-AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")          // вставить текст включая подсветку alias
-AkelPad.SetEditWnd(0);                                              // возвращает окно редактирования
-AkelPad.Call("Coder::Settings", 2);                                 // перерисовать  подсветку
+AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")          // РІСЃС‚Р°РІРёС‚СЊ С‚РµРєСЃС‚ РІРєР»СЋС‡Р°СЏ РїРѕРґСЃРІРµС‚РєСѓ alias
+AkelPad.SetEditWnd(0);                                              // РІРѕР·РІСЂР°С‰Р°РµС‚ РѕРєРЅРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ
+AkelPad.Call("Coder::Settings", 2);                                 // РїРµСЂРµСЂРёСЃРѕРІР°С‚СЊ  РїРѕРґСЃРІРµС‚РєСѓ
 
 //////////////////////////////////////////////////////////////////////
 
@@ -115,7 +113,7 @@ function GetOutputWindow()
   return hWnd;
 }
 
-// если объект разово используется, то можно внутри функции его создать
+// РµСЃР»Рё РѕР±СЉРµРєС‚ СЂР°Р·РѕРІРѕ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ, С‚Рѕ РјРѕР¶РЅРѕ РІРЅСѓС‚СЂРё С„СѓРЅРєС†РёРё РµРіРѕ СЃРѕР·РґР°С‚СЊ
 function FileExists(pPathCoder)
 {
   var fso = new ActiveXObject("Scripting.FileSystemObject");
