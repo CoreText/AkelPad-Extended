@@ -56,7 +56,6 @@ try
 {
 	var sSelTextEscaped = sSelText
 	 .replace(/[\\\/.,^\!@#\№$%&*+\-\_\=?|()\[\]{}\<\>\;\:]/g, "\\$&")
-	 .replace(/\"\"/g, '\\""')                                        // escape " quotes between quotes ""
 	 .replace(/\`/g, '\\W')                                           // escape ` in ss1.coder regexp string
 	;
 
@@ -75,8 +74,8 @@ try
 	}
 
   //AkelPad.MessageBox(0, "\n\nbNotRegExp:\n"+ bNotRegExp +"\n\nText:\n"+ sSelText +"\n\nText Escaped:\n"+ sSelTextEscaped, WScript.ScriptName, 0);
-	if (bNotRegExp)
-	  sSelText = sSelTextEscaped;
+	sSelText = (bNotRegExp)? sSelTextEscaped : sSelText.replace(/\`/g, '\\W');
+	
 
 	if (validateRegex(sSelText))
 	{
@@ -89,6 +88,7 @@ catch (oError)
   AkelPad.MessageBox(0,
     'LogHighLight.js Error:\n'+ oError.name +"\n"+ oError.description  +"\n\n"+ sSelText +"\n\nPath to coder file:\n"+ pPathCoder1 +"\n\npTextCoder:\n"+ pTextCoder
     , WScript.ScriptName, 16 /*MB_ICONERROR*/);
+  WScript.Quit();
 }
 
 AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")          // вставить текст включая подсветку alias
@@ -122,11 +122,11 @@ function FileExists(pPathCoder)
  * @param string -pattern to test
  * @return bool -true if success
  */
-function validateRegex(pattern)
+function validateRegex(sPattern)
 {
   try
   {
-    new RegExp(pattern);
+    new RegExp("`"+ sPattern +"`");
     return true;
   }
   catch (oError)
