@@ -8,10 +8,10 @@
 // sss1.tmp генерирует подсветку в ss1.coder при каждом вызове скрипта.
 //
 // Highlights:
-// Green  - precise match
-// Pink   - exact word, but other character case
-// Pink   - exact character case, but not exact word
-// Purple - is not exact word and not exact character case
+// Green           - precise match
+// Magenta/Fuchsia - exact word, but other character case
+// Deep Pink       - exact character case, but not exact word
+// Purple Indigo   - is not exact word and not exact character case
 //
 // Usage:
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="Привет" -bNotRegExp=1');             // элементарный вызов
