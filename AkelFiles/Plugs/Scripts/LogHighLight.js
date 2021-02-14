@@ -7,13 +7,19 @@
 // Нужно, чтобы были файлы "%a\AkelFiles\Plugs\Coder\sss1.tmp" и "%a\AkelFiles\Plugs\Coder\ss1.coder"
 // sss1.tmp генерирует подсветку в ss1.coder при каждом вызове скрипта.
 //
+// Highlights:
+// Green  - precise match
+// Pink   - exact word, but other character case
+// Pink   - exact character case, but not exact word
+// Purple - is not exact word and not exact character case
+//
 // Usage:
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="Привет" -bNotRegExp=1');             // элементарный вызов
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=1');  // sWhatText - переменная с текстом
 //
 // Пример захвата чекбокса рег.выр. в скрипте `FindReplaceEx.js`:
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=' + (SendDlgItemMessage(hDlg, IDC_SEARCH_REGEXP, 240 /*BM_GETCHECK*/, 0, 0)?0:1));
-// 
+//
 // highlight test RegExp (?=["'])(?:"[^"\\]*(?:\\[\s\S][^"\\]*)*"|'[^'\\]*(?:\\[\s\S][^'\\]*)*')
 
 var hWndOutput = GetOutputWindow(); // получить дескриптор окна консоли
@@ -75,7 +81,6 @@ try
 
   //AkelPad.MessageBox(0, "\n\nbNotRegExp:\n"+ bNotRegExp +"\n\nText:\n"+ sSelText +"\n\nText Escaped:\n"+ sSelTextEscaped, WScript.ScriptName, 0);
 	sSelText = (bNotRegExp)? sSelTextEscaped : sSelText.replace(/\`/g, '\\W');
-	
 
 	if (validateRegex(sSelText))
 	{
