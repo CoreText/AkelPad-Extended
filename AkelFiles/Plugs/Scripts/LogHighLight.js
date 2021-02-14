@@ -43,7 +43,7 @@ sSelText = (! sText)? AkelPad.GetSelText() : decodeURIComponent(sText.replace(/^
 if (sSelText === "")
 {
   hMainWnd = AkelPad.GetMainWnd();
-  if (AkelPad.MessageBox(hMainWnd, "Нужно выделить текст!\nИспользовать регулярное выражения из буфера обмена?", WScript.ScriptName, 4 + 256 + 32) === 6)
+  if (AkelPad.MessageBox(hMainWnd, "Нужно выделить текст!\nИспользовать регулярное выражения из буфера обмена?", WScript.ScriptName, (4 + 256 + 32)) === 6)
   {
     sSelText = AkelPad.GetClipboardText();
     bNotRegExp = 0;
@@ -54,7 +54,6 @@ if (sSelText === "")
 
 try
 {
-  var sTextOriginal = sSelText;
 	var sSelTextEscaped = sSelText
 	 .replace(/[\\\/.,^\!@#\№$%&*+\-\_\=?|()\[\]{}\<\>\;\:]/g, "\\$&")
 	 .replace(/\"\"/g, '\\""')                                        // escape " quotes between quotes ""
@@ -80,7 +79,6 @@ try
 	  sSelText = sSelTextEscaped;
 
 	pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
-
 	AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
 }
 catch (oError)
@@ -100,10 +98,10 @@ function GetOutputWindow()
 {
   var lpWnd;
   var hWnd = 0;
-  if (lpWnd = AkelPad.MemAlloc(_X64 ? 8 : 4 /*sizeof(HWND)*/))
+  if (lpWnd = AkelPad.MemAlloc(_X64? 8 : 4 /*sizeof(HWND)*/))
   {
     AkelPad.Call("Log::Output", 2, lpWnd);
-    hWnd = AkelPad.MemRead(lpWnd, 2 /*DT_QWORD*/ );
+    hWnd = AkelPad.MemRead(lpWnd, 2 /*DT_QWORD*/);
     AkelPad.MemFree(lpWnd);
   }
   return hWnd;
@@ -113,5 +111,5 @@ function GetOutputWindow()
 function FileExists(pPathCoder)
 {
   var fso = new ActiveXObject("Scripting.FileSystemObject");
-  return (fso.FileExists(pPathCoder) ? 1 : 0);
+  return (fso.FileExists(pPathCoder)? 1 : 0);
 }
