@@ -1964,7 +1964,7 @@ function SearchReplace()
     else
       StatusBarUpdate((" | "+ GetLangString(STRID_COUNTCHANGES) + nChanges).toUpperCase());
   }
-  else if (bDialogHiddenActions && (nButton === BT_FINDALL || wCommand === IDC_FINDALL_BUTTON))
+  else if (nButton === BT_FINDALL || wCommand === IDC_FINDALL_BUTTON)
   {
     if (nDirection & DN_ALLFILES)
     {
@@ -2472,7 +2472,7 @@ function LogOutputActions(nLogArgs, sLogThemeExt)
 
 /**
  * Highlight the results in the Log::Output
- * 
+ *
  * @param string -text to highlight
  * @param bool|number 0|1 -if regular expression to search
  * @return void
