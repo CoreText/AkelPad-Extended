@@ -61,7 +61,10 @@ if (/[\r\n]/.test(sSelText))                                      // отмен€ем по
 }
 
 if (bNotRegExp)
+{
+  sSelText = escapeRegExp(sSelText);
   sSelText = sSelText.replace(/[\\]\\[\\{\\}\\(\\)\\*\\+\\?\\.\\^\\$\\|\\=\\<\\>\\#\\\\]/g, "\\"); // экранировать спецсимволы регул€рного выражени€
+}
 
 pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
 AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
@@ -70,6 +73,10 @@ AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")        // вставить те
 AkelPad.SetEditWnd(0);                                            // возвращает окно редактировани€
 AkelPad.Call("Coder::Settings", 2);                               // перерисовать  подсветку
 
+function escapeRegExp(sText)
+{
+  return sText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');            // $& means the whole matched string
+}
 
 function GetOutputWindow()
 {
