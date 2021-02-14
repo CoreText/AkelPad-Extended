@@ -1,4 +1,4 @@
-// http://akelpad.sourceforge.net/en/plugins.php#Scripts
+// http://AkelPad.sourceforge.net/en/plugins.php#Scripts
 // Version: 4.0
 // Author: Shengalts Aleksander aka Instructor / texter
 //
@@ -807,22 +807,24 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
 
         ResetInputsDirection();
 
-        if (Ctrl() && Shift() && (!Alt()))
-        {
-          nDirection=DN_BEGINNING;
-          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceAllButton))
-          {
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACEALL_BUTTON, 0);
-            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
-          }
-        }
-        else if (Ctrl() && (!Shift()) && (!Alt()))
+        if (Ctrl() && (!Shift()) && (!Alt()))
         {
           nDirection=DN_DOWN;
           if (oSys.Call("user32::IsWindowEnabled", hWndReplaceButton))
           {
             oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACE_BUTTON, 0);
             AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+            oSys.Call("user32::SetFocus", hWndWith);
+          }
+        }
+        else if (Ctrl() && Shift() && (!Alt()))
+        {
+          nDirection=DN_BEGINNING;
+          if (oSys.Call("user32::IsWindowEnabled", hWndReplaceAllButton))
+          {
+            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_REPLACEALL_BUTTON, 0);
+            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+            oSys.Call("user32::SetFocus", hWndWhat);
           }
         }
       }
@@ -968,9 +970,9 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (!hWndOutput)
       {
         bCloseDialog=false;
+        ResetInputsDirection();
         if ((!Ctrl()) && (!Shift()) && Alt())
         {
-          ResetInputsDirection();
           nDirection=DN_BEGINNING;
           if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
           {
@@ -980,7 +982,6 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
         }
         if ((!Ctrl()) && Shift() && Alt())
         {
-          ResetInputsDirection();
           nDirection=DN_ALLFILES;
           if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
           {
@@ -1527,7 +1528,7 @@ function SearchReplace()
   {
     sOriginalFindText = pFindIt;
     if (bWord)
-      pFindIt = "(?=\\b|\\W)"+ pFindIt +"(?=\\W|\\b)";
+      pFindIt = "(?=\\b|\\W)"+ pFindIt.replace(/[\\\/.,^\!@#\№$%&*+\-\_\=?|()\[\]{}\<\>\;\:]/g, "\\$&") +"(?=\\W|\\b)";
 
     oPattern=new RegExp(((bRegExp || bWord)?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton===BT_FINDALL || nButton===BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
   }
@@ -2479,6 +2480,8 @@ function LogOutputActions(nLogArgs, sLogThemeExt)
  */
 function MakeHighlight(strContent, bNotRegEx)
 {
+  if (! AkelPad.IsPluginRunning("Log::Output"))
+      AkelPad.Call("Log::Output");
   AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-bNotRegExp='+ ((bNotRegEx)?1:0) +' -sText="'+ encodeURIComponent(strContent) +'"'));
 }
 
@@ -2596,11 +2599,11 @@ function GetLangString(nStringID)
     if (nStringID === STRID_FINDNEXT)
       return "&Find next";
     if (nStringID === STRID_FINDALL)
-      return "Find a&ll";
+      return "Find &all";
     if (nStringID === STRID_REPLACE)
       return "&Replace";
     if (nStringID === STRID_REPLACEALL)
-      return "Replace &all";
+      return "Replace al&l";
     if (nStringID === STRID_CANCEL)
       return "Cancel";
     if (nStringID === STRID_STOP)
