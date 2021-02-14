@@ -13,9 +13,13 @@
 //
 // ѕример захвата чекбокса рег.выр. в скрипте `FindReplaceEx.js`:
 // AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", '-sSelText="' + sWhatText + '" -bNotRegExp=' + (SendDlgItemMessage(hDlg, IDC_SEARCH_REGEXP, 240 /*BM_GETCHECK*/, 0, 0)?0:1));
+// 
+// highlight test RegExp (?=["'])(?:"[^"\\]*(?:\\[\s\S][^"\\]*)*"|'[^'\\]*(?:\\[\s\S][^'\\]*)*')
 
 var hWndOutput = GetOutputWindow(); // получить дескриптор окна консоли
 var hMainWnd;
+var oError;
+
 if (! hWndOutput)
 {
   WScript.Echo(" онсоль закрыта, нечего подсвечивать");
@@ -32,7 +36,9 @@ if (! FileExists(pPathCoder))
 
 // Arguments
 var bNotRegExp = AkelPad.GetArgValue("bNotRegExp", 1);
-var sSelText = AkelPad.GetArgValue("sSelText", AkelPad.GetSelText());
+var sText = AkelPad.GetArgValue("sText", "");
+var sSelText = "";
+sSelText = (! sText)? AkelPad.GetSelText() : decodeURIComponent(sText.replace(/^["]/, "").replace(/["]$/, ""));
 
 if (sSelText === "")
 {
@@ -46,44 +52,55 @@ if (sSelText === "")
     WScript.Quit();
 }
 
-sSelText = sSelText.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&").replace(/\"\"/g, '\\""').replace(/\`/g, '\\W');
-
-AkelPad.SetEditWnd(hWndOutput);                                   // устанавливает консоль окном редактировани€
-var sLogText = AkelPad.GetTextRange(0, -1);                       // получает текст консоли
-var pPathCoder1 = pPath + "\\AkelFiles\\Plugs\\Coder\\ss1.coder";
-var pTextCoder = AkelPad.ReadFile(pPathCoder, 0xD, 1200, true);   // 1200 = 16LE
-
-if (/[\r\n]/.test(sSelText))                                      // отмен€ем подсветку если выделен многострочный текст, Coder это не переварит
+try
 {
-  AkelPad.SetEditWnd(0);
-  WScript.Echo("Ќе дл€ многострочного текста");
-  WScript.Quit();
+  var sTextOriginal = sSelText;
+	var sSelTextEscaped = sSelText
+	 .replace(/[\\\/.,^\!@#\є$%&*+\-\_\=?|()\[\]{}\<\>\;\:]/g, "\\$&")
+	 .replace(/\"\"/g, '\\""')                                        // escape " quotes between quotes ""
+	 .replace(/\`/g, '\\W')                                           // escape ` in ss1.coder regexp string
+	;
+
+  sSelText = sSelText.replace(/^["]/, "").replace(/["]$/, "");      // remove unwanted quotes
+
+	AkelPad.SetEditWnd(hWndOutput);                                   // устанавливает консоль окном редактировани€
+	var sLogText = AkelPad.GetTextRange(0, -1);                       // получает текст консоли
+	var pPathCoder1 = pPath + "\\AkelFiles\\Plugs\\Coder\\ss1.coder";
+	var pTextCoder = AkelPad.ReadFile(pPathCoder, 0xD, 1200, true);   // 1200 = 16LE
+
+	if (/[\r\n]/.test(sSelTextEscaped))                               // отмен€ем подсветку если выделен многострочный текст, Coder это не переварит
+	{
+	  AkelPad.SetEditWnd(0);
+	  WScript.Echo("Ќе дл€ многострочного текста");
+	  WScript.Quit();
+	}
+
+  //AkelPad.MessageBox(0, "\n\nbNotRegExp:\n"+ bNotRegExp +"\n\nText:\n"+ sSelText +"\n\nText Escaped:\n"+ sSelTextEscaped, WScript.ScriptName, 0);
+	if (bNotRegExp)
+	  sSelText = sSelTextEscaped;
+
+	pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
+
+	AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
+}
+catch (oError)
+{
+  AkelPad.MessageBox(0,
+    'LogHighLight.js Error:\n'+ oError.name +"\n"+ oError.description  +"\n\n"+ sSelText +"\n\nPath to coder file:\n"+ pPathCoder1 +"\n\npTextCoder:\n"+ pTextCoder
+    , WScript.ScriptName, 16 /*MB_ICONERROR*/);
 }
 
-if (bNotRegExp)
-{
-  sSelText = escapeRegExp(sSelText);
-  sSelText = sSelText.replace(/[\\]\\[\\{\\}\\(\\)\\*\\+\\?\\.\\^\\$\\|\\=\\<\\>\\#\\\\]/g, "\\"); // экранировать спецсимволы регул€рного выражени€
-}
+AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")          // вставить текст включа€ подсветку alias
+AkelPad.SetEditWnd(0);                                              // возвращает окно редактировани€
+AkelPad.Call("Coder::Settings", 2);                                 // перерисовать  подсветку
 
-pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
-AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
-AkelPad.Call("Log::Output", 4, sLogText, -1, 0, 0, ".ss1")        // вставить текст включа€ подсветку alias
-
-AkelPad.SetEditWnd(0);                                            // возвращает окно редактировани€
-AkelPad.Call("Coder::Settings", 2);                               // перерисовать  подсветку
-
-function escapeRegExp(sText)
-{
-  return sText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');            // $& means the whole matched string
-}
+//////////////////////////////////////////////////////////////////////
 
 function GetOutputWindow()
 {
   var lpWnd;
   var hWnd = 0;
-
-  if (lpWnd = AkelPad.MemAlloc(_X64 ? 8 : 4 /*sizeof(HWND)*/ ))
+  if (lpWnd = AkelPad.MemAlloc(_X64 ? 8 : 4 /*sizeof(HWND)*/))
   {
     AkelPad.Call("Log::Output", 2, lpWnd);
     hWnd = AkelPad.MemRead(lpWnd, 2 /*DT_QWORD*/ );
