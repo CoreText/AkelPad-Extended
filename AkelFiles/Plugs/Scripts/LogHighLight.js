@@ -46,7 +46,7 @@ if (sSelText === "")
     WScript.Quit();
 }
 
-sSelText = sSelText.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&").replace(/\"\"/g, '\\""');
+sSelText = sSelText.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&").replace(/\"\"/g, '\\""').replace(/\`/g, '\\W');
 
 AkelPad.SetEditWnd(hWndOutput);                                   // устанавливает консоль окном редактирования
 var sLogText = AkelPad.GetTextRange(0, -1);                       // получает текст консоли
