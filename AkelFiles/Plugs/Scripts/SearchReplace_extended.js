@@ -11,7 +11,7 @@
 // -DefButtonID=1016          -Default button ID. See IDC_* defines below (default is 1016).
 // -Template="Name"           -Template used on dialog open (default is "").
 //
-// -nDialogHiddenActions=0    -Run script without the dialog (0 by deafault - shows, 1 - hide dialog)
+// -bDialogHiddenActions=0    -Run script without the dialog (0 by deafault - shows, 1 - hide dialog)
 // -sDirection="DOWN"         -BEGIN, SELECTED, DOWN, UP, TABS
 // -LogArgs=18                -See Log::Output FLAGS in the AkelPad docs. Recomended to use 18, 26
 //                             8388608 log results in new tab.
@@ -47,7 +47,7 @@
 // -DefButtonID=1016          -Идентификатор кнопки по умолчанию. См. описание IDC_* ниже (по умолчанию 1016).
 // -Template="Имя"            -Шаблон, использующийся при открытии диалога (по умолчанию "").
 //
-// -nDialogHiddenActions=0    -Вызов скрипта без диалога (0 - по умолчанию показывает, 1 - без диалога)
+// -bDialogHiddenActions=0    -Вызов скрипта без диалога (0 - по умолчанию показывает, 1 - без диалога)
 // -sDirection="DOWN"         -BEGIN, SELECTED, DOWN, UP, TABS
 // -LogArgs=18                -См в документации Log::Output FLAGS. Предпочтительно использовать 18, 26 Append
 //                             8388608 результаты в новой вкладке.
@@ -117,7 +117,7 @@
  */
 
 var oError;
-var nDialogHiddenActions=AkelPad.GetArgValue("nDialogHiddenActions", 0);
+var bDialogHiddenActions=AkelPad.GetArgValue("bDialogHiddenActions", 0);
 
 //Arguments
 try
@@ -132,8 +132,8 @@ try
   var bWord=AkelPad.GetArgValue("Word", 0);
   var nButton=AkelPad.GetArgValue("nButton", 1);
   var nDefButtonID=AkelPad.GetArgValue("DefButtonID", 1016 /*IDC_FIND_BUTTON*/);
-  //var nDialogHiddenActions=0;
-  var sDirection=AkelPad.GetArgValue("sDirection", "DOWN");
+  //var bDialogHiddenActions=0;
+  var sDirection=decodeURIComponent(AkelPad.GetArgValue("sDirection", "DOWN"));
   var nDirection=GetDirection(sDirection);
 
   /**
@@ -147,9 +147,12 @@ try
   var nLogArgs=+AkelPad.GetArgValue("LogArgs", 18);
   var nSearchStrings=AkelPad.GetArgValue("SearchStrings", 10);
   var pFindIt=AkelPad.GetArgValue("Find", "");
+  pFindIt = decodeURIComponent(pFindIt.replace(/^["]/, "").replace(/["]$/, ""));
   var pReplaceWith=AkelPad.GetArgValue("Replace", "");
+  pReplaceWith = decodeURIComponent(pReplaceWith.replace(/^["]/, "").replace(/["]$/, ""));
   var sReplaceWithIt=pReplaceWith;
   var pTemplate=AkelPad.GetArgValue("Template", "");
+  pTemplate = decodeURIComponent(pTemplate.replace(/^["]/, "").replace(/["]$/, ""));
   var sLogThemeExt=AkelPad.GetArgValue("LogThemeExt", ".ss1");
 
   //AkelPad.MessageBox(0, pFindIt +"\n\n"+ pReplaceWith +"\n\n"+ bWord +"\n\n"+ nDirection, WScript.ScriptName, 0 /*MB_OK*/);
@@ -318,7 +321,7 @@ var sReplaceBGColor = "#FF0080";
 var sReplaceFGColor = "#000000";
 var wCommand;
 
-if (hWndEdit && !nDialogHiddenActions)
+if (hWndEdit && !bDialogHiddenActions)
 {
   if (AkelPad.WindowRegisterClass(pClassName))
   {
@@ -371,13 +374,13 @@ if (hWndEdit && !nDialogHiddenActions)
     oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, AKDLG_PUTFIND, false, 0);
   }
 }
-else if (hWndEdit && nDialogHiddenActions === 1)
+else if (hWndEdit && bDialogHiddenActions === 1)
 {
   try
   {
     nSearchResult = SearchReplace();
     if (bHighlight && nButton === 2)
-      AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + (sOriginalFindText || pFindIt) + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
+      MakeHighlight((sOriginalFindText || pFindIt), (!bRegExp));
   }
   catch(oError)
   {
@@ -436,7 +439,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
                  [GetLangString(STRID_TEMPLATE2), "(^[ \\t]+)|([ \\t]+$)", "", "rm"],
                  [GetLangString(STRID_TEMPLATE3), "[^\\n]", " ", "r"]];
 
-    if (oSet.Begin("", 0x1 /*POB_READ*/) && !nDialogHiddenActions)
+    if (oSet.Begin("", 0x1 /*POB_READ*/) && !bDialogHiddenActions)
     {
       //Read settings
       bHighlight=oSet.Read("Highlight", 1 /*PO_DWORD*/);
@@ -1372,7 +1375,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       }
     }
 
-    if (oSet.Begin("", 0x2 /*POB_SAVE*/) && !nDialogHiddenActions)
+    if (oSet.Begin("", 0x2 /*POB_SAVE*/) && !bDialogHiddenActions)
     {
       //Save settings
       if (nDirection != DN_DOWN) nDirection&=~DN_DOWN;
@@ -1534,7 +1537,7 @@ function SearchReplace()
     return nResult;
   }
 
-  if (nDialogHiddenActions)
+  if (bDialogHiddenActions)
     pReplaceWithEsc=pReplaceWith;
 
   for (;;)
@@ -1795,7 +1798,7 @@ function SearchReplace()
           }
           bMainDisable=oSys.Call("user32::EnableWindow", hMainWnd, false);
 
-          if (!nDialogHiddenActions)
+          if (!bDialogHiddenActions)
           {
             //Change buttons
             oSys.Call("user32::SetFocus", hWndCancel);
@@ -1912,7 +1915,7 @@ function SearchReplace()
           if (!bMainDisable)
             oSys.Call("user32::EnableWindow", hMainWnd, true);
 
-          if (!nDialogHiddenActions)
+          if (!bDialogHiddenActions)
           {
             //Change buttons
             oSys.Call("user32::EnableWindow", hWndWhat, true);
@@ -1944,7 +1947,7 @@ function SearchReplace()
         AkelPad.MemFree(lpIndex);
 
         if (bHighlight && nButton === 2)
-          AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + (sOriginalFindText || pFindIt) + '" -bNotRegExp=' + ((bRegExp)?1:0) ));
+          MakeHighlight((sOriginalFindText || pFindIt), (!bRegExp));
       }
     }
     catch (oError)
@@ -1961,7 +1964,7 @@ function SearchReplace()
     else
       StatusBarUpdate((" | "+ GetLangString(STRID_COUNTCHANGES) + nChanges).toUpperCase());
   }
-  else if (nButton === BT_FINDALL || wCommand === IDC_FINDALL_BUTTON)
+  else if (bDialogHiddenActions && (nButton === BT_FINDALL || wCommand === IDC_FINDALL_BUTTON))
   {
     if (nDirection & DN_ALLFILES)
     {
@@ -2465,6 +2468,18 @@ function LogOutputActions(nLogArgs, sLogThemeExt)
   }
   hWndOutput=0;
   return true;
+}
+
+/**
+ * Highlight the results in the Log::Output
+ * 
+ * @param string -text to highlight
+ * @param bool|number 0|1 -if regular expression to search
+ * @return void
+ */
+function MakeHighlight(strContent, bNotRegEx)
+{
+  AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-bNotRegExp='+ ((bNotRegEx)?1:0) +' -sText="'+ encodeURIComponent(strContent) +'"'));
 }
 
 function GetLangString(nStringID)
