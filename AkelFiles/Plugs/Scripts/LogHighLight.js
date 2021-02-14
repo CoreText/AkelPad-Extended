@@ -78,8 +78,11 @@ try
 	if (bNotRegExp)
 	  sSelText = sSelTextEscaped;
 
-	pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
-	AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
+	if (validateRegex(sSelText))
+	{
+  	pTextCoder = pTextCoder.replace(/%#\$&@/g, sSelText);             // замена шаблона в рег.выр. секции
+  	AkelPad.WriteFile(pPathCoder1, pTextCoder, -1, 1200, true);       // 1200 = 16LE
+	}
 }
 catch (oError)
 {
@@ -112,4 +115,22 @@ function FileExists(pPathCoder)
 {
   var fso = new ActiveXObject("Scripting.FileSystemObject");
   return (fso.FileExists(pPathCoder)? 1 : 0);
+}
+
+/**
+ * Check RegEx if is valid before proceeding further.
+ * @param string -pattern to test
+ * @return bool -true if success
+ */
+function validateRegex(pattern)
+{
+  try
+  {
+    new RegExp(pattern);
+    return true;
+  }
+  catch (oError)
+  {
+    return false;
+  }
 }
