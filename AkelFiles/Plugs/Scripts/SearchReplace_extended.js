@@ -1527,8 +1527,10 @@ function SearchReplace()
   try
   {
     sOriginalFindText = pFindIt;
-    if (bWord)
-      pFindIt = "(?=\\b|\\W)"+ pFindIt.replace(/[\\\/.,^\!@#\№$%&*+\-\_\=?|()\[\]{}\<\>\;\:]/g, "\\$&") +"(?=\\W|\\b)";
+    if (bWord && (!bRegExp))
+      pFindIt = "(?=\\b|\\W)"+ pFindIt.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&") +"(?=\\W|\\b)";
+    else
+      pFindIt = "(?=\\b|\\W)"+ pFindIt +"(?=\\W|\\b)";
 
     oPattern=new RegExp(((bRegExp || bWord)?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton===BT_FINDALL || nButton===BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
   }
