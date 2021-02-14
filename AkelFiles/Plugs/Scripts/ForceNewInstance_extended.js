@@ -1,9 +1,9 @@
-/// ForceNewInstance.js
 // http://tc-image.3dn.ru/forum/9-258-848-16-1332958870
 // http://akelpad.sourceforge.net/forum/viewtopic.php?p=4222#4222
 // Version: 1.4
-// Author: Shengalts Aleksander aka Instructor
+// Author: Shengalts Aleksander aka Instructor / texter
 //
+/// Extended version from ForceNewInstance.js
 //
 // Description(1033): Force create new program instance.
 // Description(1049): ‘орсировать создание нового экземпл€ра программы.
@@ -13,8 +13,8 @@
 // -MDI=1                    -By default 1 MDI mode, 0 is SDI, 2 is PMDI
 //
 // Usage:
-// Call("Scripts::Main", 1, "ForceNewInstance.js", `-CmdLine="/Command(4155)"`)
-// Call("Scripts::Main", 1, "ForceNewInstance.js", '-MDI=2')
+// Call("Scripts::Main", 1, "ForceNewInstance_extended.js", `-CmdLine="/Command(4155)"`)
+// Call("Scripts::Main", 1, "ForceNewInstance_extended.js", '-MDI=2')
 
 //Arguments
 var pCmdLine=AkelPad.GetArgValue("CmdLine", "");
