@@ -1,4 +1,4 @@
-// http://AkelPad.sourceforge.net/en/plugins.php#Scripts
+// http://akelpad.sourceforge.net/en/plugins.php#Scripts
 // Version: 4.0
 // Author: Shengalts Aleksander aka Instructor / texter
 //
@@ -132,7 +132,6 @@ try
   var bWord=AkelPad.GetArgValue("Word", 0);
   var nButton=AkelPad.GetArgValue("nButton", 1);
   var nDefButtonID=AkelPad.GetArgValue("DefButtonID", 1016 /*IDC_FIND_BUTTON*/);
-  //var bDialogHiddenActions=0;
   var sDirection=decodeURIComponent(AkelPad.GetArgValue("sDirection", "DOWN"));
   var nDirection=GetDirection(sDirection);
 
@@ -758,6 +757,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
             {
               AkelPad.Call("Log::Output::NextMatch");
               oSys.Call("User32::SetFocus", hWndWhat);
+              AkelPad.SendMessage(hWndDown, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
             }
             else
             {
@@ -778,6 +778,7 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
             {
               AkelPad.Call("Log::Output::PrevMatch");
               oSys.Call("User32::SetFocus", hWndWhat);
+              AkelPad.SendMessage(hWndUp, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
             }
             else
             {
@@ -970,24 +971,31 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
       if (!hWndOutput)
       {
         bCloseDialog=false;
+        nID = GetDlgCtrlID(oSys.Call("User32::GetFocus"));
         ResetInputsDirection();
         if ((!Ctrl()) && (!Shift()) && Alt())
         {
-          nDirection=DN_BEGINNING;
-          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+          if (nID === IDC_FIND)
           {
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
-            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+            nDirection=DN_BEGINNING;
+            if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+            {
+              AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+              oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+            } else oSys.Call("User32::SetFocus", hWndWhat);
           }
         }
         if ((!Ctrl()) && Shift() && Alt())
         {
-          nDirection=DN_ALLFILES;
-          if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+          if (nID === IDC_FIND)
           {
-            oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
-            AkelPad.SendMessage(hWndBeginning, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
-          }
+            nDirection=DN_ALLFILES;
+            if (oSys.Call("user32::IsWindowEnabled", hWndFindAllButton))
+            {
+              AkelPad.SendMessage(hWndAllFiles, 241 /*BM_SETCHECK*/, 1 /*BST_CHECKED*/, 0);
+              oSys.Call("user32::PostMessage" + _TCHAR, hWndDialog, 273 /*WM_COMMAND*/, IDC_FINDALL_BUTTON, 0);
+            }
+          } else oSys.Call("User32::SetFocus", hWndWhat);
         }
       }
     }
@@ -1529,7 +1537,7 @@ function SearchReplace()
     sOriginalFindText = pFindIt;
     if (bWord && (!bRegExp))
       pFindIt = "(?=\\b|\\W)"+ pFindIt.replace(/[\\\/.^$+*?|()\[\]{}]/g, "\\$&") +"(?=\\W|\\b)";
-    else
+    else if (bWord)
       pFindIt = "(?=\\b|\\W)"+ pFindIt +"(?=\\W|\\b)";
 
     oPattern=new RegExp(((bRegExp || bWord)?pFindIt:EscRegExp(pFindIt)), (bSensitive?"":"i") + ((nButton===BT_FINDALL || nButton===BT_REPLACEALL || nDirection & DN_UP)?"g":"") + (bMultiline?"m":""));
@@ -1769,7 +1777,7 @@ function SearchReplace()
         if (!hWndOutput)
         {
           if (nDirection & DN_ALLFILES)
-            AkelPad.Call("Log::Output", 1, "", "",  "^ \\((\\d+) (\\d+):(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3", -2, -2, nLogArgs);
+            AkelPad.Call("Log::Output", 1, "", "", "^ \\((\\d+) (\\d+):(\\d+)\\)", "/FRAME=\\1 /GOTOLINE=\\2:\\3", -2, -2, nLogArgs);
           else
             AkelPad.Call("Log::Output", 1, "", "", "^(Searched .+ in file (.*)?$)?(\\((\\d+):(\\d+)\\))?", "/FILE=\\2 /GOTOLINE=\\4:\\5", -2, -2, nLogArgs);
           hWndOutput=GetOutputWindow();
