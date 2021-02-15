@@ -37,12 +37,14 @@ QuotesRE:
 1 "^\[\d+\]" "\0=(0,${COMM},0)"
 1 `^\+\+\+.*?$` "\0=(0,#00FF00,0)"
 1 `^\-\-\-.*?$` "\0=(0,#FF0080,0)"
-;Для FindReplaceEx.js
+;FindReplaceEx.js
 1 "^  \[\d+, \d+, \d+, \d+:\d+\]" "\0=(0,${COMM},0)"
 1 "\A[A-Z]:\\.+?:" "\0=(0,${DEL1},0)"
 1 "Всего вхождений: \d+\Z" "\0=(0,${DEL2},0)"
 1 "Total found: \d+\Z" "\0=(0,${DEL2},0)"
-;Для SearchReplace_extended.js
+;FindReplaceFiles_extended.js
+1 "(.+)(\(\d+:\d+\))" "\0=(0,${COMM},0)"
+;SearchReplace_extended.js
 1 "\(\d+:\d+\)" "\0=(0,${COMM},0)"
 1 "\A\d+:" "\0=(0,${DEL1},0)"
 ;QSearch
