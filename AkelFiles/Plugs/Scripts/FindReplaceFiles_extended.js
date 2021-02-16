@@ -2623,11 +2623,10 @@ function SearchFiles(bReplace)
                               var aMatch = rContent.exec(sCurrentLine);
                               if (aMatch !== null)
                               {
-                                //pLine += "\n" + sRelativeFileName + "(" + (nLine+1) + ":" + (aMatch.index+1) + "," + rContent.lastIndex + ") " + sCurrentLine /* aMatch.input */;
-                                pLine += "\n" + sRelativeFileName + "(" + (nLine+1) + ":" + (aMatch.index+1) + ") " + sCurrentLine.slice(((aMatch.index > nLogResultLen)? nLogResultLen - nLogResultLenHalf : 0), ((aMatch.index > nLogResultLen)? nLogResultLen + nLogResultLenHalf : nLogResultLen)) /* aMatch.input */;
+                                pLine += "\n" + sRelativeFileName + "(" + (nLine+1) + ":" + (aMatch.index+1) + ") " + sCurrentLine.slice( ((aMatch.index > nLogResultLen)? (aMatch.index - nLogResultLenHalf) : 0), ((aMatch.index > nLogResultLen)? (aMatch.index + nLogResultLenHalf) : nLogResultLen + (rContent.lastIndex - aMatch.index)) ) /* aMatch.input */;
                                 while (aMatchCurrentLine = rContent.exec(sCurrentLine))
                                 {
-                                  pLine += "\n" + sRelativeFileName + "(" + (nLine+1) + ":" + (aMatchCurrentLine.index+1) + ") " + sCurrentLine.slice(((aMatchCurrentLine.index > nLogResultLen)? nLogResultLen - nLogResultLenHalf : 0), ((aMatchCurrentLine.index > nLogResultLen)? nLogResultLen + nLogResultLenHalf : nLogResultLen)) /* aMatchCurrentLine.input */;
+                                  pLine += "\n" + sRelativeFileName + "(" + (nLine+1) + ":" + (aMatchCurrentLine.index+1) + ") " + sCurrentLine.slice( ((aMatchCurrentLine.index > nLogResultLen)? (aMatchCurrentLine.index - nLogResultLenHalf) : 0), ((aMatchCurrentLine.index > nLogResultLen)? (aMatchCurrentLine.index + nLogResultLenHalf) : nLogResultLen + (rContent.lastIndex - aMatchCurrentLine.index)) ) /* aMatchCurrentLine.input */;
                                 }
                                 rContent.lastIndex = 0;
                               }
