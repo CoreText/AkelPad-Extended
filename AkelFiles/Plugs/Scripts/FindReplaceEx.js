@@ -1778,7 +1778,7 @@ function FindAll(hButton, nID, nCmd)
   if (nCmd <= 2)
   {
     AkelPad.Call("Log::Output", 4, bContinue ? sTxtTotalFound + nCountAll : "...", -1);
-    AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-sSelText="' + sWhatText + '" -bNotRegExp=' + (SendDlgItemMessage(hDlg, IDC_SEARCH_REGEXP, 240 /*BM_GETCHECK*/, 0, 0)?0:1)));
+    MakeHighlight(sWhatText, !(nFRF & FRF_REGEXP));
   }
   else if (bContinue)
   {
@@ -1796,6 +1796,20 @@ function FindAll(hButton, nID, nCmd)
   AkelPad.MemFree(lpFind);
   oSys.Call("User32::SetWindowTextW", hButton, aDlg[nID].T);
   Count_EnableButtons(aButton);
+}
+
+/**
+ * Highlight the results in the Log::Output
+ *
+ * @param string -text to AkelPad
+ * @param bool|number 0|1 -if regular expression to search
+ * @return void
+ */
+function MakeHighlight(strContent, bNotRegEx)
+{
+  if (! AkelPad.IsPluginRunning("Log::Output"))
+    AkelPad.Call("Log::Output");
+  AkelPad.Call("Scripts::Main", 1, "LogHighLight.js", ('-bNotRegExp='+ ((bNotRegEx)?1:0) +' -sText="'+ encodeURIComponent(strContent) +'"'));
 }
 
 function EnableMainWnd(bEnable, hEditWnd)
