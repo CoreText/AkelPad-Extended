@@ -1,0 +1,1 @@
+%~dp0"Tools\WinMergePortable\WinMergePortable.exe" -e /e /u /x /wl /wr /dl "Base" /dr "New" %1 %2
