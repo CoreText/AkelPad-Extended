@@ -134,7 +134,7 @@
  * - TextReplacer.js
  */
 
-var bSilentActions = false;
+var bSilentActions = true;
 
 var oSys     = AkelPad.SystemFunction();
 var hInstDLL = AkelPad.GetInstanceDll();
@@ -2935,8 +2935,8 @@ function GetVCSIgnoreFileFilter(sCurrentDir)
   }
 
   //AkelPad.MessageBox(0, "aExcludedDirsCollection:\n"+ aExcludedDirsCollection.join("\n") +"\n\naUnexcludedDirsCollection:\n"+ aUnexcludedDirsCollection.join("\n"), WScript.ScriptName, 0);
-  oIgnoreFile.excludedPaths = ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs)).sort();
-  oIgnoreFile.unexcludePaths = ArrayUnique(aUnexcludedDirsCollection.concat(aUnexcludedDirs)).sort();
+  oIgnoreFile.excludedPaths = ArrayUnique(aExcludedDirsCollection.concat(aExcludedDirs).sort());
+  oIgnoreFile.unexcludePaths = ArrayUnique(aUnexcludedDirsCollection.concat(aUnexcludedDirs).sort());
   return oIgnoreFile;
 }
 
@@ -3777,12 +3777,17 @@ function OpenFileAndFindBeginOrFindNext(bPrev)
         }
         else
         {
-          WarningBox(aFiles[nItem] + "\n\n" + sTxtFileNoExist);
+          WarningBox(((typeof aFiles == "object" && typeof aFiles[nItem] !== "undefined")? aFiles[nItem] : '') + "\n\n" + sTxtFileNoExist);
           return false;
         }
       }
     }
   }
+}
+
+function WarningBox(sText, sCaption)
+{
+  AkelPad.MessageBox(hDlg, sText, sCaption, 0x00000030 /*MB_ICONWARNING*/);
 }
 
 /**
@@ -4593,14 +4598,14 @@ function BookmarkLines(strContent, bBookmark)
 
     if (nPos <= -100)
     {
-      AkelPad.MessageBox(hWndDlg, sTxtRegExpErr, sTitle, 0x10 /*MB_ICONERROR*/);
-      SendDlgItemMessage(hWndDlg, IDCONTENTCB, 177 /*EM_SETSEL*/, -nPos - 100, -1);
+      AkelPad.MessageBox(hDlg, sTxtRegExpErr, sTitle, 0x10 /*MB_ICONERROR*/);
+      SendDlgItemMessage(hDlg, IDCONTENTCB, 177 /*EM_SETSEL*/, -nPos - 100, -1);
       oSys.Call("User32::SetFocus", aDlg[IDCONTENTCB].HWND);
       return false;
     }
     else
     {
-      //AkelPad.MessageBox(hWndDlg, sTxtNotFound, sTitle, 0x40 /*MB_ICONINFORMATION*/);
+      AkelPad.MessageBox(hDlg, sTxtFileNoExist, sTitle, 0x40 /*MB_ICONINFORMATION*/);
       return false;
     }
   }
@@ -4750,7 +4755,7 @@ function LogOutputActions(sLogThemeExt, callback)
   }
   catch (oError)
   {
-    AkelPad.MessageBox(0, "Error:\n\n" + msg +"\n\n"+ oError.name + "\n\n" + oError.description + "\n\n", WScript.ScriptName, 16 /*MB_ICONERROR*/);
+    AkelPad.MessageBox(0, "Error:\n\n"+ oError.name + "\n\n" + oError.description + "\n\n", WScript.ScriptName, 16 /*MB_ICONERROR*/);
     return false;
   }
   hWndOutput = 0;
@@ -4779,12 +4784,34 @@ function GetOutputWindow()
  */
 function CopyLogContentsToNewTabCB(sText, sLogThemeExt)
 {
-  if (AkelPad.Include("CommonFunctions.js"))
-    createFile(getFileFormat(0), (sLogThemeExt || ".txt"));
-  else
-    AkelPad.SendMessage(AkelPad.GetMainWnd(), 273 /*WM_COMMAND*/, 4101 /*wParam=MAKEWAPARAM(0,IDM_FILE_NEW)*/, 1 /*lParam=TRUE*/);
-  AkelPad.ReplaceSel(sText);
-  AkelPad.SetSel(0, 0);
+  var oError, sDirs;
+
+  try
+  {
+    if (AkelPad.Include("CommonFunctions.js"))
+      createFile(getFileFormat(0), (sLogThemeExt || ".txt"));
+    else
+      AkelPad.SendMessage(AkelPad.GetMainWnd(), 273 /*WM_COMMAND*/, 4101 /*wParam=MAKEWAPARAM(0,IDM_FILE_NEW)*/, 1 /*lParam=TRUE*/);
+    AkelPad.ReplaceSel(sText);
+    AkelPad.SetSel(0, 0);
+  }
+  catch (oError) {
+    AkelPad.MessageBox(0, "Copy log contents into the new tab Error:\n\n"+ oError.name + "\n\n" + oError.description + "\n\n", WScript.ScriptName, 16 /*MB_ICONERROR*/);
+  }
+
+  WScript.Sleep(1000);
+
+  // OpenRelativeFile_extended.ini
+  try
+  {
+    sDirs = 'aDirs=['+ aDirs.join('\t').replace(/[\\"]/g, '\\$&').replace(/\t/g, '","').replace(/.+/, '"$&"') +'];\r\n';
+
+    //AkelPad.MessageBox(0, sDirs, WScript.ScriptName, 0 /*MB_OK*/);
+    AkelPad.WriteFile(AkelPad.GetAkelDir() + "\\AkelFiles\\Plugs\\Scripts\\OpenRelativeFile_extended.ini", sDirs, sDirs.length, 1200 /*UTF-16LE*/, true);
+  }
+  catch (oError) {
+    AkelPad.MessageBox(0, "Save directories to OpenRelativeFile_extended Error:\n\n"+ oError.name + "\n\n" + oError.description + "\n\n", WScript.ScriptName, 16 /*MB_ICONERROR*/);
+  }
 }
 
 /**
