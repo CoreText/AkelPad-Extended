@@ -285,6 +285,38 @@ rect.move(1, 1); // Outputs, 'Shape moved.'
 
 
 //////////////////////////////////////////////////////////////////////////
+function SuperClass() {
+    this.name = 'SuperClass'
+}
+
+function OtherSuperClass() {
+  SuperClass.call(this);
+}
+
+function MyClass() {
+  SuperClass.call(this);
+  OtherSuperClass.call(this);
+}
+
+// inherit one class
+MyClass.prototype = Object.create(SuperClass.prototype);
+
+// mixin another
+Object.assign(Object.getPrototypeOf(MyClass.prototype), OtherSuperClass.prototype);
+
+// re-assign constructor
+MyClass.prototype.constructor = MyClass;
+
+
+MyClass.prototype.myMethod = function() {
+  return this.name;
+};
+
+console.log(new MyClass().name);
+
+
+
+//////////////////////////////////////////////////////////////////////////
 
 var duck = {
   name: 'Maurice',
@@ -501,7 +533,7 @@ while (true) {
 }
 
 
-var wtf = iterate(["one", "two", "three"]);
+var wtf = iterate("WTF".split(''));
 iterateIterator(wtf, function (item) {
     return WScript.echo(item);
 })
@@ -551,5 +583,4 @@ console.equal(false, NaN === NaN);
 console.equal(true, Object.is(NaN, NaN));
 console.equal(true, -0 === 0);
 console.equal(false, Object.is(-0, 0));
-
 
