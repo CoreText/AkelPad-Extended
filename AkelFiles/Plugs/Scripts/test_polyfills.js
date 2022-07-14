@@ -29,14 +29,14 @@ console.log(und);
 
 
 ['test', 'one', 'two'].forEach(function (item) {
-    console.log(item)
+  console.log(item)
 });
 
 
 
 setTimeout(function (args) {
-    console.log(args)
-}, 5, null, 'wat wat wat')
+  console.log(args)
+}, 5, null, 'wat wat wat');
 
 
 
@@ -284,9 +284,10 @@ console.log('Is rect an instance of Shape?', rect instanceof Shape); // true
 rect.move(1, 1); // Outputs, 'Shape moved.'
 
 
+
 //////////////////////////////////////////////////////////////////////////
 function SuperClass() {
-    this.name = 'SuperClass'
+  this.name = 'SuperClass'
 }
 
 function OtherSuperClass() {
@@ -307,8 +308,7 @@ Object.assign(Object.getPrototypeOf(MyClass.prototype), OtherSuperClass.prototyp
 // re-assign constructor
 MyClass.prototype.constructor = MyClass;
 
-
-MyClass.prototype.myMethod = function() {
+MyClass.prototype.myMethod = function () {
   return this.name;
 };
 
