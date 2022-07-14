@@ -5,6 +5,9 @@
 */
 if (!(
     AkelPad.Include("ES\\polyfills\\es5.min.js")
+
+        && AkelPad.Include("ES\\underscore.min.js")
+
     && AkelPad.Include("ES\\my_polyfills.js")
     && AkelPad.Include("ES\\json2.min.js")
     && AkelPad.Include("ES\\symbol.min.js")
@@ -20,6 +23,9 @@ if (!(
   WScript.Quit();
 }
 
+
+var und = _.filter([1, 2, 3, 4, 5, 6], function(num){ return num % 2 == 0; });
+console.log(und);
 
 
 ['test', 'one', 'two'].forEach(function (item) {
@@ -175,7 +181,7 @@ var createEmployee = function (firstName, lastName, position) {
 
     // it will execute func as it was person's obj
     var fullNameFunction = getFullName.value.bind(person);
-    
+
     // так можно перегружать функции
     var sayHiFunction = person.sayHi.bind(person);
 
@@ -466,7 +472,7 @@ function makeIterator(array) {
     return {
         next: function () {
             return (
-            (nextIndex < array.length) 
+            (nextIndex < array.length)
                 ? {value: array[nextIndex++], done: false}
                 : {done: true}
             );
