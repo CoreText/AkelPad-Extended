@@ -256,6 +256,7 @@ Words:
 0	0	${ATTR}	0	alternatetext                  2
 0	0	${ATTR}	0	alternatingitemstyle           2
 0	0	${ATTR}	0	alternatingitemtemplate        2
+0	0	${ATTR}	0	anonymous                      2
 0	0	${ATTR}	0	amplitude                      2
 0	0	${ATTR}	0	applystyle                     2
 0	0	${ATTR}	0	arabic-form                    2
@@ -333,6 +334,7 @@ Words:
 0	0	${ATTR}	0	controltovalidate              2
 0	0	${ATTR}	0	coords                         2
 0	0	${ATTR}	0	copyfrom                       2
+0	0	${ATTR}	0	crossorigin                    2
 0	0	${ATTR}	0	cssclass                       2
 0	0	${ATTR}	0	cursor                         2
 0	0	${ATTR}	0	cx                             2
@@ -460,6 +462,7 @@ Words:
 0	0	${ATTR}	0	ideographic                    2
 0	0	${ATTR}	0	image-rendering                2
 0	0	${ATTR}	0	imagealign                     2
+0	0	${ATTR}	0	imagesrcset                    2
 0	0	${ATTR}	0	imageurl                       2
 0	0	${ATTR}	0	impressions                    2
 0	0	${ATTR}	0	in                             2
@@ -471,8 +474,13 @@ Words:
 0	0	${ATTR}	0	itemcommand                    2
 0	0	${ATTR}	0	itemcreated                    2
 0	0	${ATTR}	0	itemdatabound                  2
+0	0	${ATTR}	0	itemid                         2
+0	0	${ATTR}	0	itemprop                       2
+0	0	${ATTR}	0	itemscope                      2
 0	0	${ATTR}	0	itemstyle                      2
 0	0	${ATTR}	0	itemtemplate                   2
+0	0	${ATTR}	0	itemtype                       2
+0	0	${ATTR}	0	itemref                        2
 0	0	${ATTR}	0	k                              2
 0	0	${ATTR}	0	k1                             2
 0	0	${ATTR}	0	k2                             2
@@ -533,6 +541,8 @@ Words:
 0	0	${ATTR}	0	nextpagetext                   2
 0	0	${ATTR}	0	nextprevformat                 2
 0	0	${ATTR}	0	nextprevstyle                  2
+0	0	${ATTR}	0	no-referrer                    2
+0	0	${ATTR}	0	no-referrer-when-downgrade     2
 0	0	${ATTR}	0	nohref                         2
 0	0	${ATTR}	0	noresize                       2
 0	0	${ATTR}	0	noshade                        2
@@ -551,6 +561,7 @@ Words:
 0	0	${ATTR}	0	ondeletecommand                2
 0	0	${ATTR}	0	oneditcommand                  2
 0	0	${ATTR}	0	onfocus                        2
+0	0	${ATTR}	0	oninput                        2
 0	0	${ATTR}	0	onitemcommand                  2
 0	0	${ATTR}	0	onitemcreated                  2
 0	0	${ATTR}	0	onkeydown                      2
@@ -581,6 +592,7 @@ Words:
 0	0	${ATTR}	0	orient                         2
 0	0	${ATTR}	0	orientation                    2
 0	0	${ATTR}	0	origin                         2
+0	0	${ATTR}	0	origin-when-cross-origina      2
 0	0	${ATTR}	0	othermonthdaystyle             2
 0	0	${ATTR}	0	overflow                       2
 0	0	${ATTR}	0	overline-position              2
@@ -619,7 +631,7 @@ Words:
 0	0	${ATTR}	0	radiogroup                     2
 0	0	${ATTR}	0	radius                         2
 0	0	${ATTR}	0	readonly                       2
-0	0	${ATTR}	0	referrerPolicy                 2
+0	0	${ATTR}	0	referrerpolicy                 2
 0	0	${ATTR}	0	refX                           2
 0	0	${ATTR}	0	refY                           2
 0	0	${ATTR}	0	rel                            2
@@ -642,6 +654,7 @@ Words:
 0	0	${ATTR}	0	runat                          2
 0	0	${ATTR}	0	rx                             2
 0	0	${ATTR}	0	ry                             2
+0	0	${ATTR}	0	same-origin                    2
 0	0	${ATTR}	0	scale                          2
 0	0	${ATTR}	0	sceme                          2
 0	0	${ATTR}	0	scoped                         2
@@ -699,6 +712,8 @@ Words:
 0	0	${ATTR}	0	stitchTiles                    2
 0	0	${ATTR}	0	stop-color                     2
 0	0	${ATTR}	0	stop-opacity                   2
+0	0	${ATTR}	0	strict-origin                  2
+0	0	${ATTR}	0	strict-origin-when-cross-origin 2
 0	0	${ATTR}	0	strikethrough-position         2
 0	0	${ATTR}	0	strikethrough-thickness        2
 0	0	${ATTR}	0	string                         2
@@ -737,6 +752,7 @@ Words:
 0	0	${ATTR}	0	transform                      2
 0	0	${ATTR}	0	transform-origin               2
 0	0	${ATTR}	0	transformsource                2
+0	0	${ATTR}	0	translate                      2
 0	0	${ATTR}	0	type                           2
 0	0	${ATTR}	0	u1                             2
 0	0	${ATTR}	0	u2                             2
@@ -747,7 +763,9 @@ Words:
 0	0	${ATTR}	0	unicode-range                  2
 0	0	${ATTR}	0	units-per-em                   2
 0	0	${ATTR}	0	url                            2
+0	0	${ATTR}	0	use-credentials                2
 0	0	${ATTR}	0	usemap                         2
+0	0	${ATTR}	0	unsafe-url                     2
 0	0	${ATTR}	0	v-alphabetic                   2
 0	0	${ATTR}	0	v-hanging                      2
 0	0	${ATTR}	0	v-ideographic                  2
@@ -956,7 +974,7 @@ Words:
 0	0	${TAG}	0	li                             3
 0	0	${TAG}	0	line                           3
 0	0	${TAG}	0	linearGradient                 3
-0	0	${TAG}	0	link                           3
+0	0	${TYPE}	0	link                           3
 0	0	${TAG}	0	listing                        3
 0	0	${TAG}	0	main                           3
 0	0	${TAG}	0	map                            3
@@ -1003,7 +1021,7 @@ Words:
 0	0	${TAG}	0	ruby                           3
 0	0	${TAG}	0	s                              3
 0	0	${TAG}	0	samp                           3
-0	0	${TAG}	0	script                         3
+0	0	${TYPE}	0	script                         3
 0	0	${TAG}	0	section                        3
 0	0	${TAG}	0	select                         3
 0	0	${TAG}	0	selecteditemtemplate           3
@@ -1014,13 +1032,14 @@ Words:
 0	0	${TAG}	0	span                           3
 0	0	${TAG}	0	strike                         3
 0	0	${TAG}	0	strong                         3
-0	0	${TAG}	0	style                          3
+0	0	${TYPE}	0	style                          3
 0	0	${TAG}	0	sub                            3
 0	0	${TAG}	0	summary                        3
 0	0	${TAG}	0	sup                            3
 0	0	${TAG}	0	svg                            3
 0	0	${TAG}	0	symbol                         3
 0	0	${TAG}	0	table                          3
+0	0	${DEL1}	0	slot                       3
 0	0	${DEL1}	0	template                       3
 0	0	${TAG}	0	tbody                          3
 0	0	${TAG}	0	td                             3
