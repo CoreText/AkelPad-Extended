@@ -9,6 +9,7 @@ if (!(
         && AkelPad.Include("ES\\underscore.min.js")
 
     && AkelPad.Include("ES\\my_polyfills.js")
+    && AkelPad.Include("ES\\console.js")
     && AkelPad.Include("ES\\json2.min.js")
     && AkelPad.Include("ES\\symbol.min.js")
     && AkelPad.Include("ES\\polyfills\\es2016.min.js")
@@ -24,21 +25,41 @@ if (!(
 }
 
 
-var und = _.filter([1, 2, 3, 4, 5, 6], function(num){ return num % 2 == 0; });
+var und = _.filter([1, 2, 3, 4, 5, 6], function (num) { return num % 2 == 0 });
 console.log(und);
 
 
-['test', 'one', 'two'].forEach(function (item) {
-  console.log(item)
+['test', 'one', 'two'].forEach(function (item) { console.log(item) });
+
+
+
+setTimeout(function (arg1, arg2) {
+  console.log(arg1, arg2)
+}, 5, null, 'wat1', 'wat2');
+
+//////////////////////////////////////////////////////////////////////////
+
+var arr = [1, 2, 3, 4];
+
+var aFlatMap = arr.flatMap(function (x) {
+    return [x, x * 2];
 });
+console.log(aFlatMap);
+
+
+function flatM(x) {
+    this.add = 5
+}
+flatM.prototype.testFlatMap = function (arr) {
+    return arr.flatMap(function (x) {
+       return [x, x * this.add];
+    }, this);
+};
+console.log((new flatM()).testFlatMap(arr));
 
 
 
-setTimeout(function (args) {
-  console.log(args)
-}, 5, null, 'wat wat wat');
-
-
+//////////////////////////////////////////////////////////////////////////
 
 console.log('Breaded Mushrooms'.padEnd(25, '.'));
 
@@ -52,12 +73,12 @@ console.log(Symbol('foo'));
 //////////////////////////////////////////////////////////////////////////
 
 var arr = [
-     ['mark johansson', 'waffle iron', '80' , '2'],
-     ['mark johansson', 'blender'    , '200', '1'],
-     ['mark johansson', 'knife'      , '10' , '4'],
-     ['Nikita Smith'  , 'waffle iron', '80' , '1'],
-     ['Nikita Smith'  , 'knife'      , '10' , '2'],
-     ['Nikita Smith'  , 'pot'        , '20' , '3']
+   ['mark johansson', 'waffle iron', '80' , '2'],
+   ['mark johansson', 'blender'    , '200', '1'],
+   ['mark johansson', 'knife'      , '10' , '4'],
+   ['Nikita Smith'  , 'waffle iron', '80' , '1'],
+   ['Nikita Smith'  , 'knife'      , '10' , '2'],
+   ['Nikita Smith'  , 'pot'        , '20' , '3']
 ];
 
 var structure = arr.reduce(function (customers, line) {
@@ -575,12 +596,12 @@ iterateIterator(www, function (item) {
 
 //////////////////////////////////////////////////////////////////////////
 
-console.equal(true, 'abc'.startsWith('a'));
-console.equal(false, 'abc'.endsWith('a'));
-console.equal(true, 'john alice'.includes('john'));
-console.equal('123'.repeat(2), '123123');
-console.equal(false, NaN === NaN);
-console.equal(true, Object.is(NaN, NaN));
-console.equal(true, -0 === 0);
-console.equal(false, Object.is(-0, 0));
+console.equals(true, 'abc'.startsWith('a'));
+console.equals(false, 'abc'.endsWith('a'));
+console.equals(true, 'john alice'.includes('john'));
+console.equals('123'.repeat(2), '123123');
+console.equals(false, NaN === NaN);
+console.equals(true, Object.is(NaN, NaN));
+console.equals(true, -0 === 0);
+console.equals(false, Object.is(-0, 0));
 
