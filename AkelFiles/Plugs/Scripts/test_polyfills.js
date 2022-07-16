@@ -48,10 +48,10 @@ console.log(aFlatMap);
 
 
 function flatM() {
-    this.add = 5
+    this.add = 2;
 }
 flatM.prototype.testFlatMap = function (arr) {
-    return arr.flatMap(function (x) {
+    return arr.flatMap(function (x, index, a) {
        return [x, x * this.add];
     }, this);
 };
