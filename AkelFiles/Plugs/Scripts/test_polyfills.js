@@ -47,7 +47,7 @@ var aFlatMap = arr.flatMap(function (x) {
 console.log(aFlatMap);
 
 
-function flatM(x) {
+function flatM() {
     this.add = 5
 }
 flatM.prototype.testFlatMap = function (arr) {
