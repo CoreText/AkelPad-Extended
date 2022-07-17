@@ -8,9 +8,9 @@ if (!(
 
         && AkelPad.Include("ES\\underscore.min.js")
 
-    && AkelPad.Include("ES\\my_polyfills.js")
-    && AkelPad.Include("ES\\console.js")
     && AkelPad.Include("ES\\json2.min.js")
+    && AkelPad.Include("ES\\console.js")
+    && AkelPad.Include("ES\\my_polyfills.js")
     && AkelPad.Include("ES\\symbol.min.js")
     && AkelPad.Include("ES\\polyfills\\es2016.min.js")
     && AkelPad.Include("timer_extended.js")
@@ -29,6 +29,7 @@ var und = _.filter([1, 2, 3, 4, 5, 6], function (num) { return num % 2 == 0 });
 console.log(und);
 
 
+
 ['test', 'one', 'two'].forEach(function (item) { console.log(item) });
 
 
@@ -36,6 +37,8 @@ console.log(und);
 setTimeout(function (arg1, arg2) {
   console.log(arg1, arg2)
 }, 5, null, 'wat1', 'wat2');
+
+
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -47,15 +50,31 @@ var aFlatMap = arr.flatMap(function (x) {
 console.log(aFlatMap);
 
 
-function flatM() {
+
+//////////////////////////////////////////////////////////////////////////
+
+function M() {
     this.add = 2;
 }
-flatM.prototype.testFlatMap = function (arr) {
+
+// test Functor
+M.prototype.testMap = function (arr) {
+    return arr.map(function (x, index, a) {
+       return [x, x * this.add];
+    }, this);
+};
+
+// test Monad
+M.prototype.testFlatMap = function (arr) {
     return arr.flatMap(function (x, index, a) {
        return [x, x * this.add];
     }, this);
 };
-console.log((new flatM()).testFlatMap(arr));
+
+var oM = new M;
+
+console.log(oM.testMap(arr));
+console.log(oM.testFlatMap(arr));
 
 
 
@@ -604,4 +623,5 @@ console.equals(false, NaN === NaN);
 console.equals(true, Object.is(NaN, NaN));
 console.equals(true, -0 === 0);
 console.equals(false, Object.is(-0, 0));
+
 
