@@ -20,8 +20,8 @@ var console = {
             break;
         }
       }
-      catch (e) {
-        alert(e.getMessage());
+      catch (oError) {
+        alert(JSON.stringify(oError, null, 4));
       }
     }
     else {
