@@ -21,7 +21,7 @@ var console = {
         }
       }
       catch (oError) {
-        alert(JSON.stringify(oError, null, 4));
+        alert('Error:\n' + JSON.stringify(oError, null, 4));
       }
     }
     else {
