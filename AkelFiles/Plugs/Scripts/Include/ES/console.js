@@ -1,3 +1,5 @@
+var global = (global) ? global : {};
+
 /**
  * Console, almost like in the browser.
  * 
@@ -51,4 +53,9 @@ function alert() {
     else
       WScript.echo(arguments[i]);
   }
+}
+
+// export to global variable
+if (!global.console) {
+    global.console = console;
 }
