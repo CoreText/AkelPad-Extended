@@ -59,6 +59,8 @@ or
     = 1*1*a
     = 1*1*1*a
 
+is called identity element.
+
 
 0 in +(addition) operation,
 
