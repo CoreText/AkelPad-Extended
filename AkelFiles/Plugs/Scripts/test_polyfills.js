@@ -5,270 +5,632 @@
 */
 if (!(
     AkelPad.Include("ES\\polyfills\\es5.min.js")
+
+        && AkelPad.Include("ES\\underscore.min.js")
+
     && AkelPad.Include("ES\\json2.min.js")
     && AkelPad.Include("ES\\console.js")
+    && AkelPad.Include("ES\\my_polyfills.js")
+    && AkelPad.Include("ES\\symbol.min.js")
+    && AkelPad.Include("ES\\polyfills\\es2016.min.js")
     && AkelPad.Include("timer_extended.js")
+    && AkelPad.Include("ES\\promise.min.js")
+    && AkelPad.Include("ES\\reflect.js")
+    && AkelPad.Include("ES\\polyfills\\es6.min.js")
+    && AkelPad.Include("ES\\polyfills\\es2017.min.js")
+    //&& AkelPad.Include("ES\\object.js")
+    && AkelPad.Include("ES\\iterate-iterator.js")
   )) {
   WScript.Quit();
 }
 
 
+var und = _.filter([1, 2, 3, 4, 5, 6], function (num) { return num % 2 == 0 });
+console.log(und);
+
+
+
+['test', 'one', 'two'].forEach(function (item) { console.log(item) });
+
+
+
 setTimeout(function (arg1, arg2) {
-  WScript.echo(arg1 + ' ' + arg2);
+  console.log(arg1, arg2)
 }, 5, null, 'wat1', 'wat2');
 
 
+
 //////////////////////////////////////////////////////////////////////////
+
+var arr = [1, 2, 3, 4];
+
+var aFlatMap = arr.flatMap(function (x) {
+    return [x, x * 2];
+});
+console.log(aFlatMap);
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+function M() {
+    this.add = 2;
+}
+
+// test Functor
+M.prototype.testMap = function (arr) {
+    return arr.map(function (x, index, a) {
+       return [x, x * this.add];
+    }, this);
+};
+
+// test Monad
+M.prototype.testFlatMap = function (arr) {
+    return arr.flatMap(function (x, index, a) {
+       return [x, x * this.add];
+    }, this);
+};
+
+var oM = new M;
+
+console.log(oM.testMap(arr));
+console.log(oM.testFlatMap(arr));
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+console.log('Breaded Mushrooms'.padEnd(25, '.'));
+
+
+
+console.log(Symbol('foo'));
+
+// [Symbol.iterator]() - NOT WORKING :(
+
+
+//////////////////////////////////////////////////////////////////////////
+
+var arr = [
+   ['mark johansson', 'waffle iron', '80' , '2'],
+   ['mark johansson', 'blender'    , '200', '1'],
+   ['mark johansson', 'knife'      , '10' , '4'],
+   ['Nikita Smith'  , 'waffle iron', '80' , '1'],
+   ['Nikita Smith'  , 'knife'      , '10' , '2'],
+   ['Nikita Smith'  , 'pot'        , '20' , '3']
+];
+
+var structure = arr.reduce(function (customers, line) {
+  customers[line[0]] = customers[line[0]] || [];
+  customers[line[0]].push({
+    name: line[1],
+    price: line[2],
+    quantity: line[3]
+  });
+  return customers;
+}, {})
+
+console.log(JSON.stringify(structure, null, 4))
+
+//////////////////////////////////////////////////////////////////////////
+
+var inventory = [
+  {name: 'apples', quantity: 2},
+  {name: 'bananas', quantity: 0},
+  {name: 'cherries', quantity: 5}
+];
+
+function isCherries(fruit) {
+  return fruit.name === 'cherries';
+}
+
+console.log(inventory.find(isCherries));
+
+//////////////////////////////////////////////////////////////////////////
+
+var johnDoe = {
+  firstName: "John",
+  lastName: "Doe",
+  sayName: function () {
+    return "My name is " + this.firstName + " " + this.lastName;
+  }
+};
+
+var janeDoe = Object.create(johnDoe, {
+  firstName: {
+    value: "Jane"
+  },
+  greet: {
+    value: function (person) {
+      return "Hello, " + person.firstName;
+    }
+  }
+});
+
+var jimSmith = Object.create(janeDoe, {
+  firstName: {
+    value: "Jim"
+  },
+  lastName: {
+    value: "Smith"
+  }
+});
+
+console.log(janeDoe.sayName() + " " + janeDoe.greet(johnDoe));
+console.log(jimSmith.sayName() + " " + jimSmith.greet(janeDoe));
+console.log(JSON.stringify(jimSmith, null, 4));
+
+
+
+//////////////////////////////////////////////////////////////////////////
+var createPeroson = function (firstName, lastName) {
+    var person = {};
+
+    Object.defineProperties( person, {
+        firstName: {
+            value: firstName,
+            enumerable: true, // by default is false
+            writable  : true
+        },
+        lastName : {
+            value: lastName,
+            enumerable: true,
+            writable  : true
+        },
+        getFullName : {
+            value : function () {
+                return this.firstName + " " + this.lastName;
+            }
+        },
+        setFullName : {
+            value : function (value) {
+                var val = value.split(" ");
+                this.firstName = val[0];
+                this.lastName  = val[1];
+            },
+            enumerable  : true,
+            configurable: true
+        },
+        sayHi: {
+            value: function () {
+                return "Hello!";
+            }
+        }
+    });
+
+    return person;
+};
+
+var person = createPeroson("John", "Doe");
+console.log(person)
+console.log(person.getFullName())
+console.log(person.sayHi())
+
+
+/**
+ * Parasitic Inheritance
+ */
+var createEmployee = function (firstName, lastName, position) {
+    var person = createPeroson(firstName, lastName);
+
+    person.position = position || "no position";
+
+    // var fullName = person.fullName; /* won't redefine this property */
+    // gets property descriptor and we can redefine property
+    var getFullName = Object.getOwnPropertyDescriptor( person, "getFullName");
+
+    // it will execute func as it was person's obj
+    var fullNameFunction = getFullName.value.bind(person);
+
+    // так можно перегружать функции
+    var sayHiFunction = person.sayHi.bind(person);
+
+    person.sayHiFunction = function () {
+        return sayHiFunction() + ". My name is " + this.getFullName();
+    };
+
+    Object.defineProperty(person, "fullPosition", {
+        value : function () {
+            return fullNameFunction() + " (" + this.position + ")";
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return person;
+};
+
+var newEmployee = createEmployee("Snoop", "Dogg", "Web Developer");
+
+console.log(newEmployee.fullPosition());
+console.log(newEmployee.sayHiFunction());
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+/**
+ * A - object literal
+ */
+var A = {
+  name: 'A',
+  special: 'from A',
+  specialMethod: function () {
+    return this.name + ' ' + this.special
+  }
+};
+
+var newA = Object.create(A)
+B.prototype = newA
+B.constructor = A
+
+/**
+ * B - function
+ */
+function B() {
+  this.name = 'B'
+}
+
+/**
+ * C - function
+ */
+function C() {
+  this.name = 'C'
+}
+
+var newB = new B()
+console.log(newB.specialMethod())        // B from A
+
+C.prototype = newB
+C.constructor = B
+
+var newC = new C()
+console.log(newC.specialMethod())        // C from A
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+// Shape - superclass
+function Shape() {
+  this.x = 0;
+  this.y = 0;
+}
+
+// superclass method
+Shape.prototype.move = function (x, y) {
+  this.x += x;
+  this.y += y;
+  console.log('Shape moved.');
+};
+
+// Rectangle - subclass
+function Rectangle() {
+  Shape.call(this); // call super constructor.
+}
+
+// subclass extends superclass
+Rectangle.prototype = Object.create(Shape.prototype);
+
+//If you don't set Rectangle.prototype.constructor to Rectangle,
+//it will take the prototype.constructor of Shape (parent).
+//To avoid that, we set the prototype.constructor to Rectangle (child).
+Rectangle.prototype.constructor = Rectangle;
+
+var rect = new Rectangle();
+
+console.log('Is rect an instance of Rectangle?', rect instanceof Rectangle); // true
+console.log('Is rect an instance of Shape?', rect instanceof Shape); // true
+rect.move(1, 1); // Outputs, 'Shape moved.'
+
+
+
+//////////////////////////////////////////////////////////////////////////
+function SuperClass() {
+  this.name = 'SuperClass'
+}
+
+function OtherSuperClass() {
+  SuperClass.call(this);
+}
+
+function MyClass() {
+  SuperClass.call(this);
+  OtherSuperClass.call(this);
+}
+
+// inherit one class
+MyClass.prototype = Object.create(SuperClass.prototype);
+
+// mixin another
+Object.assign(Object.getPrototypeOf(MyClass.prototype), OtherSuperClass.prototype);
+
+// re-assign constructor
+MyClass.prototype.constructor = MyClass;
+
+MyClass.prototype.myMethod = function () {
+  return this.name;
+};
+
+console.log(new MyClass().name);
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+var duck = {
+  name: 'Maurice',
+  color: 'white',
+  greeting: function () {
+    console.log('Quaaaack! My name is ' + this.name);
+  }
+}
+
+console.log(Reflect.has(duck, 'color'));
+// true
+console.log(Reflect.has(duck, 'haircut'));
+// false
+
+console.log(Reflect.ownKeys(duck))
+console.log(Reflect.set(duck, 'eyes', 'black'))
+
+console.log(JSON.stringify(Object.entries(duck), null, 4));
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+var promiseA = new Promise(function (resolutionFunc, rejectionFunc) {
+  return resolutionFunc(777);
+});
+
+// At this point, "promiseA" is already settled.
+promiseA.then(function (val) {
+  console.log("asynchronous logging has val:" + val)
+});
+console.log("immediate logging");
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+var promise = new Promise(function (resolve, reject) {
+  setTimeout(resolve, 0, null, 101);
+}).then(function (value) {
+  console.log(value);
+  return Promise.resolve(102);
+}).then(function (value) {
+  console.log(value);
+  return {
+    then: function (resolve, reject) {
+      setTimeout(resolve, 0, null, 103);
+    }
+  }
+}).then(function (value) {
+  console.log(value);
+  return Promise.all(["Bar", new Promise(function (resolve, reject) {
+    setTimeout(resolve, 500, 106)
+  }), Promise.resolve(104)]);
+}).then(function (value) {
+  console.log(value);
+  return Promise.race([Promise.reject("Error"), Promise.resolve(108)]);
+}).then(function (value) {
+  console.log(value);
+  return 109;
+}).error(function (error) {
+  console.log(error);
+});
+
+// true
+// 101
+// 102
+// 103
+// [ 'Bar', 106, 104 ]
+// Error
+
+console.log(promise)
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+var pAllSettled = Promise.allSettled([
+  Promise.resolve(33),
+  new Promise(function (resolve) {
+      return setTimeout(function () {
+        return resolve(66)
+      })
+    }),
+  99,
+  Promise.reject(new Error('an error'))
+])
+  .then(function (values) {
+    console.log(values)
+  });
+
+console.log(pAllSettled)
+
+//////////////////////////////////////////////////////////////////////////
+
+var promise1 = new Promise(function (resolve, reject) {
+  setTimeout(resolve, 500, null, 'one');
+});
+
+var promise2 = new Promise(function (resolve, reject) {
+  setTimeout(resolve, 100, null, 'two');
+});
+
+var pRace = Promise.race([promise1, promise2]).then(function (value) {
+  console.log(value);
+  // Both resolve, but promise2 is faster
+});
+
+console.log(pRace)
+// expected output: "two"
+
+
+//////////////////////////////////////////////////////////////////////////
+// we are passing as argument an array of promises that are already resolved,
+// to trigger Promise.race as soon as possible
+var resolvedPromisesArray = [Promise.resolve(33), Promise.resolve(44)];
+
+var pRace = Promise.race(resolvedPromisesArray);
+// immediately logging the value of p
+console.log(pRace);
+
+// using setTimeout we can execute code after the stack is empty
+setTimeout(function () {
+  console.log('the stack is now empty');
+  console.log(pRace);
+}, 0);
+
+
+//////////////////////////////////////////////////////////////////////////
+var foreverPendingPromise = Promise.race([]);
+var alreadyFulfilledProm = Promise.resolve(100);
+
+var arr = [foreverPendingPromise, alreadyFulfilledProm, "non-Promise value"];
+var arr2 = [foreverPendingPromise, "non-Promise value", Promise.resolve(100)];
+var p = Promise.race(arr);
+var p2 = Promise.race(arr2);
+
+console.log(p);
+console.log(p2);
+
+setTimeout(function () {
+  console.log('the stack is now empty');
+  console.log(p);
+  console.log(p2);
+}, 0);
+
+
+//////////////////////////////////////////////////////////////////////////
+var promise1 = new Promise(function (resolve, reject) {
+  setTimeout(resolve, 500, null, 'one');
+});
+
+var promise2 = new Promise(function (resolve, reject) {
+  setTimeout(reject, 100, null, 'two');
+});
+
+
+var pRace = Promise.race([promise1, promise2]).then(function (value) {
+  console.log('succeeded with value:', value);
+}).error(function (reason) {
+  // Only promise1 is fulfilled, but promise2 is faster
+  console.log('failed with reason:', reason);
+});
+
+console.log(pRace)
+// expected output: "failed with reason: two"
+
+
+var pAny = Promise.any([promise1, promise2]).then(function (value) {
+  // Only promise1 is fulfilled, even though promise2 settled sooner
+  console.log('succeeded with value:', value);
+}).error(function (reason) {
+  console.log('failed with reason:', reason);
+});
+
+console.log(pAny)
+// expected output: "succeeded with value: one"
+
+
+
+////////////////////////////////////////////////////////////////////////// Iterator
+
+function makeIterator(array) {
+    var nextIndex = 0;
+    return {
+        next: function () {
+            return (
+            (nextIndex < array.length)
+                ? {value: array[nextIndex++], done: false}
+                : {done: true}
+            );
+        }
+    };
+}
+
+var iterate = makeIterator;
+var some = iterate(["yo", "ya", "hoo"]);
+
+/*
+console.log(some.next().value)
+console.log(some.next().value)
+console.log(some.next().value)
+console.log(some.next().value)
+console.log(some.next().done)
+*/
+
+
+while (true) {
+  var result = some.next();
+  if (result.done)
+    break;
+
+  console.log(result.value);
+}
+
+
+var wtf = iterate("WTF".split(''));
+iterateIterator(wtf, function (item) {
+    return WScript.echo(item);
+})
+
+
+
+//////////////////////////////////////////////////////////////////////////
+// ES3-5 version
+
+/*
+function gen(obj) {
+  var keys = [];
+  var index = 0;
+  for (keys[index++] in obj);
+  var total = index;
+  index = 0;
+  return {
+    next: function () {
+      if (index < total) {
+        var key = keys[index++];
+        return {
+          done: false,
+          value: [key, obj[key]]
+        }
+      }
+      return {
+        done: true
+      };
+    }
+  };
+}
+
+var www = gen(["one", "two", "three"]);
+iterateIterator(www, function (item) {
+  return WScript.echo(item);
+})
+*/
+
+
+//////////////////////////////////////////////////////////////////////////
+
+console.equals(true, 'abc'.startsWith('a'));
+console.equals(false, 'abc'.endsWith('a'));
+console.equals(true, 'john alice'.includes('john'));
+console.equals('123'.repeat(2), '123123');
 console.equals(false, NaN === NaN);
+console.equals(true, Object.is(NaN, NaN));
 console.equals(true, -0 === 0);
+console.equals(false, Object.is(-0, 0));
 
 
-//////////////////////////////////////////////////////////////////////////
 var test = function () {alert(1);}
-console.log(test);
 
 var entire = test.toString(); // this part may fail!
 var body = entire.substring(entire.indexOf("{") + 1, entire.lastIndexOf("}"));
 
 console.log(body); // "alert(1);"
 
-
-//////////////////////////////////////////////////////////////////////////
-if (console.assert(true)) {
-    console.log('ok');
-}
-
-if (console.assert(false, {reason: 'not true'})) {
-    console.log('not ok');
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-/*
-In algebra,
-
-    a
-    = 0+a
-    = 0+0+a
-    = 0+0+0+a
-
-or
-
-    a
-    = 1*a
-    = 1*1*a
-    = 1*1*1*a
-
-is called identity element.
-
-
-0 in +(addition) operation,
-
-    a + 0 = a  //right identity
-    0 + a = a  //left identity
-
-
-1 in *(multiplication) operation,
-
-    a * 1 = a  //right identity
-    1 * a = a  //left identity
-
-
-
-In algebra is called associative property
-
-    1 + 2 + 3 = 1 + 2 + 3
-    (1+2) + 3 = 1 + (2+3)
-        3 + 3 = 1 + 5
-            6 = 6
-
-*/
-
-var compose = function (f, g) {
-    return (function (x) { return g(f(x)) })
-};
-
-var isMonad = function (m) { return !(typeof m.val === "undefined") };
-
-// M is a highly composable unit in functional programming.
-var M = function (m) {
-  var m = m || [];
-
-  var f = function (m1) {
-    //check type error
-    try {
-      return M(M(m1).val(m));
-    } catch (e) {
-      return M(compose(m, M(m1).val)); // f-f compose
-    };
-  };
-
-  f.val = m;
-
-  return (
-    isMonad(m)
-      ? m
-      : f
-  );
-};
-
-M.val = function (m) { return m };
-
-
-//////////////////////////////////////////////////////////////////////////
-var log = function (m) {
-    return (
-      (typeof m !== 'function')
-        ? (function () {
-            console.log(m);
-            return m;
-          })()
-        : err()
-    );
-};
-
-var err = function () {
-  throw new TypeError();
-};
-
-////////////////////////////////////////////////////////////////////////// Test code
-
-var loglog = M(log)(log);
-M("test")(loglog);
-
-
-M("------")(log);
-M([1])(log);
-M(M(M(5)))(log)
-M(99)(M)(log)
-
-
-M("------")(log);
-//M([1, 2, 3])(([a, b, c]) => [a + 1, b + 1, c + 1])(log)
-M([1, 2, 3])(function (args) {
-  var a = args[0];
-  var b = args[1];
-  var c = args[2];
-  return [a + 1, b + 1, c + 1]
-})(log)
-
-
-M("------")(log);
-var add1 = function (a) {
-  return (
-    (typeof a == 'number')
-      ? a + 1
-      : err()
-  );
-};
-
-M(10)(add1)(log);             //11
-M(10)(add1)(add1)(log);       //12
-M(10)(add1)(add1)(add1)(log); //13
-
-var add2 = M(add1)(add1);
-M(10)(add2)(log);             //12
-
-var add3 = M(add2)(add1);
-M(10)(add3)(log);             //13
-
-
-M("------")(log);
-var plus = function (x) {
-  return function (y) {
-    return (x + y)
-  };
-};
-
-M(plus(1)(5))(log);           //6
-M(5)(M(1)(plus))(log);        //6
-
-var plus1 = M(1)(plus);
-M(5)(plus1)(log);             //6
-
-
-M("------")(log);
-var map = function (f) {
-  return function (array) {
-    return array.map(f);
-  };
-};
-
-var map1 = M(add1)(map);
-M([1, 2, 3])(log)(map1)(log);
-
-
-//////////////////////////////////////////////////////////////////////////
-
-M("left identity   M(a)(f) = f(a)")(log);
-M(7)(add1)(log)               //8
-
-M("right identity  M = M(M)")(log);
-console.log(M)                //{ [Function: M] val: [Function] }
-console.log(M(M))             //{ [Function: M] val: [Function] }
-
-
-M("identity")(log);
-M(9)(M(function (x) { return x }))(log);         //9
-M(9)(function (x) { return x })(log);            //9
-
-
-M("homomorphism")(log);
-M(100)(M(add1))(log);         //101
-M(add1(100))(log);            //101
-
-
-M("interchange")(log);
-M(3)(add1)(log);                                //4
-M(add1)(function (f) {return f(3) })(log);      //4
-
-
-M("associativity")(log);
-M(10)(add1)(add1)(log);       //12
-M(10)(M(add1)(add1))(log);    //12
-
-
-// left identity M(a)(f) = f(a)
-M(7)(add1)                    //8
-M(add1(7))                    //8
-
-// right identity M = M(M)
-console.log(M)                //{ [Function: M] val: [Function] }
-console.log(M(M))             //{ [Function: M] val: [Function] }
-
-
-
-/* Applicative
-
-A value that implements the Applicative specification must also implement the Apply specification.
-    1. v.ap(A.of(x => x)) is equivalent to v (identity)
-    2. A.of(x).ap(A.of(f)) is equivalent to A.of(f(x)) (homomorphism)
-    3. A.of(y).ap(u) is equivalent to u.ap(A.of(f => f(y))) (interchange)
-*/
-
-// identity
-M(9)(M(function (x) { return x }))               //9
-
-
-// homomorphism
-M(100)(M(add1))               //101
-M(add1(100))                  //101
-
-
-// interchange
-M(3)(add1)                                      //4
-M(add1)(function (f) { return f(3) })           //4
-
-
-
-/* Chain
-
-A value that implements the Chain specification must also implement the Apply specification.
-    1. m.chain(f).chain(g) is equivalent to m.chain(x => f(x).chain(g)) (associativity)
-*/
-
-// associativity
-M(10)(add1)(add1)             //12
-M(10)(M(add1)(add1))          //12
 
 
