@@ -840,9 +840,10 @@ function DialogCallback(hWnd, uMsg, wParam, lParam)
           AkelPad.Call("LineBoard::Main::PrevBookmark");
       }
     }
-    else if (wParam === 0x43 /*E key VK_KEY_C*/)
+    else if (wParam === 0x43 /*C key VK_KEY_C*/)
     {
-      LogOutputActions(".txt", CopyLogContentsToClipboardCB);
+        if (Ctrl() && Shift())
+            LogOutputActions(".txt", CopyLogContentsToClipboardCB);
     }
     else if (wParam === 0x45 /*E key VK_KEY_E*/)
     {
